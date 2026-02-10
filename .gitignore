@@ -1,0 +1,32 @@
+# Laravel
+/app-laravel/vendor/
+/app-laravel/node_modules/
+/app-laravel/.env
+/app-laravel/.env.backup
+/app-laravel/.phpunit.result.cache
+/app-laravel/Homestead.json
+/app-laravel/Homestead.yaml
+/app-laravel/npm-debug.log
+/app-laravel/yarn-error.log
+/app-laravel/storage/*.key
+/app-laravel/storage/framework/cache/*
+/app-laravel/storage/framework/sessions/*
+/app-laravel/storage/framework/testing/*
+/app-laravel/storage/framework/views/*
+/app-laravel/storage/logs/*
+/app-laravel/public/hot
+/app-laravel/public/storage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Memory (local only)
+.claude/memory/
