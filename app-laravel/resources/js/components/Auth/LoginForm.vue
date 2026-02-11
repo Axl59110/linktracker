@@ -62,13 +62,23 @@
         </div>
       </form>
 
-      <!-- Lien vers inscription ou mot de passe oublié -->
+      <!-- Identifiants de développement -->
       <div class="mt-6 text-center">
-        <p class="text-sm text-gray-600">
-          Identifiants de test : <br />
-          <span class="font-mono bg-gray-100 px-2 py-1 rounded text-xs">test@example.com</span> /
-          <span class="font-mono bg-gray-100 px-2 py-1 rounded text-xs">password</span>
+        <p class="text-sm text-gray-600 mb-2">
+          <strong>Identifiants de développement :</strong>
         </p>
+        <div class="text-xs space-y-1">
+          <p>
+            Admin :
+            <span class="font-mono bg-blue-100 px-2 py-1 rounded">admin@admin.com</span> /
+            <span class="font-mono bg-blue-100 px-2 py-1 rounded">admin</span>
+          </p>
+          <p>
+            Test :
+            <span class="font-mono bg-gray-100 px-2 py-1 rounded">test@example.com</span> /
+            <span class="font-mono bg-gray-100 px-2 py-1 rounded">password</span>
+          </p>
+        </div>
       </div>
     </div>
   </div>
