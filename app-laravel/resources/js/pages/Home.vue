@@ -1,6 +1,13 @@
 <template>
   <div class="container mx-auto px-4 py-16">
     <div class="text-center">
+      <!-- Message de bienvenue si connecté -->
+      <div v-if="authStore.isAuthenticated" class="mb-4 p-4 bg-green-100 border border-green-400 rounded-lg">
+        <p class="text-green-800">
+          Bienvenue, <strong>{{ authStore.user?.name }}</strong> ! Vous êtes connecté.
+        </p>
+      </div>
+
       <h1 class="text-5xl font-bold text-gray-900 mb-4">
         Link Tracker
       </h1>
@@ -8,8 +15,20 @@
         Application de monitoring de backlinks pour SEO
       </p>
       <div class="flex justify-center gap-4">
-        <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition">
+        <button
+          v-if="!authStore.isAuthenticated"
+          @click="router.push({ name: 'login' })"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition"
+        >
           Connexion
+        </button>
+        <button
+          v-else
+          @click="handleLogout"
+          :disabled="authStore.loading"
+          class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition disabled:opacity-50"
+        >
+          {{ authStore.loading ? 'Déconnexion...' : 'Déconnexion' }}
         </button>
         <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition">
           En savoir plus
@@ -45,5 +64,16 @@
 </template>
 
 <script setup>
-// Page d'accueil
+import { useAuthStore } from '../stores/auth';
+import { useRouter } from 'vue-router';
+
+const authStore = useAuthStore();
+const router = useRouter();
+
+const handleLogout = async () => {
+  const result = await authStore.logout();
+  if (result.success) {
+    router.push({ name: 'login' });
+  }
+};
 </script>
