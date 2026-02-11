@@ -8,6 +8,10 @@
 .env
 .env.backup
 .env.production
+/database/database.sqlite
+/database/*.sqlite
+/bootstrap/cache/config.php
+debug_path.php
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
