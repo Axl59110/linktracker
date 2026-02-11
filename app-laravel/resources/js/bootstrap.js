@@ -8,6 +8,21 @@ import axios from 'axios';
 window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios.defaults.withCredentials = true;
+window.axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://linktracker.test';
+
+// Intercepteur pour gérer les erreurs d'authentification
+window.axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && (error.response.status === 401 || error.response.status === 419)) {
+            // Session expirée ou token CSRF invalide
+            // Rediriger vers login si nécessaire
+            console.warn('Session expirée ou token CSRF invalide');
+        }
+        return Promise.reject(error);
+    }
+);
 
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
