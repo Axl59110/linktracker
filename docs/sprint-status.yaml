@@ -14,7 +14,7 @@ sprints:
     end_date: "2026-02-23"  # 2 weeks
     capacity_points: 40
     committed_points: 36
-    completed_points: 5
+    completed_points: 10
     status: "in_progress"
     goal: "Établir l'infrastructure technique et la gestion des projets"
     stories:
@@ -36,10 +36,21 @@ sprints:
       - story_id: "STORY-002"
         title: "Implement User Authentication with Sanctum"
         points: 5
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-11T00:40:00Z"
+        completed_at: "2026-02-11T02:15:00Z"
+        notes: |
+          - Laravel Sanctum configuré (mode SPA session-based)
+          - AuthController créé (login, logout, user endpoints)
+          - Routes API v1 avec middleware auth:sanctum
+          - Store Pinia pour gestion d'état authentification
+          - Composants Vue : LoginForm, Login page
+          - Navigation guard avec protection des routes
+          - Tests complets : 10/10 passent
+          - CSRF protection activée avec cookie Sanctum
+          - Axios configuré avec withCredentials
+          - UserSeeder créé pour tests
 
       - story_id: "STORY-003"
         title: "Create Project CRUD API"
