@@ -18,6 +18,11 @@ use App\Http\Controllers\BacklinkController;
 
 // NEW BLADE ROUTES - SaaS UI Redesign (EPIC-013)
 
+// Home page - Redirect to dashboard
+Route::get('/', function () {
+    return redirect('/dashboard');
+});
+
 // Dashboard principale avec nouveau layout Blade
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

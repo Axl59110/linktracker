@@ -36,7 +36,7 @@
             @else
                 {{-- Default breadcrumb si aucun fourni --}}
                 <span class="text-neutral-900 font-medium">{{ $title ?? 'Page' }}</span>
-            @endhasSection
+            @endif
         </nav>
     </div>
 
