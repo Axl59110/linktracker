@@ -24,7 +24,8 @@ class UpdateProjectRequest extends FormRequest
     public function rules(): array
     {
         $userId = auth()->id();
-        $projectId = $this->route('project'); // ID du projet en cours de modification
+        $project = $this->route('project'); // Objet Project via route model binding
+        $projectId = $project instanceof \App\Models\Project ? $project->id : $project;
 
         return [
             'name' => [

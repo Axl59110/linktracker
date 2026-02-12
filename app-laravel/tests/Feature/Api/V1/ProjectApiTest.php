@@ -148,7 +148,7 @@ class ProjectApiTest extends TestCase
 
         $updateData = [
             'name' => 'Updated Project Name',
-            'url' => 'https://updated-example.com',
+            'url' => 'https://github.com/updated',
             'status' => 'paused',
         ];
 
@@ -159,14 +159,14 @@ class ProjectApiTest extends TestCase
             ->assertJson([
                 'id' => $project->id,
                 'name' => 'Updated Project Name',
-                'url' => 'https://updated-example.com',
+                'url' => 'https://github.com/updated',
                 'status' => 'paused',
             ]);
 
         $this->assertDatabaseHas('projects', [
             'id' => $project->id,
             'name' => 'Updated Project Name',
-            'url' => 'https://updated-example.com',
+            'url' => 'https://github.com/updated',
             'status' => 'paused',
         ]);
     }
