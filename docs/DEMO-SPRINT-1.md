@@ -31,7 +31,7 @@
 ### Prérequis
 
 - ✅ Laravel Herd installé et démarré
-- ✅ http://linktracker.test configuré
+- ✅ http://app-laravel.test configuré (via `herd link`)
 - ✅ Base de données SQLite avec seeds
 - ✅ Assets frontend buildés
 
@@ -51,7 +51,7 @@ php artisan migrate:fresh --seed
 
 L'application est déjà démarrée automatiquement par Herd !
 
-**URL:** http://linktracker.test
+**URL:** http://app-laravel.test
 
 ### 3. Compte de test
 
@@ -63,14 +63,14 @@ Pour la démo, utilisez :
 
 ### A. Page d'Accueil (Non Authentifié)
 
-1. **Ouvrir** http://linktracker.test
+1. **Ouvrir** http://app-laravel.test
    - ✅ Design Tailwind CSS v4
    - ✅ Navigation avec bouton "Login"
    - ✅ Message de bienvenue
 
 ### B. Authentification
 
-2. **Cliquer sur "Login"** → http://linktracker.test/login
+2. **Cliquer sur "Login"** → http://app-laravel.test/login
    - ✅ Formulaire de connexion élégant
    - ✅ Validation frontend (required fields)
 
@@ -89,7 +89,7 @@ Pour la démo, utilisez :
 
 ### D. Liste des Projets
 
-5. **Cliquer sur "Mes Projets"** → http://linktracker.test/projects
+5. **Cliquer sur "Mes Projets"** → http://app-laravel.test/projects
    - ✅ Liste vide ou avec projets existants
    - ✅ Grille responsive de cartes
    - ✅ Bouton "Créer un projet"
@@ -98,7 +98,7 @@ Pour la démo, utilisez :
 
 ### E. Créer un Projet
 
-6. **Cliquer sur "Créer un projet"** → http://linktracker.test/projects/create
+6. **Cliquer sur "Créer un projet"** → http://app-laravel.test/projects/create
 
    **Test 1: Création réussie**
    - Nom: `Mon Premier Projet`
@@ -130,7 +130,7 @@ Pour la démo, utilisez :
 
 ### G. Modifier un Projet
 
-8. **Cliquer sur "Modifier"** → http://linktracker.test/projects/{id}/edit
+8. **Cliquer sur "Modifier"** → http://app-laravel.test/projects/{id}/edit
    - ✅ Formulaire pré-rempli avec les données actuelles
    - ✅ Modification du nom
    - ✅ Modification de l'URL (avec validation SSRF)
@@ -150,29 +150,29 @@ Pour la démo, utilisez :
 
 ```bash
 # 1. Obtenir le cookie CSRF
-curl http://linktracker.test/sanctum/csrf-cookie -c cookies.txt
+curl http://app-laravel.test/sanctum/csrf-cookie -c cookies.txt
 
 # 2. Login
-curl -X POST http://linktracker.test/api/v1/auth/login \
+curl -X POST http://app-laravel.test/api/v1/auth/login \
   -b cookies.txt \
   -H "Content-Type: application/json" \
   -H "X-XSRF-TOKEN: {token}" \
   -d "{\"email\":\"admin@admin.com\",\"password\":\"admin\"}"
 
 # 3. Liste des projets
-curl http://linktracker.test/api/v1/projects \
+curl http://app-laravel.test/api/v1/projects \
   -b cookies.txt \
   -H "X-XSRF-TOKEN: {token}"
 
 # 4. Créer un projet
-curl -X POST http://linktracker.test/api/v1/projects \
+curl -X POST http://app-laravel.test/api/v1/projects \
   -b cookies.txt \
   -H "Content-Type: application/json" \
   -H "X-XSRF-TOKEN: {token}" \
   -d "{\"name\":\"API Test\",\"url\":\"https://github.com\"}"
 
 # 5. Tester SSRF protection
-curl -X POST http://linktracker.test/api/v1/projects \
+curl -X POST http://app-laravel.test/api/v1/projects \
   -b cookies.txt \
   -H "Content-Type: application/json" \
   -H "X-XSRF-TOKEN: {token}" \
@@ -182,7 +182,7 @@ curl -X POST http://linktracker.test/api/v1/projects \
 
 ### J. Laravel Telescope (Debugging)
 
-11. **Ouvrir Telescope** → http://linktracker.test/telescope
+11. **Ouvrir Telescope** → http://app-laravel.test/telescope
     - ✅ Dashboard de debugging
     - ✅ Requêtes HTTP
     - ✅ Queries SQL
@@ -230,7 +230,7 @@ php artisan test
 
 **Environnement:**
 - Laravel Herd (Windows)
-- http://linktracker.test (configured)
+- http://app-laravel.test (configured)
 
 ### Sécurité Implémentée
 
@@ -296,7 +296,7 @@ Les fondations sont solides pour continuer avec :
 
 ## ✅ Critères d'Acceptation Sprint 1
 
-- [x] Application accessible sur http://linktracker.test
+- [x] Application accessible sur http://app-laravel.test
 - [x] Login/Logout fonctionnel
 - [x] CRUD Projects complet (frontend + backend)
 - [x] Validation SSRF opérationnelle
