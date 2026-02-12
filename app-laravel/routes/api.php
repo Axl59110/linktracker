@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BacklinkController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,5 +29,10 @@ Route::prefix('v1')->group(function () {
 
         // Projects CRUD
         Route::apiResource('projects', ProjectController::class);
+
+        // Backlinks CRUD (nested under projects)
+        Route::apiResource('projects.backlinks', BacklinkController::class)->except(['index', 'store']);
+        Route::get('projects/{project}/backlinks', [BacklinkController::class, 'index'])->name('projects.backlinks.index');
+        Route::post('projects/{project}/backlinks', [BacklinkController::class, 'store'])->name('projects.backlinks.store');
     });
 });
