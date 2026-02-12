@@ -22,30 +22,31 @@ const routes = [
         component: Login,
         meta: { title: 'Link Tracker - Connexion', requiresAuth: false }
     },
-    {
-        path: '/projects',
-        name: 'projects.index',
-        component: ProjectsIndex,
-        meta: { title: 'Mes Projets', requiresAuth: true }
-    },
-    {
-        path: '/projects/create',
-        name: 'projects.create',
-        component: ProjectsCreate,
-        meta: { title: 'Créer un projet', requiresAuth: true }
-    },
-    {
-        path: '/projects/:id',
-        name: 'projects.show',
-        component: ProjectsShow,
-        meta: { title: 'Détails du projet', requiresAuth: true }
-    },
-    {
-        path: '/projects/:id/edit',
-        name: 'projects.edit',
-        component: ProjectsEdit,
-        meta: { title: 'Modifier le projet', requiresAuth: true }
-    },
+    // MIGRATED TO BLADE - Routes désactivées (nouveau design SaaS)
+    // {
+    //     path: '/projects',
+    //     name: 'projects.index',
+    //     component: ProjectsIndex,
+    //     meta: { title: 'Mes Projets', requiresAuth: true }
+    // },
+    // {
+    //     path: '/projects/create',
+    //     name: 'projects.create',
+    //     component: ProjectsCreate,
+    //     meta: { title: 'Créer un projet', requiresAuth: true }
+    // },
+    // {
+    //     path: '/projects/:id',
+    //     name: 'projects.show',
+    //     component: ProjectsShow,
+    //     meta: { title: 'Détails du projet', requiresAuth: true }
+    // },
+    // {
+    //     path: '/projects/:id/edit',
+    //     name: 'projects.edit',
+    //     component: ProjectsEdit,
+    //     meta: { title: 'Modifier le projet', requiresAuth: true }
+    // },
     {
         path: '/projects/:projectId/backlinks',
         name: 'backlinks.index',
