@@ -55,9 +55,9 @@ sprints:
       - story_id: "STORY-003"
         title: "Create Project CRUD API"
         points: 3
-        status: "not_started"
+        status: "in_progress"
         assigned_to: "Claude Code"
-        started_at: null
+        started_at: "2026-02-12T00:00:00Z"
         completed_at: null
 
       - story_id: "STORY-004"
