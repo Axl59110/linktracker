@@ -36,4 +36,78 @@ class Backlink extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    /**
+     * Scope a query to only include active backlinks.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    /**
+     * Scope a query to only include lost backlinks.
+     */
+    public function scopeLost($query)
+    {
+        return $query->where('status', 'lost');
+    }
+
+    /**
+     * Scope a query to only include changed backlinks.
+     */
+    public function scopeChanged($query)
+    {
+        return $query->where('status', 'changed');
+    }
+
+    /**
+     * Get the badge color for the backlink status (for UI).
+     */
+    public function getStatusBadgeColorAttribute(): string
+    {
+        return match($this->status) {
+            'active' => 'bg-green-100 text-green-800 border-green-200',
+            'lost' => 'bg-red-100 text-red-800 border-red-200',
+            'changed' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
+            default => 'bg-gray-100 text-gray-800 border-gray-200',
+        };
+    }
+
+    /**
+     * Get the status label (for UI).
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return match($this->status) {
+            'active' => 'Actif',
+            'lost' => 'Perdu',
+            'changed' => 'Modifié',
+            default => ucfirst($this->status),
+        };
+    }
+
+    /**
+     * Determine if the backlink is currently active.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Determine if the backlink is lost.
+     */
+    public function isLost(): bool
+    {
+        return $this->status === 'lost';
+    }
+
+    /**
+     * Determine if the backlink has changed.
+     */
+    public function hasChanged(): bool
+    {
+        return $this->status === 'changed';
+    }
 }

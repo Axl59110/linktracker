@@ -20,12 +20,62 @@ class BacklinkFactory extends Factory
             'source_url' => fake()->url(),
             'target_url' => fake()->url(),
             'anchor_text' => fake()->words(3, true),
-            'status' => fake()->randomElement(['active', 'lost', 'changed']),
-            'http_status' => fake()->randomElement([200, 301, 404, null]),
-            'rel_attributes' => fake()->randomElement(['follow', 'nofollow', null]),
-            'is_dofollow' => fake()->boolean(80),
+            'status' => 'active',
+            'http_status' => 200,
+            'rel_attributes' => 'follow',
+            'is_dofollow' => true,
             'first_seen_at' => now(),
             'last_checked_at' => fake()->optional()->dateTimeBetween('-1 week', 'now'),
         ];
+    }
+
+    /**
+     * Indicate that the backlink is active.
+     */
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'active',
+            'http_status' => 200,
+            'is_dofollow' => true,
+            'rel_attributes' => 'follow',
+        ]);
+    }
+
+    /**
+     * Indicate that the backlink is lost.
+     */
+    public function lost(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'lost',
+            'http_status' => 404,
+            'last_checked_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the backlink has changed.
+     */
+    public function changed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'changed',
+            'http_status' => 200,
+            'is_dofollow' => false,
+            'rel_attributes' => 'nofollow',
+            'last_checked_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the backlink is nofollow.
+     */
+    public function nofollow(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_dofollow' => false,
+            'rel_attributes' => 'nofollow',
+        ]);
     }
 }
