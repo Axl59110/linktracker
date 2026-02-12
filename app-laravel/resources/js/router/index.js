@@ -4,6 +4,7 @@ import ProjectsIndex from '../pages/Projects/Index.vue';
 import ProjectsShow from '../pages/Projects/Show.vue';
 import ProjectsCreate from '../pages/Projects/Create.vue';
 import ProjectsEdit from '../pages/Projects/Edit.vue';
+import BacklinksIndex from '../pages/Backlinks/Index.vue';
 
 const routes = [
     {
@@ -42,9 +43,12 @@ const routes = [
         component: ProjectsEdit,
         meta: { title: 'Modifier le projet', requiresAuth: true }
     },
-    // Routes à ajouter:
-    // - /backlinks (requiresAuth: true)
-    // etc.
+    {
+        path: '/projects/:projectId/backlinks',
+        name: 'backlinks.index',
+        component: BacklinksIndex,
+        meta: { title: 'Backlinks du projet', requiresAuth: true }
+    },
 ];
 
 export default routes;
