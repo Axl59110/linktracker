@@ -14,7 +14,7 @@ export const useProjectsStore = defineStore('projects', () => {
         error.value = null;
         try {
             const response = await axios.get('/api/v1/projects');
-            projects.value = response.data.data;
+            projects.value = response.data;
         } catch (err) {
             error.value = err.response?.data?.message || 'Erreur lors du chargement des projets';
             console.error('Error fetching projects:', err);
@@ -28,7 +28,7 @@ export const useProjectsStore = defineStore('projects', () => {
         error.value = null;
         try {
             const response = await axios.get(`/api/v1/projects/${id}`);
-            return response.data.data;
+            return response.data;
         } catch (err) {
             error.value = err.response?.data?.message || 'Erreur lors du chargement';
             throw err;
@@ -42,8 +42,8 @@ export const useProjectsStore = defineStore('projects', () => {
         error.value = null;
         try {
             const response = await axios.post('/api/v1/projects', projectData);
-            projects.value.push(response.data.data);
-            return response.data.data;
+            projects.value.push(response.data);
+            return response.data;
         } catch (err) {
             error.value = err.response?.data?.errors || err.response?.data?.message || 'Erreur lors de la création';
             throw err;
@@ -59,9 +59,9 @@ export const useProjectsStore = defineStore('projects', () => {
             const response = await axios.put(`/api/v1/projects/${id}`, projectData);
             const index = projects.value.findIndex(p => p.id === id);
             if (index !== -1) {
-                projects.value[index] = response.data.data;
+                projects.value[index] = response.data;
             }
-            return response.data.data;
+            return response.data;
         } catch (err) {
             error.value = err.response?.data?.errors || err.response?.data?.message || 'Erreur lors de la modification';
             throw err;
