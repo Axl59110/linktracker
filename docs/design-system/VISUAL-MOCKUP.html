@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Tracker - Visual Mockup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Neutral (95% de l'UI) */
+            --neutral-50: #fafafa;
+            --neutral-100: #f5f5f5;
+            --neutral-200: #e5e5e5;
+            --neutral-300: #d4d4d4;
+            --neutral-400: #a3a3a3;
+            --neutral-600: #525252;
+            --neutral-700: #404040;
+            --neutral-900: #171717;
+
+            /* Brand (Actions uniquement) */
+            --brand-50: #eff6ff;
+            --brand-500: #3b82f6;
+            --brand-600: #2563eb;
+
+            /* Success */
+            --success-50: #f0fdf4;
+            --success-600: #16a34a;
+
+            /* Danger */
+            --danger-50: #fef2f2;
+            --danger-600: #dc2626;
+
+            /* Layout */
+            --sidebar-width: 256px;
+            --topbar-height: 64px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--neutral-50);
+            color: var(--neutral-600);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid var(--neutral-200);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-logo {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--neutral-200);
+        }
+
+        .sidebar-logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--neutral-900);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: var(--neutral-600);
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.15s;
+        }
+
+        .sidebar-nav a:hover {
+            background: var(--neutral-100);
+        }
+
+        .sidebar-nav a.active {
+            background: var(--neutral-100);
+            color: var(--neutral-900);
+        }
+
+        .sidebar-nav a span {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .sidebar-badge {
+            margin-left: auto;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 12px;
+            background: var(--danger-50);
+            color: var(--danger-600);
+        }
+
+        .sidebar-bottom {
+            padding: 16px;
+            border-top: 1px solid var(--neutral-200);
+        }
+
+        /* === MAIN CONTENT === */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === TOPBAR === */
+        .topbar {
+            height: var(--topbar-height);
+            background: white;
+            border-bottom: 1px solid var(--neutral-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: var(--neutral-400);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--neutral-600);
+        }
+
+        .breadcrumb span {
+            color: var(--neutral-900);
+            font-weight: 500;
+        }
+
+        .topbar-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .topbar-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--neutral-400);
+        }
+
+        .topbar-stats .dot {
+            width: 4px;
+            height: 4px;
+            background: var(--neutral-300);
+            border-radius: 50%;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--brand-500);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        /* === CONTENT AREA === */
+        .content {
+            flex: 1;
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* === PAGE HEADER === */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--neutral-900);
+        }
+
+        .page-header p {
+            font-size: 14px;
+            color: var(--neutral-400);
+        }
+
+        /* === BUTTONS === */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.15s;
+        }
+
+        .btn-primary {
+            background: var(--brand-500);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-600);
+        }
+
+        .btn-secondary {
+            background: var(--neutral-100);
+            color: var(--neutral-700);
+            border: 1px solid var(--neutral-200);
+        }
+
+        .btn-secondary:hover {
+            background: var(--neutral-200);
+        }
+
+        /* === STATS GRID === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stats-card {
+            background: white;
+            border: 1px solid var(--neutral-200);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stats-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .stats-card label {
+            font-size: 13px;
+            color: var(--neutral-400);
+        }
+
+        .stats-card .icon {
+            font-size: 28px;
+        }
+
+        .stats-card .value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin-bottom: 4px;
+        }
+
+        .stats-card .change {
+            font-size: 12px;
+            color: var(--neutral-400);
+        }
+
+        /* === PROJECTS GRID === */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .project-card {
+            background: white;
+            border: 1px solid var(--neutral-200);
+            border-radius: 12px;
+            padding: 24px;
+            transition: border-color 0.15s;
+        }
+
+        .project-card:hover {
+            border-color: var(--neutral-300);
+        }
+
+        .project-card-header {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .project-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--neutral-900);
+        }
+
+        .project-card .url {
+            font-size: 13px;
+            color: var(--neutral-400);
+            margin-bottom: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .project-card-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .project-card-actions .btn {
+            flex: 1;
+            font-size: 13px;
+            padding: 8px 12px;
+        }
+
+        /* === BADGES === */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid;
+        }
+
+        .badge-success {
+            background: var(--success-50);
+            color: var(--success-600);
+            border-color: var(--success-600);
+        }
+
+        .badge-neutral {
+            background: var(--neutral-100);
+            color: var(--neutral-600);
+            border-color: var(--neutral-200);
+        }
+
+        .badge-danger {
+            background: var(--danger-50);
+            color: var(--danger-600);
+            border-color: var(--danger-600);
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .topbar-stats {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>Link Tracker</h1>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="active">
+                <span>📊</span> Dashboard
+            </a>
+            <a href="#">
+                <span>📁</span> Projets
+            </a>
+            <a href="#">
+                <span>🔗</span> Backlinks
+            </a>
+            <a href="#">
+                <span>🔔</span> Alertes
+                <span class="sidebar-badge">3</span>
+            </a>
+            <a href="#">
+                <span>🛒</span> Commandes
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="#">
+                <span>⚙️</span> Paramètres
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Topbar -->
+        <div class="topbar">
+            <nav class="breadcrumb">
+                <span>Dashboard</span>
+            </nav>
+
+            <div class="topbar-user">
+                <div class="topbar-stats">
+                    <span>127 actifs</span>
+                    <div class="dot"></div>
+                    <span>8 projets</span>
+                </div>
+                <div class="user-avatar">M</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <main class="content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-header-top">
+                    <div>
+                        <h1>Dashboard</h1>
+                        <p>Vue d'ensemble de vos backlinks et projets</p>
+                    </div>
+                    <button class="btn btn-primary">+ Nouveau projet</button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stats-card">
+                    <div class="stats-card-header">
+                        <label>Backlinks actifs</label>
+                        <div class="icon">✅</div>
+                    </div>
+                    <div class="value">127</div>
+                    <div class="change">+12 ce mois</div>
+                </div>
+
+                <div class="stats-card">
+                    <div class="stats-card-header">
+                        <label>Backlinks perdus</label>
+                        <div class="icon">❌</div>
+                    </div>
+                    <div class="value">3</div>
+                    <div class="change">-2 vs mois dernier</div>
+                </div>
+
+                <div class="stats-card">
+                    <div class="stats-card-header">
+                        <label>Projets</label>
+                        <div class="icon">📁</div>
+                    </div>
+                    <div class="value">8</div>
+                    <div class="change">&nbsp;</div>
+                </div>
+            </div>
+
+            <!-- Projects Grid -->
+            <div style="margin-bottom: 24px;">
+                <h2 style="font-size: 18px; font-weight: 600; color: var(--neutral-900); margin-bottom: 16px;">Projets récents</h2>
+            </div>
+
+            <div class="projects-grid">
+                <!-- Project Card 1 -->
+                <div class="project-card">
+                    <div class="project-card-header">
+                        <h3>Mon Site E-commerce</h3>
+                        <span class="badge badge-success">Actif</span>
+                    </div>
+                    <div class="url">https://mon-ecommerce.fr</div>
+                    <div class="project-card-actions">
+                        <button class="btn btn-secondary">Voir</button>
+                        <button class="btn btn-secondary">Backlinks</button>
+                    </div>
+                </div>
+
+                <!-- Project Card 2 -->
+                <div class="project-card">
+                    <div class="project-card-header">
+                        <h3>Blog SEO</h3>
+                        <span class="badge badge-success">Actif</span>
+                    </div>
+                    <div class="url">https://blog-seo-consulting.com</div>
+                    <div class="project-card-actions">
+                        <button class="btn btn-secondary">Voir</button>
+                        <button class="btn btn-secondary">Backlinks</button>
+                    </div>
+                </div>
+
+                <!-- Project Card 3 -->
+                <div class="project-card">
+                    <div class="project-card-header">
+                        <h3>Site Portfolio</h3>
+                        <span class="badge badge-neutral">Archivé</span>
+                    </div>
+                    <div class="url">https://portfolio-designer.fr</div>
+                    <div class="project-card-actions">
+                        <button class="btn btn-secondary">Voir</button>
+                        <button class="btn btn-secondary">Backlinks</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Note: Ceci est un mockup statique HTML/CSS
+        // Dans la vraie app, Vue.js gérera l'interactivité
+        console.log('🎨 Link Tracker - Visual Mockup');
+        console.log('Design System:');
+        console.log('- Palette: Neutral + Brand (blue) + Success (green) + Danger (red)');
+        console.log('- Layout: Sidebar 256px + Content area');
+        console.log('- Typography: System fonts');
+        console.log('- Components: Blade réutilisables');
+    </script>
+</body>
+</html>
