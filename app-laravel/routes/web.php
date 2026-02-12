@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\BacklinkController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,8 +24,10 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 // Projects - CRUD complet avec nouveau layout Blade
 Route::resource('projects', ProjectController::class);
 
+// Backlinks - CRUD complet avec nouveau layout Blade
+Route::resource('backlinks', BacklinkController::class);
+
 // TODO: Ajouter routes Blade pour :
-// - /backlinks (global backlinks list + CRUD)
 // - /alerts (EPIC-004)
 // - /orders (EPIC-006)
 // - /settings (EPIC-008)
