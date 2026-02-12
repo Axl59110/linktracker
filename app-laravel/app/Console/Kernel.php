@@ -12,7 +12,19 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Vérification quotidienne des backlinks actifs
+        $schedule->command('app:check-backlinks --frequency=daily')
+                 ->dailyAt('02:00')
+                 ->withoutOverlapping()
+                 ->appendOutputTo(storage_path('logs/scheduler.log'));
+
+        // Vérification hebdomadaire complète (tous les dimanches)
+        $schedule->command('app:check-backlinks --frequency=weekly --status=all')
+                 ->weekly()
+                 ->sundays()
+                 ->at('03:00')
+                 ->withoutOverlapping()
+                 ->appendOutputTo(storage_path('logs/scheduler.log'));
     }
 
     /**

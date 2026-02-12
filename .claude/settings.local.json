@@ -19,7 +19,9 @@
       "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan make:job CheckBacklinkJob)",
       "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan test tests/Feature/Jobs/CheckBacklinkJobTest.php)",
       "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan make:migration add_error_message_to_backlink_checks_table)",
-      "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan tinker --execute=\"echo App\\\\Models\\\\BacklinkCheck::class\")"
+      "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan tinker --execute=\"echo App\\\\Models\\\\BacklinkCheck::class\")",
+      "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan make:command CheckBacklinksCommand)",
+      "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan test tests/Feature/Console/CheckBacklinksCommandTest.php)"
     ]
   }
 }
