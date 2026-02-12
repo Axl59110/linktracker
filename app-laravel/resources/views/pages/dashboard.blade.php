@@ -21,7 +21,7 @@
         {{-- Active Backlinks --}}
         <x-stats-card
             label="Backlinks actifs"
-            :value="$activeBacklinks"
+            :value="$activeBacklinks ?? 0"
             change="+0%"
             icon="🔗"
         />
@@ -29,7 +29,7 @@
         {{-- Lost Backlinks --}}
         <x-stats-card
             label="Backlinks perdus"
-            :value="$lostBacklinks"
+            :value="$lostBacklinks ?? 0"
             change="0%"
             icon="⚠️"
         />
@@ -37,7 +37,7 @@
         {{-- Total Projects --}}
         <x-stats-card
             label="Projets"
-            :value="$totalProjects"
+            :value="$totalProjects ?? 0"
             change="+0%"
             icon="📁"
         />
@@ -49,18 +49,18 @@
         <div class="bg-white p-6 rounded-lg border border-neutral-200">
             <h2 class="text-lg font-semibold text-neutral-900 mb-4">Alertes récentes</h2>
 
-            @if(count($recentAlerts) > 0)
+            @if(count($recentAlerts ?? []) > 0)
                 {{-- TODO: Afficher la liste des alertes récentes --}}
                 <div class="space-y-3">
                     @foreach($recentAlerts as $alert)
                         <div class="flex items-start space-x-3 p-3 bg-neutral-50 rounded-lg">
                             <span class="text-2xl">{{ $alert->icon ?? '🔔' }}</span>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-neutral-900">{{ $alert->title }}</p>
-                                <p class="text-xs text-neutral-500">{{ $alert->created_at->diffForHumans() }}</p>
+                                <p class="text-sm font-medium text-neutral-900">{{ $alert->title ?? 'Alerte' }}</p>
+                                <p class="text-xs text-neutral-500">{{ $alert->created_at?->diffForHumans() ?? 'Date inconnue' }}</p>
                             </div>
-                            <x-badge variant="{{ $alert->severity }}">
-                                {{ ucfirst($alert->severity) }}
+                            <x-badge variant="{{ $alert->severity ?? 'neutral' }}">
+                                {{ ucfirst($alert->severity ?? 'info') }}
                             </x-badge>
                         </div>
                     @endforeach
@@ -84,7 +84,7 @@
         <div class="bg-white p-6 rounded-lg border border-neutral-200">
             <h2 class="text-lg font-semibold text-neutral-900 mb-4">Projets récents</h2>
 
-            @if(count($recentProjects) > 0)
+            @if(count($recentProjects ?? []) > 0)
                 {{-- TODO: Afficher la liste des projets récents --}}
                 <div class="space-y-3">
                     @foreach($recentProjects as $project)

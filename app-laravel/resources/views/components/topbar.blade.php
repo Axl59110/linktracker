@@ -11,6 +11,10 @@
     TODO: Récupérer stats réelles depuis database
 --}}
 
+@props([
+    'title' => 'Page',
+])
+
 <div class="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-6 sticky top-0 z-30">
     {{-- Left: Mobile Menu Button + Breadcrumb --}}
     <div class="flex items-center space-x-4">

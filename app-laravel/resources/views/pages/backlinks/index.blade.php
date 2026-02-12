@@ -34,7 +34,7 @@
                     @foreach($backlinks as $backlink)
                         <tr class="hover:bg-neutral-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">
-                                {{ $backlink->project->name ?? 'N/A' }}
+                                {{ $backlink->project?->name ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4">
                                 <a href="{{ $backlink->source_url }}" target="_blank" class="text-sm text-brand-500 hover:text-brand-600">
