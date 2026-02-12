@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(docker-compose ps:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(vendor/bin/phpunit:*)",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; php artisan --version\")",
+      "Bash(C:toolsphp83php.exe artisan make:migration create_projects_table)",
+      "Bash(/c/Users/axel/.config/herd/bin/php artisan:*)"
     ]
   }
 }

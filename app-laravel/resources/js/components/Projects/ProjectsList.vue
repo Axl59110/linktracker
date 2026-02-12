@@ -84,12 +84,20 @@ const formatDate = (date) => {
                     Créé le {{ formatDate(project.created_at) }}
                 </div>
 
-                <button
-                    @click="router.push(`/projects/${project.id}`)"
-                    class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded transition"
-                >
-                    Voir le projet
-                </button>
+                <div class="flex gap-2">
+                    <button
+                        @click="router.push(`/projects/${project.id}`)"
+                        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded transition"
+                    >
+                        Voir
+                    </button>
+                    <button
+                        @click="router.push(`/projects/${project.id}/edit`)"
+                        class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded transition"
+                    >
+                        Modifier
+                    </button>
+                </div>
             </div>
         </div>
     </div>

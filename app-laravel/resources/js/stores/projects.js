@@ -23,6 +23,53 @@ export const useProjectsStore = defineStore('projects', () => {
         }
     }
 
+    async function getProject(id) {
+        loading.value = true;
+        error.value = null;
+        try {
+            const response = await axios.get(`/api/v1/projects/${id}`);
+            return response.data.data;
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Erreur lors du chargement';
+            throw err;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function createProject(projectData) {
+        loading.value = true;
+        error.value = null;
+        try {
+            const response = await axios.post('/api/v1/projects', projectData);
+            projects.value.push(response.data.data);
+            return response.data.data;
+        } catch (err) {
+            error.value = err.response?.data?.errors || err.response?.data?.message || 'Erreur lors de la création';
+            throw err;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function updateProject(id, projectData) {
+        loading.value = true;
+        error.value = null;
+        try {
+            const response = await axios.put(`/api/v1/projects/${id}`, projectData);
+            const index = projects.value.findIndex(p => p.id === id);
+            if (index !== -1) {
+                projects.value[index] = response.data.data;
+            }
+            return response.data.data;
+        } catch (err) {
+            error.value = err.response?.data?.errors || err.response?.data?.message || 'Erreur lors de la modification';
+            throw err;
+        } finally {
+            loading.value = false;
+        }
+    }
+
     function clearError() {
         error.value = null;
     }
@@ -33,6 +80,9 @@ export const useProjectsStore = defineStore('projects', () => {
         error,
         hasProjects,
         fetchProjects,
+        getProject,
+        createProject,
+        updateProject,
         clearError,
     };
 });

@@ -4,14 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'url', 'status'];
+    protected $fillable = [
+        'name',
+        'url',
+        'status',
+    ];
 
     protected $casts = [
         'created_at' => 'datetime',
@@ -19,8 +22,19 @@ class Project extends Model
         'deleted_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    /**
+     * Get the user that owns the project.
+     */
+    public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the backlinks for the project.
+     */
+    public function backlinks()
+    {
+        return $this->hasMany(Backlink::class);
     }
 }

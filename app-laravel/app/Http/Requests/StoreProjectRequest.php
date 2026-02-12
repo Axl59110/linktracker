@@ -2,8 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Exceptions\SsrfException;
+use App\Services\Security\UrlValidator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreProjectRequest extends FormRequest
 {
@@ -12,7 +13,7 @@ class StoreProjectRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return true; // L'auth est gérée par le middleware
     }
 
     /**
@@ -22,17 +23,47 @@ class StoreProjectRequest extends FormRequest
      */
     public function rules(): array
     {
+        $userId = auth()->id();
+
         return [
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('projects', 'name')->where(function ($query) {
-                    return $query->where('user_id', $this->user()->id);
-                }),
+                "unique:projects,name,NULL,id,user_id,{$userId}",
             ],
-            'url' => 'required|url|max:2048',
-            'status' => 'nullable|in:active,paused,archived',
+            'url' => [
+                'required',
+                'url',
+                'max:2048',
+                function ($attribute, $value, $fail) {
+                    try {
+                        app(UrlValidator::class)->validate($value);
+                    } catch (SsrfException $e) {
+                        $fail("L'URL est bloquée pour des raisons de sécurité : " . $e->getMessage());
+                    }
+                },
+            ],
+            'status' => [
+                'nullable',
+                'in:active,paused,archived',
+            ],
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Le nom du projet est requis.',
+            'name.unique' => 'Vous avez déjà un projet avec ce nom.',
+            'url.required' => 'L\'URL est requise.',
+            'url.url' => 'L\'URL doit être une URL valide.',
+            'status.in' => 'Le statut doit être active, paused ou archived.',
         ];
     }
 }
