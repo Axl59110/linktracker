@@ -7,7 +7,15 @@
       "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; php artisan --version\")",
       "Bash(C:toolsphp83php.exe artisan make:migration create_projects_table)",
       "Bash(/c/Users/axel/.config/herd/bin/php artisan:*)",
-      "Bash(herd link:*)"
+      "Bash(herd link:*)",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; php artisan test tests/Feature/Api/V1/BacklinkApiTest.php\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git status\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git add app/Http/Controllers/Api/V1/BacklinkController.php app/Http/Requests/StoreBacklinkRequest.php app/Http/Requests/UpdateBacklinkRequest.php app/Policies/BacklinkPolicy.php routes/api.php tests/Feature/Api/V1/BacklinkApiTest.php ../docs/stories/STORY-010.md\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git checkout -b feature/STORY-011-backlinks-list-component\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git commit -m ''feat\\(backlinks\\): implement Backlinks List Vue Component \\(STORY-011\\)'' -m ''BacklinksStore \\(Pinia\\) for state management'' -m ''BacklinksList component with stats cards and responsive table'' -m ''Stats cards: active/lost/changed backlinks count'' -m ''Table columns: source URL, anchor text, status, last check, presence, actions'' -m ''Empty/loading/error states'' -m ''Date formatting and status badges'' -m ''Navigation to view/edit backlinks'' -m ''Updated Projects Show with View all backlinks button'' -m ''Route /projects/:projectId/backlinks'' -m ''Assets rebuilt with npm run build'' -m ''Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>''\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git checkout master && git merge feature/STORY-011-backlinks-list-component --no-edit\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git checkout master\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git merge feature/STORY-011-backlinks-list-component --no-edit\")"
     ]
   }
 }

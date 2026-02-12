@@ -5,6 +5,9 @@ import ProjectsShow from '../pages/Projects/Show.vue';
 import ProjectsCreate from '../pages/Projects/Create.vue';
 import ProjectsEdit from '../pages/Projects/Edit.vue';
 import BacklinksIndex from '../pages/Backlinks/Index.vue';
+import BacklinksCreate from '../pages/Backlinks/Create.vue';
+import BacklinksEdit from '../pages/Backlinks/Edit.vue';
+import BacklinksShow from '../pages/Backlinks/Show.vue';
 
 const routes = [
     {
@@ -48,6 +51,24 @@ const routes = [
         name: 'backlinks.index',
         component: BacklinksIndex,
         meta: { title: 'Backlinks du projet', requiresAuth: true }
+    },
+    {
+        path: '/projects/:projectId/backlinks/create',
+        name: 'backlinks.create',
+        component: BacklinksCreate,
+        meta: { title: 'Ajouter un backlink', requiresAuth: true }
+    },
+    {
+        path: '/projects/:projectId/backlinks/:id',
+        name: 'backlinks.show',
+        component: BacklinksShow,
+        meta: { title: 'Détails du backlink', requiresAuth: true }
+    },
+    {
+        path: '/projects/:projectId/backlinks/:id/edit',
+        name: 'backlinks.edit',
+        component: BacklinksEdit,
+        meta: { title: 'Modifier le backlink', requiresAuth: true }
     },
 ];
 
