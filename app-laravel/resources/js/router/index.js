@@ -1,5 +1,8 @@
 import Home from '../pages/Home.vue';
 import Login from '../pages/Auth/Login.vue';
+import ProjectsIndex from '../pages/Projects/Index.vue';
+import ProjectsCreate from '../pages/Projects/Create.vue';
+import ProjectsEdit from '../pages/Projects/Edit.vue';
 
 const routes = [
     {
@@ -14,8 +17,25 @@ const routes = [
         component: Login,
         meta: { title: 'Link Tracker - Connexion', requiresAuth: false }
     },
+    {
+        path: '/projects',
+        name: 'projects.index',
+        component: ProjectsIndex,
+        meta: { title: 'Mes Projets', requiresAuth: true }
+    },
+    {
+        path: '/projects/create',
+        name: 'projects.create',
+        component: ProjectsCreate,
+        meta: { title: 'Créer un projet', requiresAuth: true }
+    },
+    {
+        path: '/projects/:id/edit',
+        name: 'projects.edit',
+        component: ProjectsEdit,
+        meta: { title: 'Modifier le projet', requiresAuth: true }
+    },
     // Routes à ajouter:
-    // - /projects (requiresAuth: true)
     // - /projects/:id (requiresAuth: true)
     // - /backlinks (requiresAuth: true)
     // etc.
