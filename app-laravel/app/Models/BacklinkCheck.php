@@ -17,6 +17,7 @@ class BacklinkCheck extends Model
         'rel_attributes',
         'response_time',
         'checked_at',
+        'error_message',
     ];
 
     protected $casts = [

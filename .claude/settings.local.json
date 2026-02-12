@@ -15,7 +15,11 @@
       "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git commit -m ''feat\\(backlinks\\): implement Backlinks List Vue Component \\(STORY-011\\)'' -m ''BacklinksStore \\(Pinia\\) for state management'' -m ''BacklinksList component with stats cards and responsive table'' -m ''Stats cards: active/lost/changed backlinks count'' -m ''Table columns: source URL, anchor text, status, last check, presence, actions'' -m ''Empty/loading/error states'' -m ''Date formatting and status badges'' -m ''Navigation to view/edit backlinks'' -m ''Updated Projects Show with View all backlinks button'' -m ''Route /projects/:projectId/backlinks'' -m ''Assets rebuilt with npm run build'' -m ''Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>''\")",
       "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git checkout master && git merge feature/STORY-011-backlinks-list-component --no-edit\")",
       "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git checkout master\")",
-      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git merge feature/STORY-011-backlinks-list-component --no-edit\")"
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\axel\\\\OneDrive\\\\Desktop\\\\Claude\\\\Linktracker\\\\app-laravel''; git merge feature/STORY-011-backlinks-list-component --no-edit\")",
+      "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan make:job CheckBacklinkJob)",
+      "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan test tests/Feature/Jobs/CheckBacklinkJobTest.php)",
+      "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan make:migration add_error_message_to_backlink_checks_table)",
+      "Bash(\"C:\\\\Users\\\\axel\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan tinker --execute=\"echo App\\\\Models\\\\BacklinkCheck::class\")"
     ]
   }
 }
