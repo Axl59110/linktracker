@@ -88,30 +88,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
-
-            {{-- TODO: Dropdown Menu à implémenter dans phase ultérieure --}}
-            {{--
-            <div
-                x-show="userMenuOpen"
-                @click.away="userMenuOpen = false"
-                x-cloak
-                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-neutral-200 py-1 z-50"
-            >
-                <a href="{{ url('/profile') }}" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
-                    Mon profil
-                </a>
-                <a href="{{ url('/settings') }}" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
-                    Paramètres
-                </a>
-                <div class="border-t border-neutral-200 my-1"></div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-danger-600 hover:bg-neutral-100">
-                        Déconnexion
-                    </button>
-                </form>
-            </div>
-            --}}
         </div>
     </div>
 </div>
