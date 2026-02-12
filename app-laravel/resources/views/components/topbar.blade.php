@@ -89,7 +89,8 @@
                 </svg>
             </button>
 
-            {{-- TODO: Dropdown Menu à implémenter dans phase ultérieure
+            {{-- TODO: Dropdown Menu à implémenter dans phase ultérieure --}}
+            {{--
             <div
                 x-show="userMenuOpen"
                 @click.away="userMenuOpen = false"
