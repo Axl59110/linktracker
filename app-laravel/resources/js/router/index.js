@@ -1,6 +1,7 @@
 import Home from '../pages/Home.vue';
 import Login from '../pages/Auth/Login.vue';
 import ProjectsIndex from '../pages/Projects/Index.vue';
+import ProjectsShow from '../pages/Projects/Show.vue';
 import ProjectsCreate from '../pages/Projects/Create.vue';
 import ProjectsEdit from '../pages/Projects/Edit.vue';
 
@@ -30,13 +31,18 @@ const routes = [
         meta: { title: 'Créer un projet', requiresAuth: true }
     },
     {
+        path: '/projects/:id',
+        name: 'projects.show',
+        component: ProjectsShow,
+        meta: { title: 'Détails du projet', requiresAuth: true }
+    },
+    {
         path: '/projects/:id/edit',
         name: 'projects.edit',
         component: ProjectsEdit,
         meta: { title: 'Modifier le projet', requiresAuth: true }
     },
     // Routes à ajouter:
-    // - /projects/:id (requiresAuth: true)
     // - /backlinks (requiresAuth: true)
     // etc.
 ];
