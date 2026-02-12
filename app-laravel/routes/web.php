@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// NEW DESIGN PREVIEW - Route test pour voir le nouveau layout Blade
+Route::get('/dashboard-preview', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard.preview');
+
 // SPA entry point - all routes handled by Vue Router
 Route::get('/{any}', function () {
     return view('app');
