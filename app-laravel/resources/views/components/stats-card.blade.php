@@ -1,38 +1,23 @@
-{{--
-    Stats Card Component
-
-    Affiche une stat avec label, valeur, icône et changement optionnel.
-
-    Usage:
-    <x-stats-card
-        label="Backlinks actifs"
-        value="127"
-        change="+12 ce mois"
-        icon="✅"
-    />
---}}
-
 @props([
-    'label' => '',
-    'value' => '0',
+    'label',
+    'value',
     'change' => null,
-    'icon' => null
+    'icon' => null,
 ])
 
-<div {{ $attributes->merge(['class' => 'bg-white border border-neutral-200 rounded-lg p-5']) }}>
-    <div class="flex items-center justify-between">
-        {{-- Left: Label + Value + Change --}}
+<div class="bg-white p-6 rounded-lg border border-neutral-200">
+    <div class="flex items-start justify-between">
         <div class="flex-1">
-            <p class="text-sm text-neutral-500">{{ $label }}</p>
-            <p class="text-2xl font-semibold text-neutral-900 mt-1">{{ $value }}</p>
+            <p class="text-sm text-neutral-500 mb-1">{{ $label }}</p>
+            <p class="text-3xl font-bold text-neutral-900">{{ $value }}</p>
+
             @if($change)
-                <p class="text-xs text-neutral-400 mt-1">{{ $change }}</p>
+                <p class="text-xs text-neutral-400 mt-2">{{ $change }}</p>
             @endif
         </div>
 
-        {{-- Right: Icon (Optional) --}}
         @if($icon)
-            <div class="text-3xl ml-4">{{ $icon }}</div>
+            <span class="text-3xl">{{ $icon }}</span>
         @endif
     </div>
 </div>

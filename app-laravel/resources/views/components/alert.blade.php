@@ -1,55 +1,30 @@
-{{--
-    Alert Component
-
-    Affiche une alerte ou notification.
-
-    Variants:
-    - success: Vert
-    - danger: Rouge
-    - warning: Orange (TODO: Ajouter si besoin)
-    - info: Bleu (TODO: Ajouter si besoin)
-
-    Usage:
-    <x-alert variant="danger">
-        Une erreur est survenue lors de la suppression.
-    </x-alert>
-
-    <x-alert variant="success">
-        Le projet a été créé avec succès.
-    </x-alert>
---}}
-
 @props([
-    'variant' => 'info'
+    'variant' => 'info',
 ])
 
 @php
     $variants = [
-        'success' => 'bg-success-50 border-success-200 text-success-700',
-        'danger' => 'bg-danger-50 border-danger-200 text-danger-700',
-        'info' => 'bg-brand-50 border-brand-200 text-brand-700',
-        // TODO: Ajouter warning si besoin (orange)
+        'success' => [
+            'container' => 'bg-success-50 border-success-200 text-success-900',
+            'icon' => '✓',
+        ],
+        'danger' => [
+            'container' => 'bg-danger-50 border-danger-200 text-danger-900',
+            'icon' => '✕',
+        ],
+        'info' => [
+            'container' => 'bg-neutral-100 border-neutral-200 text-neutral-900',
+            'icon' => 'ℹ',
+        ],
     ];
 
-    $icons = [
-        'success' => '✓',
-        'danger' => '✗',
-        'info' => 'ℹ',
-    ];
-
-    $classes = $variants[$variant] ?? $variants['info'];
-    $icon = $icons[$variant] ?? $icons['info'];
+    $config = $variants[$variant] ?? $variants['info'];
 @endphp
 
-<div {{ $attributes->merge(['class' => "border rounded-lg p-4 {$classes}"]) }}>
-    <div class="flex">
-        {{-- Icon --}}
-        <div class="flex-shrink-0 mr-3 text-lg">
-            {{ $icon }}
-        </div>
-
-        {{-- Content --}}
-        <div class="flex-1 text-sm">
+<div class="p-4 rounded-lg border {{ $config['container'] }}" role="alert">
+    <div class="flex items-start">
+        <span class="text-lg mr-3">{{ $config['icon'] }}</span>
+        <div class="flex-1">
             {{ $slot }}
         </div>
     </div>

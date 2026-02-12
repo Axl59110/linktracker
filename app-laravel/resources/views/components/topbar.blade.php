@@ -2,6 +2,7 @@
     Topbar Component
 
     Contient:
+    - Mobile hamburger menu button
     - Breadcrumb navigation (slot 'breadcrumb')
     - Quick stats (optionnel)
     - User menu (dropdown)
@@ -11,15 +12,29 @@
 --}}
 
 <div class="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-6 sticky top-0 z-30">
-    {{-- Left: Breadcrumb Navigation --}}
-    <nav class="flex items-center space-x-2 text-sm">
-        @hasSection('breadcrumb')
-            @yield('breadcrumb')
-        @else
-            {{-- Default breadcrumb si aucun fourni --}}
-            <span class="text-neutral-900 font-medium">{{ $title ?? 'Page' }}</span>
-        @endhasSection
-    </nav>
+    {{-- Left: Mobile Menu Button + Breadcrumb --}}
+    <div class="flex items-center space-x-4">
+        {{-- Mobile Hamburger Menu Button --}}
+        <button
+            @click="$dispatch('toggle-mobile-menu')"
+            class="lg:hidden p-2 -ml-2 rounded-lg text-neutral-600 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            aria-label="Ouvrir le menu"
+        >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+
+        {{-- Breadcrumb Navigation --}}
+        <nav class="flex items-center space-x-2 text-sm">
+            @hasSection('breadcrumb')
+                @yield('breadcrumb')
+            @else
+                {{-- Default breadcrumb si aucun fourni --}}
+                <span class="text-neutral-900 font-medium">{{ $title ?? 'Page' }}</span>
+            @endhasSection
+        </nav>
+    </div>
 
     {{-- Right: Stats + User Menu --}}
     <div class="flex items-center space-x-6">
@@ -96,15 +111,3 @@
         </div>
     </div>
 </div>
-
-{{-- Mobile Menu Button (TODO: Implémenter dans STORY-027) --}}
-{{--
-<button
-    @click="mobileMenuOpen = !mobileMenuOpen"
-    class="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-100"
->
-    <svg class="w-6 h-6 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-</button>
---}}

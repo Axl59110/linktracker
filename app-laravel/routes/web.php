@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,10 +14,18 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// NEW DESIGN PREVIEW - Route test pour voir le nouveau layout Blade
-Route::get('/dashboard-preview', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard.preview');
+// NEW BLADE ROUTES - SaaS UI Redesign (EPIC-013)
+// Dashboard principale avec nouveau layout Blade
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// SPA entry point - all routes handled by Vue Router
+// TODO: Ajouter routes Blade pour :
+// - /backlinks (global backlinks list)
+// - /alerts (EPIC-004)
+// - /orders (EPIC-006)
+// - /settings (EPIC-008)
+
+// SPA entry point - all routes handled by Vue Router (ancien système)
+// IMPORTANT: Cette route catch-all doit rester en dernier
 Route::get('/{any}', function () {
     return view('app');
 })->where('any', '.*');

@@ -1,12 +1,3 @@
-{{--
-    Dashboard Page
-
-    Vue d'ensemble de l'application avec stats et liens rapides.
-
-    TODO: Cette page sera connectée à un DashboardController dans phase ultérieure
-    TODO: Remplacer les placeholders par données réelles
---}}
-
 @extends('layouts.app')
 
 @section('title', 'Dashboard - Link Tracker')
@@ -17,113 +8,131 @@
 
 @section('content')
     {{-- Page Header --}}
-    <x-page-header
-        title="Dashboard"
-        subtitle="Vue d'ensemble de vos backlinks et projets">
+    <x-page-header title="Dashboard" subtitle="Vue d'ensemble de vos backlinks et projets">
         <x-slot:actions>
-            <x-button variant="primary" href="/projects/create">
+            <x-button variant="primary" href="{{ url('/projects/create') }}">
                 + Nouveau projet
             </x-button>
         </x-slot:actions>
     </x-page-header>
 
-    {{-- Stats Cards --}}
+    {{-- Stats Cards Grid --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {{-- TODO: Remplacer par données réelles depuis DashboardController --}}
-        @php
-            // PLACEHOLDERS - Seront remplacés par des données réelles
-            $activeBacklinks = 0;  // Backlink::where('status', 'active')->count()
-            $lostBacklinks = 0;    // Backlink::where('status', 'lost')->count()
-            $totalProjects = 0;    // Project::count()
-        @endphp
-
+        {{-- Active Backlinks --}}
         <x-stats-card
             label="Backlinks actifs"
             :value="$activeBacklinks"
-            change="+12 ce mois"
-            icon="✅"
+            change="+0%"
+            icon="🔗"
         />
 
+        {{-- Lost Backlinks --}}
         <x-stats-card
             label="Backlinks perdus"
             :value="$lostBacklinks"
-            change="-2 vs mois dernier"
-            icon="❌"
+            change="0%"
+            icon="⚠️"
         />
 
+        {{-- Total Projects --}}
         <x-stats-card
             label="Projets"
             :value="$totalProjects"
+            change="+0%"
             icon="📁"
         />
     </div>
 
-    {{-- Recent Alerts Section --}}
-    {{-- TODO: Cette section sera implémentée dans EPIC-004 (Alertes) --}}
-    <div class="bg-white border border-neutral-200 rounded-lg p-6 mb-8">
-        <h2 class="text-lg font-semibold text-neutral-900 mb-4">Alertes récentes</h2>
+    {{-- Content Grid --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {{-- Recent Alerts Section --}}
+        <div class="bg-white p-6 rounded-lg border border-neutral-200">
+            <h2 class="text-lg font-semibold text-neutral-900 mb-4">Alertes récentes</h2>
 
-        {{-- Placeholder: Aucune alerte --}}
-        <div class="text-center py-8 text-neutral-500">
-            <p class="text-sm">Aucune alerte récente</p>
-            <p class="text-xs mt-1">Les alertes apparaîtront ici quand des changements seront détectés</p>
-        </div>
-
-        {{-- TODO: Remplacer par liste réelle d'alertes quand EPIC-004 sera implémenté --}}
-        {{--
-        <div class="space-y-3">
-            @foreach($recentAlerts as $alert)
-                <div class="flex items-start space-x-3 p-3 hover:bg-neutral-50 rounded-lg">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-danger-50 flex items-center justify-center">
-                        <span class="text-danger-600 text-sm">🔔</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-neutral-900">{{ $alert->title }}</p>
-                        <p class="text-xs text-neutral-500 mt-1">{{ $alert->created_at->diffForHumans() }}</p>
-                    </div>
+            @if(count($recentAlerts) > 0)
+                {{-- TODO: Afficher la liste des alertes récentes --}}
+                <div class="space-y-3">
+                    @foreach($recentAlerts as $alert)
+                        <div class="flex items-start space-x-3 p-3 bg-neutral-50 rounded-lg">
+                            <span class="text-2xl">{{ $alert->icon ?? '🔔' }}</span>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-neutral-900">{{ $alert->title }}</p>
+                                <p class="text-xs text-neutral-500">{{ $alert->created_at->diffForHumans() }}</p>
+                            </div>
+                            <x-badge variant="{{ $alert->severity }}">
+                                {{ ucfirst($alert->severity) }}
+                            </x-badge>
+                        </div>
+                    @endforeach
                 </div>
-            @endforeach
+
+                <div class="mt-4 text-center">
+                    <x-button variant="secondary" size="sm" href="{{ url('/alerts') }}">
+                        Voir toutes les alertes
+                    </x-button>
+                </div>
+            @else
+                {{-- Empty State --}}
+                <div class="text-center py-8">
+                    <span class="text-4xl mb-2 block">🔕</span>
+                    <p class="text-sm text-neutral-500">Aucune alerte récente</p>
+                </div>
+            @endif
         </div>
-        --}}
+
+        {{-- Recent Projects Section --}}
+        <div class="bg-white p-6 rounded-lg border border-neutral-200">
+            <h2 class="text-lg font-semibold text-neutral-900 mb-4">Projets récents</h2>
+
+            @if(count($recentProjects) > 0)
+                {{-- TODO: Afficher la liste des projets récents --}}
+                <div class="space-y-3">
+                    @foreach($recentProjects as $project)
+                        <div class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors">
+                            <div>
+                                <p class="text-sm font-medium text-neutral-900">{{ $project->name }}</p>
+                                <p class="text-xs text-neutral-500">{{ $project->url }}</p>
+                            </div>
+                            <x-badge variant="success">
+                                {{ $project->backlinks_count ?? 0 }} backlinks
+                            </x-badge>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-4 text-center">
+                    <x-button variant="secondary" size="sm" href="{{ url('/projects') }}">
+                        Voir tous les projets
+                    </x-button>
+                </div>
+            @else
+                {{-- Empty State --}}
+                <div class="text-center py-8">
+                    <span class="text-4xl mb-2 block">📂</span>
+                    <p class="text-sm text-neutral-500 mb-4">Aucun projet configuré</p>
+                    <x-button variant="primary" size="sm" href="{{ url('/projects/create') }}">
+                        Créer votre premier projet
+                    </x-button>
+                </div>
+            @endif
+        </div>
     </div>
 
-    {{-- Recent Projects Section --}}
-    {{-- TODO: Récupérer les 3 derniers projets depuis database --}}
-    <div class="bg-white border border-neutral-200 rounded-lg p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-neutral-900">Projets récents</h2>
-            <a href="/projects" class="text-sm text-brand-500 hover:text-brand-600 font-medium">
-                Voir tous →
-            </a>
+    {{-- Quick Actions (Optional) --}}
+    <div class="mt-8 bg-brand-50 p-6 rounded-lg border border-brand-100">
+        <div class="flex items-start justify-between">
+            <div>
+                <h3 class="text-base font-semibold text-neutral-900 mb-1">Prêt à démarrer ?</h3>
+                <p class="text-sm text-neutral-600 mb-4">Créez votre premier projet pour commencer à suivre vos backlinks.</p>
+            </div>
         </div>
-
-        {{-- Placeholder: Aucun projet --}}
-        <div class="text-center py-8 text-neutral-500">
-            <p class="text-sm">Aucun projet configuré</p>
-            <p class="text-xs mt-1">Créez votre premier projet pour commencer</p>
-            <x-button variant="primary" href="/projects/create" class="mt-4">
-                + Créer un projet
+        <div class="flex items-center space-x-3">
+            <x-button variant="primary" href="{{ url('/projects/create') }}">
+                Créer un projet
+            </x-button>
+            <x-button variant="secondary" href="{{ url('/backlinks') }}">
+                Voir les backlinks
             </x-button>
         </div>
-
-        {{-- TODO: Remplacer par liste réelle de projets --}}
-        {{--
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            @foreach($recentProjects as $project)
-                <a href="/projects/{{ $project->id }}" class="block p-4 border border-neutral-200 rounded-lg hover:border-neutral-300 transition-colors">
-                    <div class="flex items-start justify-between mb-2">
-                        <h3 class="font-medium text-neutral-900">{{ $project->name }}</h3>
-                        <x-badge variant="{{ $project->status === 'active' ? 'success' : 'neutral' }}">
-                            {{ ucfirst($project->status) }}
-                        </x-badge>
-                    </div>
-                    <p class="text-sm text-neutral-500 truncate">{{ $project->url }}</p>
-                    <p class="text-xs text-neutral-400 mt-2">
-                        {{ $project->backlinks_count ?? 0 }} backlinks
-                    </p>
-                </a>
-            @endforeach
-        </div>
-        --}}
     </div>
 @endsection

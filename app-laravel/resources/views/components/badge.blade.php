@@ -1,21 +1,5 @@
-{{--
-    Badge Component
-
-    Affiche un badge coloré selon le variant.
-
-    Variants disponibles:
-    - success: Vert (pour statut "Actif")
-    - danger: Rouge (pour statut "Perdu", erreurs)
-    - neutral: Gris (pour statut "Modifié", "Archivé", etc.)
-
-    Usage:
-    <x-badge variant="success">Actif</x-badge>
-    <x-badge variant="danger">Perdu</x-badge>
-    <x-badge variant="neutral">Modifié</x-badge>
---}}
-
 @props([
-    'variant' => 'neutral'
+    'variant' => 'neutral',
 ])
 
 @php
@@ -28,6 +12,6 @@
     $classes = $variants[$variant] ?? $variants['neutral'];
 @endphp
 
-<span {{ $attributes->merge(['class' => "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border {$classes}"]) }}>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border {{ $classes }}">
     {{ $slot }}
 </span>

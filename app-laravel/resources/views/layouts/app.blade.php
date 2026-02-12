@@ -7,7 +7,7 @@
 
     <title>@yield('title', config('app.name', 'Link Tracker'))</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/alpine.js'])
 </head>
 <body class="antialiased bg-neutral-50 text-neutral-600">
     <div id="app" class="min-h-screen">
