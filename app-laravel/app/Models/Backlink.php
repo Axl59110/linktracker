@@ -38,6 +38,22 @@ class Backlink extends Model
     }
 
     /**
+     * Get all checks for this backlink.
+     */
+    public function checks()
+    {
+        return $this->hasMany(BacklinkCheck::class)->orderBy('checked_at', 'desc');
+    }
+
+    /**
+     * Get the latest check for this backlink.
+     */
+    public function latestCheck()
+    {
+        return $this->hasOne(BacklinkCheck::class)->latest('checked_at');
+    }
+
+    /**
      * Scope a query to only include active backlinks.
      */
     public function scopeActive($query)
