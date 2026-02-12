@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProjectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,11 +16,15 @@ use App\Http\Controllers\DashboardController;
 */
 
 // NEW BLADE ROUTES - SaaS UI Redesign (EPIC-013)
+
 // Dashboard principale avec nouveau layout Blade
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+// Projects - CRUD complet avec nouveau layout Blade
+Route::resource('projects', ProjectController::class);
+
 // TODO: Ajouter routes Blade pour :
-// - /backlinks (global backlinks list)
+// - /backlinks (global backlinks list + CRUD)
 // - /alerts (EPIC-004)
 // - /orders (EPIC-006)
 // - /settings (EPIC-008)
