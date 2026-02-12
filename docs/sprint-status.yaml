@@ -14,7 +14,7 @@ sprints:
     end_date: "2026-02-23"  # 2 weeks
     capacity_points: 40
     committed_points: 36
-    completed_points: 10
+    completed_points: 15
     status: "in_progress"
     goal: "Établir l'infrastructure technique et la gestion des projets"
     stories:
@@ -55,26 +55,49 @@ sprints:
       - story_id: "STORY-003"
         title: "Create Project CRUD API"
         points: 3
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T10:00:00Z"
+        completed_at: "2026-02-12T11:30:00Z"
+        notes: |
+          - ProjectController avec méthodes CRUD complètes
+          - Project Model avec fillable et validation
+          - Migration projects table (name, url, status, user_id)
+          - Routes API protégées par auth:sanctum
+          - Tests Feature complets (10/10 passent)
+          - Policy ProjectPolicy pour autorisation
+          - Relations User->Projects
 
       - story_id: "STORY-004"
         title: "Build Projects List Vue Component"
         points: 3
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T11:30:00Z"
+        completed_at: "2026-02-12T12:25:00Z"
+        notes: |
+          - ProjectsList.vue composant avec états loading/empty/error
+          - Store Pinia projects.js pour gestion d'état
+          - Page Index.vue avec route protégée /projects
+          - Grille responsive avec cartes projets
+          - Boutons "Créer" et "Voir" fonctionnels
+          - Design Tailwind cohérent
 
       - story_id: "STORY-005"
         title: "Build Project Create/Edit Form"
         points: 2
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T12:30:00Z"
+        completed_at: "2026-02-12T13:15:00Z"
+        notes: |
+          - ProjectForm.vue composant réutilisable (create/edit)
+          - Pages Create.vue et Edit.vue avec routes protégées
+          - Validation frontend (required, URL format)
+          - Gestion erreurs backend + loading state
+          - Store enrichi: getProject, createProject, updateProject
+          - Bouton "Modifier" ajouté dans ProjectsList
+          - Redirection et messages de succès
 
       - story_id: "STORY-006"
         title: "Create Backlinks Table Migration"
