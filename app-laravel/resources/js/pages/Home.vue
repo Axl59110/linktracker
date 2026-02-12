@@ -22,14 +22,21 @@
         >
           Connexion
         </button>
-        <button
-          v-else
-          @click="handleLogout"
-          :disabled="authStore.loading"
-          class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition disabled:opacity-50"
-        >
-          {{ authStore.loading ? 'Déconnexion...' : 'Déconnexion' }}
-        </button>
+        <template v-else>
+          <button
+            @click="router.push({ name: 'projects.index' })"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition"
+          >
+            Mes Projets
+          </button>
+          <button
+            @click="handleLogout"
+            :disabled="authStore.loading"
+            class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition disabled:opacity-50"
+          >
+            {{ authStore.loading ? 'Déconnexion...' : 'Déconnexion' }}
+          </button>
+        </template>
         <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition">
           En savoir plus
         </button>

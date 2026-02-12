@@ -1,5 +1,6 @@
 import Home from '../pages/Home.vue';
 import Login from '../pages/Auth/Login.vue';
+import ProjectsIndex from '../pages/Projects/Index.vue';
 
 const routes = [
     {
@@ -14,8 +15,13 @@ const routes = [
         component: Login,
         meta: { title: 'Link Tracker - Connexion', requiresAuth: false }
     },
+    {
+        path: '/projects',
+        name: 'projects.index',
+        component: ProjectsIndex,
+        meta: { title: 'Mes Projets', requiresAuth: true }
+    },
     // Routes à ajouter:
-    // - /projects (requiresAuth: true)
     // - /projects/:id (requiresAuth: true)
     // - /backlinks (requiresAuth: true)
     // etc.

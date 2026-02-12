@@ -14,7 +14,7 @@ sprints:
     end_date: "2026-02-23"  # 2 weeks
     capacity_points: 40
     committed_points: 36
-    completed_points: 10
+    completed_points: 13
     status: "in_progress"
     goal: "Établir l'infrastructure technique et la gestion des projets"
     stories:
@@ -55,18 +55,30 @@ sprints:
       - story_id: "STORY-003"
         title: "Create Project CRUD API"
         points: 3
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T00:00:00Z"
+        completed_at: "2026-02-12T01:00:00Z"
+        notes: |
+          - Projects CRUD API endpoints created
+          - ProjectController with full CRUD operations
+          - Form Requests for validation
+          - ProjectPolicy for authorization
+          - 100% test coverage (15 tests passing)
 
       - story_id: "STORY-004"
         title: "Build Projects List Vue Component"
         points: 3
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T02:00:00Z"
+        completed_at: "2026-02-12T03:00:00Z"
+        notes: |
+          - ProjectsList.vue component with loading/empty/error states
+          - Pinia store projects.js for state management
+          - /projects route protected (requiresAuth: true)
+          - Responsive grid layout with Tailwind CSS
+          - Navigation from Home page added
 
       - story_id: "STORY-005"
         title: "Build Project Create/Edit Form"
