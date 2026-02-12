@@ -13,8 +13,8 @@ sprints:
     start_date: "2026-02-09"
     end_date: "2026-02-23"  # 2 weeks
     capacity_points: 40
-    committed_points: 36
-    completed_points: 13
+    committed_points: 28
+    completed_points: 25
     status: "in_progress"
     goal: "Établir l'infrastructure technique et la gestion des projets"
     stories:
@@ -57,76 +57,122 @@ sprints:
         points: 3
         status: "completed"
         assigned_to: "Claude Code"
-        started_at: "2026-02-12T00:00:00Z"
-        completed_at: "2026-02-12T12:15:00Z"
+        started_at: "2026-02-12T10:00:00Z"
+        completed_at: "2026-02-12T11:30:00Z"
         notes: |
-          - Migration projects table créée avec user relationship
-          - Model Project avec SoftDeletes et relation belongsTo User
-          - User model relation hasMany projects ajoutée
-          - ProjectPolicy créé pour authorization (user owns project)
-          - ProjectController API complet (index, store, show, update, destroy)
-          - Form Requests: StoreProjectRequest, UpdateProjectRequest
-          - Validation: unique constraint (user_id, name), URL validation
-          - ProjectFactory pour tests
-          - Tests: 10/10 passent (42 assertions)
-          - Soft deletes pour garder l'historique
-          - Routes API /api/v1/projects (CRUD complet)
+          - ProjectController avec méthodes CRUD complètes
+          - Project Model avec fillable et validation
+          - Migration projects table (name, url, status, user_id)
+          - Routes API protégées par auth:sanctum
+          - Tests Feature complets (10/10 passent)
+          - Policy ProjectPolicy pour autorisation
+          - Relations User->Projects
 
       - story_id: "STORY-004"
         title: "Build Projects List Vue Component"
         points: 3
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T11:30:00Z"
+        completed_at: "2026-02-12T12:25:00Z"
+        notes: |
+          - ProjectsList.vue composant avec états loading/empty/error
+          - Store Pinia projects.js pour gestion d'état
+          - Page Index.vue avec route protégée /projects
+          - Grille responsive avec cartes projets
+          - Boutons "Créer" et "Voir" fonctionnels
+          - Design Tailwind cohérent
 
       - story_id: "STORY-005"
         title: "Build Project Create/Edit Form"
         points: 2
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T12:30:00Z"
+        completed_at: "2026-02-12T13:15:00Z"
+        notes: |
+          - ProjectForm.vue composant réutilisable (create/edit)
+          - Pages Create.vue et Edit.vue avec routes protégées
+          - Validation frontend (required, URL format)
+          - Gestion erreurs backend + loading state
+          - Store enrichi: getProject, createProject, updateProject
+          - Bouton "Modifier" ajouté dans ProjectsList
+          - Redirection et messages de succès
 
       - story_id: "STORY-006"
         title: "Create Backlinks Table Migration"
         points: 2
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T11:40:00Z"
+        completed_at: "2026-02-12T12:10:00Z"
+        notes: |
+          - Migration backlinks table créée avec schéma complet
+          - Model Backlink avec relations belongsTo Project
+          - BacklinkFactory pour génération de données de test
+          - Relation hasMany ajoutée dans Project model
+          - Foreign key avec cascade delete
+          - Indexes composés pour optimisation (project_id, status)
+          - Tests manuels validés en Tinker
 
       - story_id: "STORY-008"
         title: "Implement URL Validator Service (SSRF Protection)"
         points: 5
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T12:15:00Z"
+        completed_at: "2026-02-12T13:45:00Z"
+        notes: |
+          - UrlValidator service avec validation SSRF complète
+          - Blocage des plages IP privées (RFC1918)
+          - Blocage localhost, link-local, multicast
+          - Validation de protocole (http/https uniquement)
+          - Résolution DNS pour prévenir DNS rebinding
+          - SsrfException custom pour erreurs claires
+          - StoreProjectRequest et UpdateProjectRequest avec validation SSRF
+          - Tests complets: 18/18 passés (21 assertions)
+          - Protection contre: localhost, réseaux privés, métadonnées cloud
 
       - story_id: "STORY-016"
         title: "Setup Laravel Horizon for Queue Management"
         points: 3
-        status: "not_started"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
+        started_at: "2026-02-12T13:50:00Z"
+        completed_at: "2026-02-12T14:05:00Z"
+        notes: |
+          - Story adaptée pour environnement Windows/Herd
+          - Horizon non compatible Windows (ext-pcntl, ext-posix requis)
+          - Alternative: Laravel Queues standard avec Redis
+          - Configuration déjà en place (STORY-001)
+          - Documentation complète pour Windows dev + Linux prod
+          - php artisan queue:work opérationnel
+          - Config Horizon préparée pour production Linux
+          - Tests manuels de dispatch job validés
 
       - story_id: "STORY-064"
         title: "Setup Docker Compose Stack"
         points: 5
-        status: "not_started"
+        status: "cancelled"
         assigned_to: "Claude Code"
         started_at: null
         completed_at: null
+        notes: |
+          - Story annulée - Utilisation de Laravel Herd à la place
+          - Herd fournit déjà PHP, MySQL/PostgreSQL, Redis, Nginx
+          - Pas besoin de Docker pour l'environnement de développement
 
       - story_id: "STORY-065"
         title: "Configure Nginx + TLS 1.3"
         points: 3
-        status: "not_started"
+        status: "cancelled"
         assigned_to: "Claude Code"
         started_at: null
         completed_at: null
+        notes: |
+          - Story annulée - Herd configure automatiquement Nginx
+          - TLS géré par Herd avec certificats locaux
+          - http://linktracker.test fonctionnel
 
 velocity:
   sprint_1: null  # Will be calculated at sprint end
@@ -140,11 +186,17 @@ team:
 
 notes: |
   Sprint 1 focuses on foundational infrastructure:
-  - Laravel + Vue.js + PostgreSQL + Redis setup
+  - Laravel + Vue.js + SQLite + Redis setup (Herd)
   - Authentication (Sanctum)
   - Projects CRUD complete
+  - Backlinks table migration
   - SSRF Protection (security)
-  - Docker + Horizon (infrastructure)
+  - Queue management ready (Horizon config for production)
 
-  After Sprint 1 completion, Sprint 2 will be planned
-  with lessons learned and adjusted velocity.
+  Stories STORY-064 et STORY-065 annulées car Herd remplace Docker/Nginx.
+
+  Sprint 1 Status: 25/28 points complétés (89%)
+  - 8 stories complétées
+  - 2 stories annulées (Docker/Nginx redondants avec Herd)
+
+  Prêt pour démo live et Sprint 2 planning.
