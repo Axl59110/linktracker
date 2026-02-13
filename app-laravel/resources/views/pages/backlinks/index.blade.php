@@ -34,10 +34,10 @@
         </div>
 
         <form method="GET" action="{{ route('backlinks.index') }}">
-            {{-- Tous les filtres sur une seule ligne --}}
-            <div class="grid grid-cols-5 gap-4 items-end">
+            {{-- Tous les filtres sur une seule ligne (desktop) --}}
+            <div class="flex flex-col md:grid md:grid-cols-5 gap-4 md:items-end">
                 {{-- Recherche textuelle --}}
-                <div class="col-span-1">
+                <div>
                     <label for="search" class="block text-sm font-medium text-neutral-700 mb-1">Recherche</label>
                     <input
                         type="text"
