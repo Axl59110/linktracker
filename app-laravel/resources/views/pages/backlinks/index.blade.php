@@ -18,24 +18,46 @@
     </x-page-header>
 
     {{-- Filters --}}
-    <div class="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
+    <div class="bg-white rounded-lg border border-neutral-200 p-6 mb-6" x-data="{ showFilters: window.innerWidth >= 768 }">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-neutral-900">
-                Filtres
-                @if($activeFiltersCount > 0)
-                    <x-badge variant="brand" class="ml-2">{{ $activeFiltersCount }} actif(s)</x-badge>
-                @endif
-            </h3>
+            <div class="flex items-center gap-3">
+                <h3 class="text-lg font-semibold text-neutral-900">
+                    Filtres
+                    @if($activeFiltersCount > 0)
+                        <x-badge variant="brand" class="ml-2">{{ $activeFiltersCount }} actif(s)</x-badge>
+                    @endif
+                </h3>
+                {{-- Bouton toggle filtres (mobile uniquement) --}}
+                <button
+                    type="button"
+                    @click="showFilters = !showFilters"
+                    class="md:hidden inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-700 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                    <span x-text="showFilters ? 'Masquer' : 'Afficher'"></span>
+                </button>
+            </div>
             @if(request()->hasAny(['search', 'status', 'project_id', 'tier_level', 'spot_type', 'sort']))
                 <x-button variant="secondary" size="sm" href="{{ route('backlinks.index') }}">
-                    Réinitialiser tous les filtres
+                    Réinitialiser
                 </x-button>
             @endif
         </div>
 
         <form method="GET" action="{{ route('backlinks.index') }}">
-            {{-- Tous les filtres sur une seule ligne (desktop) --}}
-            <div class="flex flex-col md:grid md:grid-cols-5 gap-4 md:items-end">
+            {{-- Filtres : modale sur mobile, inline sur desktop --}}
+            <div
+                x-show="showFilters || window.innerWidth >= 768"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                class="flex flex-col md:grid md:grid-cols-5 gap-4 md:items-end"
+            >
                 {{-- Recherche textuelle --}}
                 <div>
                     <label for="search" class="block text-sm font-medium text-neutral-700 mb-1">Recherche</label>
@@ -108,13 +130,13 @@
                         <option value="internal" {{ request('spot_type') === 'internal' ? 'selected' : '' }}>Interne (PBN)</option>
                     </select>
                 </div>
-            </div>
 
-            {{-- Submit Button --}}
-            <div class="flex justify-end mt-4">
-                <x-button variant="primary" type="submit">
-                    Appliquer les filtres
-                </x-button>
+                {{-- Submit Button --}}
+                <div class="md:flex md:items-end">
+                    <x-button variant="primary" type="submit" class="w-full md:w-auto">
+                        Appliquer
+                    </x-button>
+                </div>
             </div>
         </form>
     </div>
