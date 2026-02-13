@@ -14,6 +14,13 @@
         </x-alert>
     @endif
 
+    {{-- Error Message --}}
+    @if(session('error'))
+        <x-alert variant="danger" class="mb-6">
+            {{ session('error') }}
+        </x-alert>
+    @endif
+
     {{-- Page Header --}}
     <x-page-header title="Plateformes d'achat" subtitle="Gérez vos plateformes de netlinking">
         <x-slot:actions>

@@ -31,6 +31,8 @@ class Backlink extends Model
         'invoice_paid',
         'platform_id',
         'contact_info',
+        'contact_name',
+        'contact_email',
         'created_by_user_id',
     ];
 

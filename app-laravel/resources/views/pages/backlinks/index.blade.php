@@ -64,50 +64,89 @@
 
     @if($backlinks->count() > 0)
         <div class="bg-white rounded-lg border border-neutral-200 overflow-hidden">
-            <x-table>
-                <x-slot:header>
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Projet</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">URL Source</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Ancre</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Statut</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Type</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase">Actions</th>
-                    </tr>
-                </x-slot:header>
-                <x-slot:body>
-                    @foreach($backlinks as $backlink)
-                        <tr class="hover:bg-neutral-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">
-                                {{ $backlink->project?->name ?? 'N/A' }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <a href="{{ $backlink->source_url }}" target="_blank" class="text-sm text-brand-500 hover:text-brand-600">
-                                    {{ Str::limit($backlink->source_url, 40) }}
-                                </a>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-neutral-500">{{ Str::limit($backlink->anchor_text ?? 'N/A', 30) }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <x-badge variant="{{ $backlink->status === 'active' ? 'success' : ($backlink->status === 'lost' ? 'danger' : 'neutral') }}">
-                                    {{ ucfirst($backlink->status) }}
-                                </x-badge>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
-                                {{ $backlink->is_dofollow ? 'Dofollow' : 'Nofollow' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
-                                <x-button variant="secondary" size="sm" href="{{ route('backlinks.show', $backlink) }}">Voir</x-button>
-                                <x-button variant="secondary" size="sm" href="{{ route('backlinks.edit', $backlink) }}">Modifier</x-button>
-                                <form action="{{ route('backlinks.destroy', $backlink) }}" method="POST" class="inline-block" onsubmit="return confirm('Supprimer ce backlink ?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-button variant="danger" size="sm" type="submit">Supprimer</x-button>
-                                </form>
-                            </td>
+            <div class="overflow-x-auto">
+                <x-table>
+                    <x-slot:header>
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Projet</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">URL Source</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Ancre</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Tier</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Réseau</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Statut</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Prix</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase w-24">Actions</th>
                         </tr>
-                    @endforeach
-                </x-slot:body>
-            </x-table>
+                    </x-slot:header>
+                    <x-slot:body>
+                        @foreach($backlinks as $backlink)
+                            <tr class="hover:bg-neutral-50">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">
+                                    {{ $backlink->project?->name ?? 'N/A' }}
+                                </td>
+                                <td class="px-4 py-4 max-w-md">
+                                    <a href="{{ $backlink->source_url }}" target="_blank" class="text-sm text-brand-500 hover:text-brand-600 hover:underline truncate block">
+                                        {{ $backlink->source_url }}
+                                    </a>
+                                </td>
+                                <td class="px-4 py-4 max-w-xs">
+                                    @if($backlink->anchor_text)
+                                        <span class="text-sm font-semibold text-neutral-900">{{ $backlink->anchor_text }}</span>
+                                    @else
+                                        <span class="text-xs text-neutral-400 italic">Pas d'ancre</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <x-badge variant="{{ $backlink->tier_level === 'tier1' ? 'neutral' : 'warning' }}">
+                                        {{ $backlink->tier_level === 'tier1' ? 'Tier 1' : 'Tier 2' }}
+                                    </x-badge>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <x-badge variant="{{ $backlink->spot_type === 'internal' ? 'success' : 'neutral' }}">
+                                        {{ $backlink->spot_type === 'internal' ? 'Interne' : 'Externe' }}
+                                    </x-badge>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <x-badge variant="{{ $backlink->status === 'active' ? 'success' : ($backlink->status === 'lost' ? 'danger' : 'warning') }}">
+                                        {{ ucfirst($backlink->status) }}
+                                    </x-badge>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-neutral-900">
+                                    @if($backlink->price && $backlink->currency)
+                                        {{ number_format($backlink->price, 2) }} {{ $backlink->currency }}
+                                    @else
+                                        <span class="text-neutral-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <a href="{{ route('backlinks.show', $backlink) }}" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-neutral-100 text-neutral-600 hover:text-brand-600 transition-colors" title="Voir">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                        </a>
+                                        <a href="{{ route('backlinks.edit', $backlink) }}" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-neutral-100 text-neutral-600 hover:text-brand-600 transition-colors" title="Modifier">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                        </a>
+                                        <form action="{{ route('backlinks.destroy', $backlink) }}" method="POST" class="inline-block" onsubmit="return confirm('Supprimer ce backlink ?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-red-50 text-neutral-600 hover:text-red-600 transition-colors" title="Supprimer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </x-slot:body>
+                </x-table>
+            </div>
         </div>
 
         {{-- Pagination --}}

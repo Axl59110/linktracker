@@ -78,6 +78,15 @@ class PlatformController extends Controller
      */
     public function destroy(Platform $platform)
     {
+        // Check if platform has associated backlinks
+        $backlinksCount = $platform->backlinks()->count();
+
+        if ($backlinksCount > 0) {
+            return redirect()
+                ->route('platforms.index')
+                ->with('error', "Impossible de supprimer cette plateforme car elle est associée à {$backlinksCount} backlink(s). Veuillez d'abord réassigner ou supprimer ces backlinks.");
+        }
+
         $platform->delete();
 
         return redirect()
