@@ -18,48 +18,130 @@
     </x-page-header>
 
     {{-- Filters --}}
-    <div class="bg-white rounded-lg border border-neutral-200 p-4 mb-6">
-        <form method="GET" action="{{ route('backlinks.index') }}" class="flex flex-wrap gap-4 items-end">
-            {{-- Status Filter --}}
-            <div class="flex-1 min-w-[200px]">
-                <label for="status" class="block text-sm font-medium text-neutral-700 mb-1">Statut</label>
-                <select
-                    id="status"
-                    name="status"
-                    class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                >
-                    <option value="">Tous les statuts</option>
-                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Actif</option>
-                    <option value="lost" {{ request('status') === 'lost' ? 'selected' : '' }}>Perdu</option>
-                    <option value="changed" {{ request('status') === 'changed' ? 'selected' : '' }}>Modifié</option>
-                </select>
-            </div>
-
-            {{-- Project Filter --}}
-            <div class="flex-1 min-w-[200px]">
-                <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">Projet</label>
-                <select
-                    id="project_id"
-                    name="project_id"
-                    class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                >
-                    <option value="">Tous les projets</option>
-                    @foreach($projects as $project)
-                        <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>
-                            {{ $project->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Filter Actions --}}
-            <div class="flex gap-2">
-                <x-button variant="primary" type="submit">Filtrer</x-button>
-                @if(request()->hasAny(['status', 'project_id']))
-                    <x-button variant="secondary" href="{{ route('backlinks.index') }}">Réinitialiser</x-button>
+    <div class="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-neutral-900">
+                Filtres
+                @if($activeFiltersCount > 0)
+                    <x-badge variant="brand" class="ml-2">{{ $activeFiltersCount }} actif(s)</x-badge>
                 @endif
+            </h3>
+            @if(request()->hasAny(['search', 'status', 'project_id', 'tier_level', 'spot_type', 'sort']))
+                <x-button variant="secondary" size="sm" href="{{ route('backlinks.index') }}">
+                    Réinitialiser tous les filtres
+                </x-button>
+            @endif
+        </div>
+
+        <form method="GET" action="{{ route('backlinks.index') }}" class="space-y-4">
+            {{-- Recherche textuelle --}}
+            <div>
+                <label for="search" class="block text-sm font-medium text-neutral-700 mb-1">Recherche</label>
+                <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    value="{{ request('search') }}"
+                    placeholder="Rechercher dans URL source, ancre ou URL cible..."
+                    class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+            </div>
+
+            {{-- Filtres en grille --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {{-- Status Filter --}}
+                <div>
+                    <label for="status" class="block text-sm font-medium text-neutral-700 mb-1">Statut</label>
+                    <select
+                        id="status"
+                        name="status"
+                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                        <option value="">Tous</option>
+                        <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Actif</option>
+                        <option value="lost" {{ request('status') === 'lost' ? 'selected' : '' }}>Perdu</option>
+                        <option value="changed" {{ request('status') === 'changed' ? 'selected' : '' }}>Modifié</option>
+                    </select>
+                </div>
+
+                {{-- Project Filter --}}
+                <div>
+                    <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">Projet</label>
+                    <select
+                        id="project_id"
+                        name="project_id"
+                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                        <option value="">Tous</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>
+                                {{ $project->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Tier Level Filter --}}
+                <div>
+                    <label for="tier_level" class="block text-sm font-medium text-neutral-700 mb-1">Niveau</label>
+                    <select
+                        id="tier_level"
+                        name="tier_level"
+                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                        <option value="">Tous</option>
+                        <option value="tier1" {{ request('tier_level') === 'tier1' ? 'selected' : '' }}>Tier 1</option>
+                        <option value="tier2" {{ request('tier_level') === 'tier2' ? 'selected' : '' }}>Tier 2</option>
+                    </select>
+                </div>
+
+                {{-- Spot Type Filter --}}
+                <div>
+                    <label for="spot_type" class="block text-sm font-medium text-neutral-700 mb-1">Type de réseau</label>
+                    <select
+                        id="spot_type"
+                        name="spot_type"
+                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                        <option value="">Tous</option>
+                        <option value="external" {{ request('spot_type') === 'external' ? 'selected' : '' }}>Externe</option>
+                        <option value="internal" {{ request('spot_type') === 'internal' ? 'selected' : '' }}>Interne (PBN)</option>
+                    </select>
+                </div>
+            </div>
+
+            {{-- Submit Button --}}
+            <div class="flex justify-end">
+                <x-button variant="primary" type="submit">
+                    Appliquer les filtres
+                </x-button>
             </div>
         </form>
+    </div>
+
+    {{-- Résultats --}}
+    <div class="mb-4 flex items-center justify-between">
+        <p class="text-sm text-neutral-600">
+            <span class="font-semibold text-neutral-900">{{ $backlinks->total() }}</span> backlink(s) trouvé(s)
+            @if($activeFiltersCount > 0)
+                <span class="text-neutral-500">({{ $activeFiltersCount }} filtre(s) actif(s))</span>
+            @endif
+        </p>
+        @if(request('sort'))
+            @php
+                $sortLabels = [
+                    'created_at' => 'Date de création',
+                    'source_url' => 'URL Source',
+                    'status' => 'Statut',
+                    'tier_level' => 'Niveau',
+                    'spot_type' => 'Type de réseau',
+                    'last_checked_at' => 'Dernière vérification'
+                ];
+            @endphp
+            <p class="text-xs text-neutral-500">
+                Tri : {{ $sortLabels[request('sort')] ?? 'Date de création' }} ({{ request('direction') === 'asc' ? 'croissant' : 'décroissant' }})
+            </p>
+        @endif
     </div>
 
     @if($backlinks->count() > 0)
@@ -69,11 +151,11 @@
                     <x-slot:header>
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Projet</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">URL Source</th>
+                            <x-sortable-header field="source_url" label="URL Source" />
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Ancre</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Tier</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Réseau</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Statut</th>
+                            <x-sortable-header field="tier_level" label="Tier" />
+                            <x-sortable-header field="spot_type" label="Réseau" />
+                            <x-sortable-header field="status" label="Statut" />
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Prix</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase w-24">Actions</th>
                         </tr>

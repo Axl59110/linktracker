@@ -31,7 +31,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 Route::resource('projects', ProjectController::class);
 
 // Backlinks - CRUD complet avec nouveau layout Blade
-Route::resource('backlinks', BacklinkController::class);
+// Rate limiting sur index pour éviter DoS via filtres/recherche
+Route::resource('backlinks', BacklinkController::class)
+    ->middleware(['throttle:60,1']);
 
 // Platforms - Gestion des plateformes d'achat de liens
 Route::resource('platforms', PlatformController::class)->except(['show']);

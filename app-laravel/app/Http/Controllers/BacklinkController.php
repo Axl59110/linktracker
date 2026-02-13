@@ -13,17 +13,54 @@ class BacklinkController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Backlink::with('project')->latest();
+        // Validation des paramètres de filtrage
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'status' => 'nullable|in:active,lost,changed',
+            'project_id' => 'nullable|integer|exists:projects,id',
+            'tier_level' => 'nullable|in:tier1,tier2',
+            'spot_type' => 'nullable|in:external,internal',
+            'sort' => 'nullable|in:created_at,source_url,status,tier_level,spot_type,last_checked_at',
+            'direction' => 'nullable|in:asc,desc',
+        ]);
+
+        $query = Backlink::with('project');
+
+        // Filtrer par recherche textuelle (avec échappement des wildcards SQL)
+        if (!empty($validated['search'])) {
+            $search = str_replace(['%', '_'], ['\%', '\_'], $validated['search']);
+            $query->where(function($q) use ($search) {
+                $q->where('source_url', 'like', "%{$search}%")
+                  ->orWhere('anchor_text', 'like', "%{$search}%")
+                  ->orWhere('target_url', 'like', "%{$search}%");
+            });
+        }
 
         // Filtrer par status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if (!empty($validated['status'])) {
+            $query->where('status', $validated['status']);
         }
 
         // Filtrer par projet
-        if ($request->filled('project_id')) {
-            $query->where('project_id', $request->project_id);
+        if (!empty($validated['project_id'])) {
+            $query->where('project_id', $validated['project_id']);
         }
+
+        // Filtrer par tier level
+        if (!empty($validated['tier_level'])) {
+            $query->where('tier_level', $validated['tier_level']);
+        }
+
+        // Filtrer par spot type
+        if (!empty($validated['spot_type'])) {
+            $query->where('spot_type', $validated['spot_type']);
+        }
+
+        // Tri (déjà validé par la validation)
+        $sortField = $validated['sort'] ?? 'created_at';
+        $sortDirection = $validated['direction'] ?? 'desc';
+
+        $query->orderBy($sortField, $sortDirection);
 
         // Pagination (15 items par page)
         $backlinks = $query->paginate(15)->withQueryString();
@@ -31,7 +68,12 @@ class BacklinkController extends Controller
         // Charger tous les projets pour le filtre
         $projects = Project::orderBy('name')->get();
 
-        return view('pages.backlinks.index', compact('backlinks', 'projects'));
+        // Compter les filtres actifs
+        $activeFiltersCount = collect(['search', 'status', 'project_id', 'tier_level', 'spot_type'])
+            ->filter(fn($filter) => !empty($validated[$filter]))
+            ->count();
+
+        return view('pages.backlinks.index', compact('backlinks', 'projects', 'activeFiltersCount'));
     }
 
     /**
