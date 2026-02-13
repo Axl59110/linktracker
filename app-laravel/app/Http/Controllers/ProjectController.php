@@ -12,9 +12,9 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        // TODO: Ajouter pagination et filtres
-        // TODO: Ajouter withCount('backlinks') quand le model Backlink sera finalisé
-        $projects = Project::latest()->get();
+        $projects = Project::withCount('backlinks')
+            ->latest()
+            ->paginate(15);
 
         return view('pages.projects.index', compact('projects'));
     }
@@ -53,8 +53,11 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        // TODO: Charger les backlinks associés
-        // $project->load('backlinks');
+        $project->load(['backlinks' => function($query) {
+            $query->latest()->take(10);
+        }]);
+
+        $project->loadCount('backlinks');
 
         return view('pages.projects.show', compact('project'));
     }

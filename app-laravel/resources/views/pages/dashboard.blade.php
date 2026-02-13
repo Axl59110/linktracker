@@ -17,12 +17,12 @@
     </x-page-header>
 
     {{-- Stats Cards Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {{-- Active Backlinks --}}
         <x-stats-card
             label="Backlinks actifs"
             :value="$activeBacklinks ?? 0"
-            change="+0%"
+            change=""
             icon="🔗"
         />
 
@@ -30,15 +30,23 @@
         <x-stats-card
             label="Backlinks perdus"
             :value="$lostBacklinks ?? 0"
-            change="0%"
+            change=""
             icon="⚠️"
+        />
+
+        {{-- Changed Backlinks --}}
+        <x-stats-card
+            label="Backlinks modifiés"
+            :value="$changedBacklinks ?? 0"
+            change=""
+            icon="🔄"
         />
 
         {{-- Total Projects --}}
         <x-stats-card
             label="Projets"
             :value="$totalProjects ?? 0"
-            change="+0%"
+            change=""
             icon="📁"
         />
     </div>
@@ -117,6 +125,52 @@
             @endif
         </div>
     </div>
+
+    {{-- Recent Backlinks Section --}}
+    @if(count($recentBacklinks ?? []) > 0)
+    <div class="mt-6 bg-white p-6 rounded-lg border border-neutral-200">
+        <h2 class="text-lg font-semibold text-neutral-900 mb-4">Backlinks récents</h2>
+
+        <x-table>
+            <x-slot:header>
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Projet</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">URL Source</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Statut</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Ajouté</th>
+                </tr>
+            </x-slot:header>
+            <x-slot:body>
+                @foreach($recentBacklinks as $backlink)
+                    <tr class="hover:bg-neutral-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">
+                            {{ $backlink->project?->name ?? 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="{{ $backlink->source_url }}" target="_blank" class="text-sm text-brand-500 hover:text-brand-600">
+                                {{ Str::limit($backlink->source_url, 50) }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <x-badge variant="{{ $backlink->status === 'active' ? 'success' : ($backlink->status === 'lost' ? 'danger' : 'neutral') }}">
+                                {{ ucfirst($backlink->status) }}
+                            </x-badge>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
+                            {{ $backlink->created_at->diffForHumans() }}
+                        </td>
+                    </tr>
+                @endforeach
+            </x-slot:body>
+        </x-table>
+
+        <div class="mt-4 text-center">
+            <x-button variant="secondary" size="sm" href="{{ route('backlinks.index') }}">
+                Voir tous les backlinks
+            </x-button>
+        </div>
+    </div>
+    @endif
 
     {{-- Quick Actions (Optional) --}}
     <div class="mt-8 bg-brand-50 p-6 rounded-lg border border-brand-100">

@@ -69,8 +69,7 @@
                                 </x-badge>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
-                                {{-- TODO: Afficher count réel quand Backlink sera finalisé --}}
-                                0 backlinks
+                                {{ $project->backlinks_count }} backlinks
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
                                 {{ $project->created_at->format('d/m/Y') }}
@@ -95,6 +94,13 @@
                 </x-slot:body>
             </x-table>
         </div>
+
+        {{-- Pagination --}}
+        @if($projects->hasPages())
+            <div class="mt-6">
+                {{ $projects->links() }}
+            </div>
+        @endif
     @else
         {{-- Empty State --}}
         <div class="bg-white p-12 rounded-lg border border-neutral-200 text-center">
