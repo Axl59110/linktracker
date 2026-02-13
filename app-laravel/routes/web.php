@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\BacklinkController;
 use App\Http\Controllers\PlatformController;
+use App\Http\Controllers\AlertController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,8 +36,20 @@ Route::resource('projects', ProjectController::class);
 Route::resource('backlinks', BacklinkController::class)
     ->middleware(['throttle:60,1']);
 
+// Vérification manuelle d'un backlink
+Route::post('/backlinks/{backlink}/check', [BacklinkController::class, 'check'])
+    ->name('backlinks.check')
+    ->middleware(['throttle:5,1']); // Limiter à 5 vérifications manuelles par minute
+
 // Platforms - Gestion des plateformes d'achat de liens
 Route::resource('platforms', PlatformController::class)->except(['show']);
+
+// Alerts - Système d'alertes pour backlinks (EPIC-004)
+Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');
+Route::patch('/alerts/{alert}/mark-read', [AlertController::class, 'markAsRead'])->name('alerts.mark-read');
+Route::patch('/alerts/mark-all-read', [AlertController::class, 'markAllAsRead'])->name('alerts.mark-all-read');
+Route::delete('/alerts/{alert}', [AlertController::class, 'destroy'])->name('alerts.destroy');
+Route::delete('/alerts/destroy-all-read', [AlertController::class, 'destroyAllRead'])->name('alerts.destroy-all-read');
 
 // Page "En construction" pour fonctionnalités futures
 Route::view('/under-construction', 'pages.under-construction')->name('pages.under-construction');

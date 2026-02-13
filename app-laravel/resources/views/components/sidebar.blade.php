@@ -80,19 +80,13 @@
         </a>
 
         {{-- Alertes --}}
-        {{-- TODO: Cette route n'existe pas encore, sera créée dans EPIC-004 (Alertes) --}}
         <a
-            href="{{ url('/alerts') }}"
+            href="{{ route('alerts.index') }}"
             @click="$dispatch('toggle-mobile-menu')"
             class="flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->is('alerts*') ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-600 hover:bg-neutral-100' }}"
         >
             <span class="mr-3 text-lg">🔔</span>
             <span>Alertes</span>
-
-            {{-- TODO: Remplacer par count réel depuis database (Alert::where('is_read', false)->count()) --}}
-            @php
-                $unreadAlertsCount = 0; // PLACEHOLDER: Sera remplacé par Alert::unread()->count()
-            @endphp
 
             @if($unreadAlertsCount > 0)
                 <span class="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-danger-50 text-danger-600 border border-danger-200">

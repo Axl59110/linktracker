@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Backlink;
 use App\Models\Project;
+use App\Models\Alert;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -34,9 +35,11 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // TODO: Ajouter alertes récentes quand EPIC-004 sera implémenté
-        // $recentAlerts = Alert::latest()->take(5)->get();
-        $recentAlerts = [];
+        // Alertes récentes (EPIC-004)
+        $recentAlerts = Alert::with('backlink.project')
+            ->latest()
+            ->take(5)
+            ->get();
 
         return view('pages.dashboard', compact(
             'activeBacklinks',

@@ -9,8 +9,26 @@
 @endsection
 
 @section('content')
+    @if(session('success'))
+        <x-alert variant="success" class="mb-6">{{ session('success') }}</x-alert>
+    @endif
+
+    @if(session('warning'))
+        <x-alert variant="warning" class="mb-6">{{ session('warning') }}</x-alert>
+    @endif
+
+    @if(session('error'))
+        <x-alert variant="danger" class="mb-6">{{ session('error') }}</x-alert>
+    @endif
+
     <x-page-header title="Détails du backlink" subtitle="Informations complètes sur ce backlink">
         <x-slot:actions>
+            <form action="{{ route('backlinks.check', $backlink) }}" method="POST" class="inline-block" onsubmit="return confirm('Lancer une vérification manuelle de ce backlink maintenant ?');">
+                @csrf
+                <x-button variant="brand" type="submit">
+                    🔄 Vérifier maintenant
+                </x-button>
+            </form>
             <x-button variant="secondary" href="{{ route('backlinks.edit', $backlink) }}">
                 Modifier
             </x-button>
@@ -163,6 +181,93 @@
                     </div>
                 </div>
             @endif
+
+            {{-- Historique des vérifications --}}
+            <div class="bg-white p-6 rounded-lg border border-neutral-200">
+                <h2 class="text-lg font-semibold text-neutral-900 mb-4">Historique des vérifications</h2>
+
+                @if($backlink->checks->count() > 0)
+                    {{-- Statistiques de disponibilité --}}
+                    @php
+                        $totalChecks = $backlink->checks->count();
+                        $successfulChecks = $backlink->checks->where('is_present', true)->count();
+                        $availabilityRate = $totalChecks > 0 ? round(($successfulChecks / $totalChecks) * 100, 1) : 0;
+                    @endphp
+
+                    <div class="mb-6 p-4 bg-neutral-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-neutral-700">Taux de disponibilité</span>
+                            <span class="text-2xl font-bold {{ $availabilityRate >= 95 ? 'text-success-600' : ($availabilityRate >= 80 ? 'text-warning-600' : 'text-danger-600') }}">
+                                {{ $availabilityRate }}%
+                            </span>
+                        </div>
+                        <div class="w-full bg-neutral-200 rounded-full h-2">
+                            <div class="h-2 rounded-full {{ $availabilityRate >= 95 ? 'bg-success-500' : ($availabilityRate >= 80 ? 'bg-warning-500' : 'bg-danger-500') }}" style="width: {{ $availabilityRate }}%"></div>
+                        </div>
+                        <p class="text-xs text-neutral-500 mt-2">
+                            {{ $successfulChecks }} vérifications réussies sur {{ $totalChecks }} au total
+                        </p>
+                    </div>
+
+                    {{-- Timeline des vérifications (dernières 10) --}}
+                    <div class="space-y-3">
+                        @foreach($backlink->checks->take(10) as $check)
+                            <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors">
+                                <div class="flex-shrink-0 mt-0.5">
+                                    @if($check->is_present)
+                                        <span class="text-success-500 text-xl">✓</span>
+                                    @else
+                                        <span class="text-danger-500 text-xl">✗</span>
+                                    @endif
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-sm font-medium {{ $check->is_present ? 'text-success-700' : 'text-danger-700' }}">
+                                            {{ $check->is_present ? 'Backlink trouvé' : 'Backlink non trouvé' }}
+                                        </span>
+                                        @if($check->http_status)
+                                            <x-badge variant="{{ $check->isSuccessful() ? 'success' : 'danger' }}">
+                                                HTTP {{ $check->http_status }}
+                                            </x-badge>
+                                        @endif
+                                    </div>
+
+                                    <div class="text-xs text-neutral-500 mb-1">
+                                        {{ $check->checked_at->format('d/m/Y à H:i') }} ({{ $check->checked_at->diffForHumans() }})
+                                    </div>
+
+                                    @if($check->anchor_text)
+                                        <div class="text-xs text-neutral-600">
+                                            Ancre détectée : <span class="font-medium">{{ $check->anchor_text }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($check->error_message)
+                                        <div class="text-xs text-danger-600 mt-1">
+                                            {{ $check->error_message }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if($backlink->checks->count() > 10)
+                        <div class="mt-4 text-center">
+                            <p class="text-xs text-neutral-500">
+                                Affichage des 10 dernières vérifications sur {{ $backlink->checks->count() }} au total
+                            </p>
+                        </div>
+                    @endif
+                @else
+                    <div class="text-center py-8">
+                        <span class="text-4xl mb-2 block">📊</span>
+                        <p class="text-sm text-neutral-500">Aucune vérification effectuée</p>
+                        <p class="text-xs text-neutral-400 mt-1">Les vérifications automatiques seront effectuées selon le planning configuré</p>
+                    </div>
+                @endif
+            </div>
         </div>
 
         {{-- Sidebar --}}

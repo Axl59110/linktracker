@@ -12,6 +12,10 @@
             'container' => 'bg-danger-50 border-danger-200 text-danger-900',
             'icon' => '✕',
         ],
+        'warning' => [
+            'container' => 'bg-warning-50 border-warning-200 text-warning-900',
+            'icon' => '⚠',
+        ],
         'info' => [
             'container' => 'bg-neutral-100 border-neutral-200 text-neutral-900',
             'icon' => 'ℹ',

@@ -28,7 +28,8 @@
       "Bash(powershell.exe:*)",
       "Skill(code-review:code-review)",
       "Bash(php artisan:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(php.exe artisan:*)"
     ]
   }
 }

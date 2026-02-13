@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Backlink;
 use App\Models\Project;
+use App\Services\Backlink\BacklinkCheckerService;
+use App\Services\Alert\AlertService;
 use Illuminate\Http\Request;
 
 class BacklinkController extends Controller
@@ -391,5 +393,126 @@ class BacklinkController extends Controller
         return redirect()
             ->route('backlinks.index')
             ->with('success', 'Backlink supprimé avec succès.');
+    }
+
+    /**
+     * Check a backlink manually (on-demand verification).
+     */
+    public function check(Backlink $backlink, BacklinkCheckerService $checkerService, AlertService $alertService)
+    {
+        try {
+            // Vérifier le backlink avec le service
+            $result = $checkerService->check($backlink);
+
+            // Créer un enregistrement BacklinkCheck avec les résultats
+            $check = $backlink->checks()->create([
+                'checked_at' => now(),
+                'is_present' => $result['is_present'],
+                'http_status' => $result['http_status'],
+                'error_message' => $result['error_message'],
+            ]);
+
+            // Mettre à jour le backlink
+            $updateData = [
+                'last_checked_at' => now(),
+            ];
+
+            $oldStatus = $backlink->status;
+
+            if ($result['is_present']) {
+                // Mettre à jour l'ancre si elle a changé
+                if ($result['anchor_text'] !== null && $result['anchor_text'] !== $backlink->anchor_text) {
+                    $updateData['anchor_text'] = $result['anchor_text'];
+                }
+
+                $updateData['rel_attributes'] = $result['rel_attributes'];
+                $updateData['is_dofollow'] = $result['is_dofollow'];
+                $updateData['http_status'] = $result['http_status'];
+
+                // Gestion des changements de statut
+                if ($backlink->status === 'lost') {
+                    $updateData['status'] = 'active';
+                    $alertService->createBacklinkRecoveredAlert($backlink);
+                } elseif ($backlink->status === 'active') {
+                    $changes = $this->getAttributesChanges($backlink, $result);
+                    if (!empty($changes)) {
+                        $updateData['status'] = 'changed';
+                        $alertService->createBacklinkChangedAlert($backlink, $changes);
+                    }
+                }
+            } else {
+                // Backlink non trouvé
+                if ($backlink->status !== 'lost') {
+                    $updateData['status'] = 'lost';
+                    $alertService->createBacklinkLostAlert($backlink, $result['error_message']);
+                }
+            }
+
+            $backlink->update($updateData);
+
+            // Message de succès
+            if ($result['is_present']) {
+                $message = '✅ Backlink vérifié avec succès. Le lien est présent et actif.';
+            } else {
+                $message = '⚠️ Backlink vérifié : le lien n\'a pas été trouvé sur la page.';
+            }
+
+            // Ajouter info sur changement de statut
+            if ($oldStatus !== $backlink->fresh()->status) {
+                $message .= " Le statut a été mis à jour : {$oldStatus} → {$backlink->fresh()->status}.";
+            }
+
+            return redirect()
+                ->route('backlinks.show', $backlink)
+                ->with($result['is_present'] ? 'success' : 'warning', $message);
+
+        } catch (\Exception $e) {
+            // En cas d'erreur, créer un check avec erreur
+            $backlink->checks()->create([
+                'checked_at' => now(),
+                'is_present' => false,
+                'http_status' => null,
+                'error_message' => 'Manual check failed: ' . $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('backlinks.show', $backlink)
+                ->with('error', '❌ Erreur lors de la vérification : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get the changes in backlink attributes
+     *
+     * @param Backlink $backlink
+     * @param array $result
+     * @return array
+     */
+    protected function getAttributesChanges(Backlink $backlink, array $result): array
+    {
+        $changes = [];
+
+        if ($result['anchor_text'] !== null && $backlink->anchor_text !== $result['anchor_text']) {
+            $changes['anchor_text'] = [
+                'old' => $backlink->anchor_text,
+                'new' => $result['anchor_text'],
+            ];
+        }
+
+        if ($backlink->rel_attributes !== $result['rel_attributes']) {
+            $changes['rel_attributes'] = [
+                'old' => $backlink->rel_attributes,
+                'new' => $result['rel_attributes'],
+            ];
+        }
+
+        if ($backlink->is_dofollow !== $result['is_dofollow']) {
+            $changes['is_dofollow'] = [
+                'old' => $backlink->is_dofollow ? 'Oui' : 'Non',
+                'new' => $result['is_dofollow'] ? 'Oui' : 'Non',
+            ];
+        }
+
+        return $changes;
     }
 }

@@ -105,6 +105,22 @@ class Backlink extends Model
     }
 
     /**
+     * Get all alerts for this backlink.
+     */
+    public function alerts()
+    {
+        return $this->hasMany(Alert::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get unread alerts for this backlink.
+     */
+    public function unreadAlerts()
+    {
+        return $this->hasMany(Alert::class)->where('is_read', false)->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Scope a query to only include active backlinks.
      */
     public function scopeActive($query)

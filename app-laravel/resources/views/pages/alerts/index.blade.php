@@ -1,0 +1,231 @@
+@extends('layouts.app')
+
+@section('title', 'Alertes - Link Tracker')
+
+@section('breadcrumb')
+    <span class="text-neutral-900 font-medium">Alertes</span>
+@endsection
+
+@section('content')
+    @if(session('success'))
+        <x-alert variant="success" class="mb-6">{{ session('success') }}</x-alert>
+    @endif
+
+    <x-page-header title="Alertes" subtitle="Surveillez les changements de vos backlinks">
+        <x-slot:actions>
+            @if($stats['unread'] > 0)
+                <form action="{{ route('alerts.mark-all-read') }}" method="POST" class="inline-block">
+                    @csrf
+                    @method('PATCH')
+                    <x-button variant="secondary" type="submit">
+                        Tout marquer comme lu
+                    </x-button>
+                </form>
+            @endif
+            <form action="{{ route('alerts.destroy-all-read') }}" method="POST" class="inline-block" onsubmit="return confirm('Supprimer toutes les alertes lues ?');">
+                @csrf
+                @method('DELETE')
+                <x-button variant="danger" type="submit">
+                    Supprimer les alertes lues
+                </x-button>
+            </form>
+        </x-slot:actions>
+    </x-page-header>
+
+    {{-- Statistiques --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-lg border border-neutral-200">
+            <div class="text-sm text-neutral-500 mb-1">Total</div>
+            <div class="text-2xl font-bold text-neutral-900">{{ $stats['total'] }}</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-neutral-200">
+            <div class="text-sm text-neutral-500 mb-1">Non lues</div>
+            <div class="text-2xl font-bold text-brand-600">{{ $stats['unread'] }}</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-neutral-200">
+            <div class="text-sm text-neutral-500 mb-1">Critiques</div>
+            <div class="text-2xl font-bold text-danger-600">{{ $stats['critical'] }}</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-neutral-200">
+            <div class="text-sm text-neutral-500 mb-1">Aujourd'hui</div>
+            <div class="text-2xl font-bold text-neutral-900">{{ $stats['today'] }}</div>
+        </div>
+    </div>
+
+    {{-- Filtres --}}
+    <div class="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-neutral-900">
+                Filtres
+                @if($activeFiltersCount > 0)
+                    <x-badge variant="brand" class="ml-2">{{ $activeFiltersCount }} actif(s)</x-badge>
+                @endif
+            </h3>
+            @if(request()->hasAny(['type', 'severity', 'is_read', 'days']))
+                <x-button variant="secondary" size="sm" href="{{ route('alerts.index') }}">
+                    Réinitialiser tous les filtres
+                </x-button>
+            @endif
+        </div>
+
+        <form method="GET" action="{{ route('alerts.index') }}" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {{-- Type Filter --}}
+                <div>
+                    <label for="type" class="block text-sm font-medium text-neutral-700 mb-1">Type d'alerte</label>
+                    <select
+                        id="type"
+                        name="type"
+                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                        <option value="">Tous</option>
+                        <option value="backlink_lost" {{ request('type') === 'backlink_lost' ? 'selected' : '' }}>Backlink perdu</option>
+                        <option value="backlink_changed" {{ request('type') === 'backlink_changed' ? 'selected' : '' }}>Backlink modifié</option>
+                        <option value="backlink_recovered" {{ request('type') === 'backlink_recovered' ? 'selected' : '' }}>Backlink récupéré</option>
+                    </select>
+                </div>
+
+                {{-- Severity Filter --}}
+                <div>
+                    <label for="severity" class="block text-sm font-medium text-neutral-700 mb-1">Sévérité</label>
+                    <select
+                        id="severity"
+                        name="severity"
+                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                        <option value="">Tous</option>
+                        <option value="critical" {{ request('severity') === 'critical' ? 'selected' : '' }}>Critique</option>
+                        <option value="high" {{ request('severity') === 'high' ? 'selected' : '' }}>Élevé</option>
+                        <option value="medium" {{ request('severity') === 'medium' ? 'selected' : '' }}>Moyen</option>
+                        <option value="low" {{ request('severity') === 'low' ? 'selected' : '' }}>Faible</option>
+                    </select>
+                </div>
+
+                {{-- Read Status Filter --}}
+                <div>
+                    <label for="is_read" class="block text-sm font-medium text-neutral-700 mb-1">Statut</label>
+                    <select
+                        id="is_read"
+                        name="is_read"
+                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                        <option value="">Tous</option>
+                        <option value="unread" {{ request('is_read') === 'unread' ? 'selected' : '' }}>Non lues</option>
+                        <option value="read" {{ request('is_read') === 'read' ? 'selected' : '' }}>Lues</option>
+                    </select>
+                </div>
+
+                {{-- Period Filter --}}
+                <div>
+                    <label for="days" class="block text-sm font-medium text-neutral-700 mb-1">Période</label>
+                    <select
+                        id="days"
+                        name="days"
+                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                        <option value="">Toute la période</option>
+                        <option value="1" {{ request('days') == '1' ? 'selected' : '' }}>Dernières 24h</option>
+                        <option value="7" {{ request('days') == '7' ? 'selected' : '' }}>7 derniers jours</option>
+                        <option value="30" {{ request('days') == '30' ? 'selected' : '' }}>30 derniers jours</option>
+                        <option value="90" {{ request('days') == '90' ? 'selected' : '' }}>90 derniers jours</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <x-button variant="primary" type="submit">
+                    Appliquer les filtres
+                </x-button>
+            </div>
+        </form>
+    </div>
+
+    {{-- Résultats --}}
+    <div class="mb-4">
+        <p class="text-sm text-neutral-600">
+            <span class="font-semibold text-neutral-900">{{ $alerts->total() }}</span> alerte(s) trouvée(s)
+            @if($activeFiltersCount > 0)
+                <span class="text-neutral-500">({{ $activeFiltersCount }} filtre(s) actif(s))</span>
+            @endif
+        </p>
+    </div>
+
+    @if($alerts->count() > 0)
+        <div class="space-y-3">
+            @foreach($alerts as $alert)
+                <div class="bg-white rounded-lg border border-neutral-200 p-5 {{ $alert->is_read ? 'opacity-70' : '' }}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-2xl">{{ $alert->type_icon }}</span>
+                                <h3 class="text-lg font-semibold text-neutral-900">{{ $alert->title }}</h3>
+                                @if(!$alert->is_read)
+                                    <x-badge variant="brand">Nouveau</x-badge>
+                                @endif
+                            </div>
+
+                            <div class="flex items-center gap-2 mb-3">
+                                <x-badge variant="{{ $alert->type_badge_color }}">
+                                    {{ $alert->type_label }}
+                                </x-badge>
+                                <x-badge variant="{{ $alert->severity_badge_color }}">
+                                    {{ ucfirst($alert->severity) }}
+                                </x-badge>
+                                @if($alert->backlink->project)
+                                    <x-badge variant="neutral">
+                                        {{ $alert->backlink->project->name }}
+                                    </x-badge>
+                                @endif
+                                <span class="text-xs text-neutral-500">
+                                    {{ $alert->created_at->diffForHumans() }}
+                                </span>
+                            </div>
+
+                            <p class="text-sm text-neutral-700 whitespace-pre-line mb-3">{{ $alert->message }}</p>
+
+                            <div class="flex items-center gap-3 text-sm">
+                                <a href="{{ route('backlinks.show', $alert->backlink) }}" class="text-brand-600 hover:text-brand-700 hover:underline">
+                                    Voir le backlink →
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 ml-4">
+                            @if(!$alert->is_read)
+                                <form action="{{ route('alerts.mark-read', $alert) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="text-brand-600 hover:text-brand-700 text-sm font-medium" title="Marquer comme lu">
+                                        ✓ Lu
+                                    </button>
+                                </form>
+                            @endif
+                            <form action="{{ route('alerts.destroy', $alert) }}" method="POST" onsubmit="return confirm('Supprimer cette alerte ?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-danger-600 hover:text-danger-700 text-sm font-medium" title="Supprimer">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- Pagination --}}
+        @if($alerts->hasPages())
+            <div class="mt-6">
+                {{ $alerts->links() }}
+            </div>
+        @endif
+    @else
+        <div class="bg-white p-12 rounded-lg border border-neutral-200 text-center">
+            <span class="text-6xl mb-4 block">🔔</span>
+            <h3 class="text-lg font-semibold text-neutral-900 mb-2">Aucune alerte</h3>
+            <p class="text-neutral-500">Vous n'avez aucune alerte pour le moment.</p>
+        </div>
+    @endif
+@endsection

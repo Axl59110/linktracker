@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Backlink;
 use App\Services\Backlink\BacklinkCheckerService;
+use App\Services\Alert\AlertService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -48,7 +49,7 @@ class CheckBacklinkJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(BacklinkCheckerService $checkerService): void
+    public function handle(BacklinkCheckerService $checkerService, AlertService $alertService): void
     {
         Log::info('Starting backlink check', [
             'backlink_id' => $this->backlink->id,
@@ -83,19 +84,27 @@ class CheckBacklinkJob implements ShouldQueue
                 $updateData['is_dofollow'] = $result['is_dofollow'];
                 $updateData['http_status'] = $result['http_status'];
 
-                // Si le backlink était perdu, le remettre en actif
+                // Si le backlink était perdu, le remettre en actif et créer une alerte de récupération
                 if ($this->backlink->status === 'lost') {
                     $updateData['status'] = 'active';
                     Log::info('Backlink retrouvé - changement de statut lost → active', [
                         'backlink_id' => $this->backlink->id,
                     ]);
+
+                    // Créer une alerte de récupération
+                    $alertService->createBacklinkRecoveredAlert($this->backlink);
+
                 } elseif ($this->backlink->status === 'active') {
                     // Vérifier si les attributs ont changé
-                    if ($this->hasAttributesChanged($result)) {
+                    $changes = $this->getAttributesChanges($result);
+                    if (!empty($changes)) {
                         $updateData['status'] = 'changed';
                         Log::info('Attributs du backlink modifiés - changement de statut active → changed', [
                             'backlink_id' => $this->backlink->id,
                         ]);
+
+                        // Créer une alerte de modification
+                        $alertService->createBacklinkChangedAlert($this->backlink, $changes);
                     }
                 }
             } else {
@@ -106,6 +115,9 @@ class CheckBacklinkJob implements ShouldQueue
                         'backlink_id' => $this->backlink->id,
                         'error_message' => $result['error_message'],
                     ]);
+
+                    // Créer une alerte de perte
+                    $alertService->createBacklinkLostAlert($this->backlink, $result['error_message']);
                 }
             }
 
@@ -139,24 +151,40 @@ class CheckBacklinkJob implements ShouldQueue
     }
 
     /**
-     * Vérifie si les attributs du backlink ont changé
+     * Récupère les changements d'attributs du backlink
      *
      * @param array $result
-     * @return bool
+     * @return array
      */
-    protected function hasAttributesChanged(array $result): bool
+    protected function getAttributesChanges(array $result): array
     {
+        $changes = [];
+
+        // Comparer anchor_text
+        if ($result['anchor_text'] !== null && $this->backlink->anchor_text !== $result['anchor_text']) {
+            $changes['anchor_text'] = [
+                'old' => $this->backlink->anchor_text,
+                'new' => $result['anchor_text'],
+            ];
+        }
+
         // Comparer rel_attributes
         if ($this->backlink->rel_attributes !== $result['rel_attributes']) {
-            return true;
+            $changes['rel_attributes'] = [
+                'old' => $this->backlink->rel_attributes,
+                'new' => $result['rel_attributes'],
+            ];
         }
 
         // Comparer is_dofollow
         if ($this->backlink->is_dofollow !== $result['is_dofollow']) {
-            return true;
+            $changes['is_dofollow'] = [
+                'old' => $this->backlink->is_dofollow ? 'Oui' : 'Non',
+                'new' => $result['is_dofollow'] ? 'Oui' : 'Non',
+            ];
         }
 
-        return false;
+        return $changes;
     }
 
     /**

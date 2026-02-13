@@ -58,24 +58,24 @@
             <h2 class="text-lg font-semibold text-neutral-900 mb-4">Alertes récentes</h2>
 
             @if(count($recentAlerts ?? []) > 0)
-                {{-- TODO: Afficher la liste des alertes récentes --}}
                 <div class="space-y-3">
                     @foreach($recentAlerts as $alert)
-                        <div class="flex items-start space-x-3 p-3 bg-neutral-50 rounded-lg">
-                            <span class="text-2xl">{{ $alert->icon ?? '🔔' }}</span>
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-neutral-900">{{ $alert->title ?? 'Alerte' }}</p>
-                                <p class="text-xs text-neutral-500">{{ $alert->created_at?->diffForHumans() ?? 'Date inconnue' }}</p>
+                        <div class="flex items-start space-x-3 p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors">
+                            <span class="text-2xl">{{ $alert->type_icon }}</span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-neutral-900 truncate">{{ $alert->title }}</p>
+                                <p class="text-xs text-neutral-600 truncate">{{ $alert->backlink->project?->name ?? 'Projet inconnu' }}</p>
+                                <p class="text-xs text-neutral-500">{{ $alert->created_at->diffForHumans() }}</p>
                             </div>
-                            <x-badge variant="{{ $alert->severity ?? 'neutral' }}">
-                                {{ ucfirst($alert->severity ?? 'info') }}
+                            <x-badge variant="{{ $alert->severity_badge_color }}">
+                                {{ ucfirst($alert->severity) }}
                             </x-badge>
                         </div>
                     @endforeach
                 </div>
 
                 <div class="mt-4 text-center">
-                    <x-button variant="secondary" size="sm" href="{{ url('/alerts') }}">
+                    <x-button variant="secondary" size="sm" href="{{ route('alerts.index') }}">
                         Voir toutes les alertes
                     </x-button>
                 </div>
