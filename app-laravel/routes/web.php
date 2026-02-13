@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\BacklinkController;
+use App\Http\Controllers\PlatformController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +32,9 @@ Route::resource('projects', ProjectController::class);
 
 // Backlinks - CRUD complet avec nouveau layout Blade
 Route::resource('backlinks', BacklinkController::class);
+
+// Platforms - Gestion des plateformes d'achat de liens
+Route::resource('platforms', PlatformController::class)->except(['show']);
 
 // Page "En construction" pour fonctionnalités futures
 Route::view('/under-construction', 'pages.under-construction')->name('pages.under-construction');

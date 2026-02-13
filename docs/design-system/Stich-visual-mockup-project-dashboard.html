@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SEO Netlinking Overview Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "primary-hover": "#0e43ad",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2233",
+                        "border-light": "#e5e7eb",
+                        "border-dark": "#2d3748",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .chart-grid {
+            stroke-dasharray: 4 4;
+            stroke: #e2e8f0;
+        }
+        .dark .chart-grid {
+            stroke: #2d3748;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display antialiased flex h-screen overflow-hidden">
+<!-- Left Sidebar -->
+<aside class="w-64 bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex flex-col flex-shrink-0 z-20">
+<div class="p-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
+<span class="material-icons text-xl">link</span>
+</div>
+<span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">LinkMaster<span class="text-primary">.ai</span></span>
+</div>
+<nav class="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium" href="#">
+<span class="material-icons text-[20px]">dashboard</span>
+                Overview
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-icons text-[20px]">link_off</span>
+                Backlinks
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-icons text-[20px]">text_fields</span>
+                Anchor Texts
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-icons text-[20px]">compare_arrows</span>
+                Competitors
+            </a>
+<div class="pt-4 pb-2">
+<p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Analysis</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-icons text-[20px]">health_and_safety</span>
+                Toxic Check
+                <span class="ml-auto bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 py-0.5 px-2 rounded text-xs font-medium">Alert</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-icons text-[20px]">analytics</span>
+                Reports
+            </a>
+</nav>
+<div class="p-4 border-t border-border-light dark:border-border-dark">
+<div class="flex items-center gap-3 px-2">
+<img alt="User profile" class="w-8 h-8 rounded-full" data-alt="User avatar placeholder" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnVSVm2thdzLDN_Kk5lUupWROhUfSmSmx6kwUzrhW0xr6lpD_0lp40rV277nyAUIAnnDJwAUMa7QIv0uh75O79RvlqecBeUkvdwBbGMAuBO0xMRkOSSX-eLR85VK1FIwRAy7H5rDixHD9YH2zyg4sbOcfgKLszC15EKvDLST9LhVoycFjrgWWlRCbt49Elzql2kwjtrUy2iJH5iW-KgcTKJMhZnIq2cyYqql0VSQfDFI0P3BmAUTR0JBbH__TdHZaBGlAa3KqlGi13"/>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-medium text-slate-900 dark:text-white truncate">Alex Seo</p>
+<p class="text-xs text-slate-500 truncate">alex@agency.com</p>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-icons text-[20px]">settings</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+<!-- Top Header -->
+<header class="h-16 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark flex items-center justify-between px-6 flex-shrink-0 z-10">
+<!-- Global Search -->
+<div class="w-96 relative">
+<span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary text-sm placeholder-slate-400 text-slate-900 dark:text-white" placeholder="Search domains, URLs, or projects..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<!-- Date Range -->
+<div class="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1">
+<button class="px-3 py-1.5 text-sm font-medium rounded-md bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm">Last 90 days</button>
+<button class="px-3 py-1.5 text-sm font-medium rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Custom</button>
+</div>
+<div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+<button class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm shadow-primary/20 transition-all">
+<span class="material-icons text-[18px]">add</span>
+                    New Campaign
+                </button>
+</div>
+</header>
+<!-- Scrollable Content Area -->
+<main class="flex-1 overflow-y-auto overflow-x-hidden p-6">
+<div class="max-w-[1600px] mx-auto space-y-6">
+<!-- KPI Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- KPI 1: Total Backlinks -->
+<div class="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Backlinks</p>
+<span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold px-2 py-0.5 rounded flex items-center">
+<span class="material-icons text-[14px] mr-1">trending_up</span> 12.5%
+                            </span>
+</div>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white">14,205</h3>
+<p class="text-xs text-slate-500 mt-1">vs 12,620 prev. period</p>
+</div>
+<!-- KPI 2: Referring Domains (Sparkline) -->
+<div class="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<div class="flex justify-between items-start mb-1">
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Referring Domains</p>
+</div>
+<div class="flex items-end justify-between">
+<div>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white">3,102</h3>
+<p class="text-xs text-slate-500 mt-1">+45 this week</p>
+</div>
+<div class="h-10 w-24">
+<!-- Simulated Sparkline SVG -->
+<svg class="w-full h-full text-primary" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 100 40">
+<path d="M0 35 C20 35, 20 20, 40 25 C60 30, 60 5, 80 15 L100 10" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- KPI 3: Avg Domain Authority (Radial) -->
+<div class="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex items-center justify-between">
+<div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Avg. Domain Authority</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white">42<span class="text-slate-400 text-lg font-normal">/100</span></h3>
+<p class="text-xs text-slate-500 mt-1">Targeting high authority</p>
+</div>
+<div class="relative w-16 h-16 flex items-center justify-center">
+<!-- Simple SVG Radial Progress -->
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-slate-100 dark:text-slate-700" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-primary" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="175.9" stroke-dashoffset="102" stroke-width="6"></circle>
+</svg>
+</div>
+</div>
+<!-- KPI 4: Toxic Link Alert -->
+<div class="bg-red-50 dark:bg-red-900/10 p-5 rounded-xl border border-red-100 dark:border-red-900/30 shadow-sm relative overflow-hidden group hover:border-red-200 transition-all">
+<div class="absolute -right-4 -top-4 w-20 h-20 bg-red-100 dark:bg-red-800/20 rounded-full blur-2xl"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-icons text-red-500 text-[20px]">warning</span>
+<p class="text-sm font-bold text-red-800 dark:text-red-300">Toxic Link Alert</p>
+</div>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white">5 Detected</h3>
+<p class="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">Action Required Immediately</p>
+</div>
+</div>
+</div>
+<!-- Central Visualizations -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Main Chart -->
+<div class="lg:col-span-2 bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h3 class="text-lg font-semibold text-slate-900 dark:text-white">Link Growth vs Organic Traffic</h3>
+<p class="text-sm text-slate-500">Correlation analysis over last 90 days</p>
+</div>
+<div class="flex items-center gap-3 text-xs font-medium">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-slate-600 dark:text-slate-300">Referring Domains</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+<span class="text-slate-600 dark:text-slate-300">Organic Traffic</span>
+</div>
+</div>
+</div>
+<!-- Chart Placeholder -->
+<div class="h-64 w-full relative">
+<!-- Y-Axis Left Labels -->
+<div class="absolute left-0 top-0 bottom-6 w-8 flex flex-col justify-between text-xs text-slate-400 text-right pr-2">
+<span>3k</span>
+<span>2k</span>
+<span>1k</span>
+<span>0</span>
+</div>
+<!-- Y-Axis Right Labels -->
+<div class="absolute right-0 top-0 bottom-6 w-8 flex flex-col justify-between text-xs text-slate-400 text-left pl-2">
+<span>150k</span>
+<span>100k</span>
+<span>50k</span>
+<span>0</span>
+</div>
+<!-- Chart Area -->
+<div class="absolute left-10 right-10 top-0 bottom-6 border-l border-b border-slate-200 dark:border-slate-700">
+<!-- Grid Lines -->
+<div class="w-full h-1/3 border-t border-dashed border-slate-100 dark:border-slate-800"></div>
+<div class="w-full h-1/3 border-t border-dashed border-slate-100 dark:border-slate-800"></div>
+<!-- Traffic Area (Background) -->
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none">
+<path class="text-slate-500" d="M0 100 Q 20 90, 40 85 T 80 70 T 120 75 T 160 60 T 200 50 L 200 100 Z" fill="url(#trafficGradient)" opacity="0.1"></path>
+<path class="text-slate-400 dark:text-slate-600 fill-current opacity-20" d="M0 100 Q 200 90, 400 60 T 800 20 L 800 100 Z"></path>
+</svg>
+<!-- Link Line (Foreground) -->
+<svg class="absolute inset-0 w-full h-full overflow-visible" preserveaspectratio="none">
+<defs>
+<lineargradient id="lineGradient" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0%" stop-color="#1152d4"></stop>
+<stop offset="100%" stop-color="#3b82f6"></stop>
+</lineargradient>
+</defs>
+<path class="drop-shadow-sm" d="M0 80 C 100 80, 150 70, 200 60 S 300 50, 400 45 S 600 30, 800 10" fill="none" stroke="url(#lineGradient)" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+</div>
+<!-- X-Axis Labels -->
+<div class="absolute left-10 right-10 bottom-0 flex justify-between text-xs text-slate-400 pt-2">
+<span>Nov 01</span>
+<span>Nov 15</span>
+<span>Dec 01</span>
+<span>Dec 15</span>
+<span>Jan 01</span>
+<span>Jan 15</span>
+</div>
+</div>
+</div>
+<!-- Secondary Chart: Doughnut -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col">
+<h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Link Type Distribution</h3>
+<div class="flex-1 flex items-center justify-between gap-4">
+<!-- Doughnut Visual -->
+<div class="relative w-40 h-40 flex-shrink-0">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 32 32">
+<!-- Background -->
+<circle cx="16" cy="16" fill="transparent" r="16"></circle>
+<!-- Segments (Simulated with stroke-dasharray) -->
+<!-- Dofollow (65%) -->
+<circle cx="16" cy="16" fill="transparent" r="16" stroke="#1152d4" stroke-dasharray="65 35" stroke-dashoffset="0" stroke-width="12"></circle>
+<!-- Nofollow (20%) -->
+<circle cx="16" cy="16" fill="transparent" r="16" stroke="#93c5fd" stroke-dasharray="20 80" stroke-dashoffset="-65" stroke-width="12"></circle>
+<!-- Sponsored (10%) -->
+<circle cx="16" cy="16" fill="transparent" r="16" stroke="#f59e0b" stroke-dasharray="10 90" stroke-dashoffset="-85" stroke-width="12"></circle>
+<!-- UGC (5%) -->
+<circle cx="16" cy="16" fill="transparent" r="16" stroke="#ef4444" stroke-dasharray="5 95" stroke-dashoffset="-95" stroke-width="12"></circle>
+<!-- Center Hole -->
+<circle class="fill-surface-light dark:fill-surface-dark" cx="16" cy="16" r="10"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+<span class="text-2xl font-bold text-slate-900 dark:text-white">65%</span>
+<span class="text-[10px] text-slate-500 uppercase font-semibold">Dofollow</span>
+</div>
+</div>
+<!-- Legend -->
+<div class="space-y-3 flex-1 min-w-0">
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+<span class="text-slate-600 dark:text-slate-300">Dofollow</span>
+</div>
+<span class="font-medium">65%</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-blue-300"></span>
+<span class="text-slate-600 dark:text-slate-300">Nofollow</span>
+</div>
+<span class="font-medium">20%</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+<span class="text-slate-600 dark:text-slate-300">Spon.</span>
+</div>
+<span class="font-medium">10%</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+<span class="text-slate-600 dark:text-slate-300">UGC</span>
+</div>
+<span class="font-medium">5%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content: Domain Monitoring + Feed -->
+<div class="grid grid-cols-1 xl:grid-cols-4 gap-6 pb-6">
+<!-- Domain Monitoring Table -->
+<div class="xl:col-span-3 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col">
+<div class="p-5 border-b border-border-light dark:border-border-dark flex items-center justify-between">
+<h3 class="text-lg font-semibold text-slate-900 dark:text-white">Domain Monitoring</h3>
+<button class="text-sm text-primary hover:text-primary-hover font-medium">View all domains</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-xs font-semibold text-slate-500 uppercase bg-slate-50 dark:bg-slate-800/50 border-b border-border-light dark:border-border-dark">
+<th class="px-5 py-3">Target URL</th>
+<th class="px-5 py-3 w-20">DR</th>
+<th class="px-5 py-3 text-right">Ref. Domains</th>
+<th class="px-5 py-3 text-right">New (7d)</th>
+<th class="px-5 py-3 text-right">Lost</th>
+<th class="px-5 py-3 w-32">Health Score</th>
+<th class="px-5 py-3"></th>
+</tr>
+</thead>
+<tbody class="text-sm divide-y divide-border-light dark:divide-border-dark">
+<!-- Row 1 -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-5 py-4 font-medium text-slate-900 dark:text-white">
+<div class="flex items-center gap-2">
+<img alt="Favicon" class="w-5 h-5 rounded-sm opacity-80" data-alt="TechNews favicon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7M5DEIjcLxYoATxHqmfqNkbwHh-3NR2oSz6EaXIsioEhvv0XJEH2kbZUU4Y55dwqfKbYc4fGflmD2QzISW5jA5RcdDKQDkQtqaz4cM3cTDmWsJ8gaiRX_LJku6DTEe7sAoHGtn4m2pwMEYP9oiZotg_YPKCqIsh8GlSrcmw6Lw5xdGIeLCPZW0sZnXc-6z9E5uzHyV4ENdR--PFrlM0IE6NY2tV8GrU1OolU7B7lT1b1ZdcIi1sJ8mJjS9cTkaGJLiKpCAt7rl6w8"/>
+                                                technews.com
+                                                <span class="material-icons text-[14px] text-slate-400 hover:text-primary cursor-pointer">open_in_new</span>
+</div>
+</td>
+<td class="px-5 py-4">
+<span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600">78</span>
+</td>
+<td class="px-5 py-4 text-right text-slate-600 dark:text-slate-300">1,245</td>
+<td class="px-5 py-4 text-right">
+<span class="text-green-600 font-medium">+12</span>
+</td>
+<td class="px-5 py-4 text-right">
+<span class="text-red-500 font-medium">-2</span>
+</td>
+<td class="px-5 py-4">
+<div class="flex items-center gap-2">
+<div class="flex-1 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-green-500 w-[90%] rounded-full"></div>
+</div>
+<span class="text-xs text-slate-500">90</span>
+</div>
+</td>
+<td class="px-5 py-4 text-right">
+<button class="text-slate-400 hover:text-primary"><span class="material-icons text-[18px]">more_horiz</span></button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-5 py-4 font-medium text-slate-900 dark:text-white">
+<div class="flex items-center gap-2">
+<img alt="Favicon" class="w-5 h-5 rounded-sm opacity-80" data-alt="Ecostore favicon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZgIswn3E8ftSUyswZAf9NXuvViYMv06ZbkYAivrluOKUVFlUDlusrMti9t2e94ClzHV2IBmDNDRgZIc7k2L3oRrseWfSAjfXVbHnstwoqWb8dR_A_y1R5pL7fBrMQAYAZjZ5TmTVOHpMDCf8khwEyQrotpRFAU7h8zfq786HytQppPM1XrsNok353gGEPcV10tlnpDud4Pnx9Gtz9Dlz7UD4__jmJ3yOQZy31UbjDtsTPn8e8O9ObvEi2yAIl0Qjze23vrd9Cxtjx"/>
+                                                ecostore.io
+                                                <span class="material-icons text-[14px] text-slate-400 hover:text-primary cursor-pointer">open_in_new</span>
+</div>
+</td>
+<td class="px-5 py-4">
+<span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600">45</span>
+</td>
+<td class="px-5 py-4 text-right text-slate-600 dark:text-slate-300">382</td>
+<td class="px-5 py-4 text-right">
+<span class="text-green-600 font-medium">+4</span>
+</td>
+<td class="px-5 py-4 text-right">
+<span class="text-slate-400 font-medium">-</span>
+</td>
+<td class="px-5 py-4">
+<div class="flex items-center gap-2">
+<div class="flex-1 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-yellow-400 w-[65%] rounded-full"></div>
+</div>
+<span class="text-xs text-slate-500">65</span>
+</div>
+</td>
+<td class="px-5 py-4 text-right">
+<button class="text-slate-400 hover:text-primary"><span class="material-icons text-[18px]">more_horiz</span></button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-5 py-4 font-medium text-slate-900 dark:text-white">
+<div class="flex items-center gap-2">
+<img alt="Favicon" class="w-5 h-5 rounded-sm opacity-80" data-alt="TravelBlog favicon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCewspx64XQ5H836eWpp4gcjbKIx3yk94NsbprwD7FzicehTb6UKH1crPGyt4zZmyqQUgDwQNHa1ppVE20D39dcdeMhmm7QtCH2il99WIMvrfmo2BCvNZSKhLb9MHotKxPDfllWMFCRv_WpG0cr0cHYaVoFdZW6XxqP-WfCv9azxI4cpMjBHnlz0DPFuASoJGtg5tzjugcG_LTC4Kj7P0-j9gStoup0qZcrDSLXQuKjJ4n9-aEYZgasKGXqgQKhpCuCJgNX9-MAi7DM"/>
+                                                travelblog.net
+                                                <span class="material-icons text-[14px] text-slate-400 hover:text-primary cursor-pointer">open_in_new</span>
+</div>
+</td>
+<td class="px-5 py-4">
+<span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600">62</span>
+</td>
+<td class="px-5 py-4 text-right text-slate-600 dark:text-slate-300">890</td>
+<td class="px-5 py-4 text-right">
+<span class="text-green-600 font-medium">+8</span>
+</td>
+<td class="px-5 py-4 text-right">
+<span class="text-red-500 font-medium">-1</span>
+</td>
+<td class="px-5 py-4">
+<div class="flex items-center gap-2">
+<div class="flex-1 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-green-500 w-[82%] rounded-full"></div>
+</div>
+<span class="text-xs text-slate-500">82</span>
+</div>
+</td>
+<td class="px-5 py-4 text-right">
+<button class="text-slate-400 hover:text-primary"><span class="material-icons text-[18px]">more_horiz</span></button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-5 py-4 font-medium text-slate-900 dark:text-white">
+<div class="flex items-center gap-2">
+<img alt="Favicon" class="w-5 h-5 rounded-sm opacity-80" data-alt="Fintech Daily favicon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtGbiH8wN1bDsGWigVlkzCbifJHBv2yO8fYiB1cy1oX7UrmRoFwjJJcC3iCTBbAVgO8W8BCaJqxtmvcddI0kXRXxYCQlMY0XTSbMkL6LHAszSTlxHLwNw1Wk7Z8gnkTF1YGBvusC2Ru0QenIIncGK3FyZ8zXkfr3ttBIvrqWEEWkVvHnM6Yms-K0J2dBnTB2gM0hT5QzrGr1s6ZFmK8HclzIoT44vA_UV_8FGjN4Sz5rS-KOC6mgl9DMxGeiP7lpZTLzKFsId9bJxX"/>
+                                                fintech-daily.com
+                                                <span class="material-icons text-[14px] text-slate-400 hover:text-primary cursor-pointer">open_in_new</span>
+</div>
+</td>
+<td class="px-5 py-4">
+<span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600">28</span>
+</td>
+<td class="px-5 py-4 text-right text-slate-600 dark:text-slate-300">145</td>
+<td class="px-5 py-4 text-right">
+<span class="text-slate-400 font-medium">0</span>
+</td>
+<td class="px-5 py-4 text-right">
+<span class="text-slate-400 font-medium">-</span>
+</td>
+<td class="px-5 py-4">
+<div class="flex items-center gap-2">
+<div class="flex-1 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-red-400 w-[45%] rounded-full"></div>
+</div>
+<span class="text-xs text-slate-500">45</span>
+</div>
+</td>
+<td class="px-5 py-4 text-right">
+<button class="text-slate-400 hover:text-primary"><span class="material-icons text-[18px]">more_horiz</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Sidebar: Mini-Feed -->
+<div class="xl:col-span-1 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col h-full">
+<div class="p-5 border-b border-border-light dark:border-border-dark">
+<h3 class="text-lg font-semibold text-slate-900 dark:text-white">Recent New Backlinks</h3>
+</div>
+<div class="p-4 space-y-4 overflow-y-auto max-h-[400px]">
+<!-- Feed Item 1 -->
+<div class="flex gap-3 items-start">
+<div class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-200 dark:border-slate-700">
+<img alt="Source icon" class="w-4 h-4 opacity-70" data-alt="TechCrunch favicon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMmfi2hv_iFAEwRBJRuqA8owAEMM-1du2yMxnZ0izZpdz5fMfyMpOc9Ce_XgaePnaa0zwlF-NpFX_uoSGBmp4QDdkncyXZDjtGY5RgRaASaP4vo5hKEUA-cAgHZq_9wfDmRL8TP4V_r7nHz7AfSUz78yn0WMUz0w5Tvvoj2zjbdCYvpcVEYko1J7Ig9XqMh-YF-tEqzFVmc38kp3VgTc0UI8NdCZifn4IIY4kuOfjf8NxcwGGEY4PyAh2PRwNodhGDa2g6t5x1h-26"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="text-sm font-medium text-primary truncate max-w-[120px]" title="techcrunch.com">techcrunch.com</h4>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded">DR 92</span>
+</div>
+<p class="text-xs text-slate-500 mt-0.5 line-clamp-2">"Top SEO tools for 2024..."</p>
+<div class="flex items-center gap-2 mt-1.5">
+<span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 truncate max-w-[100px]">⚓ "SEO Tools"</span>
+<span class="text-[10px] text-slate-400 ml-auto">2h ago</span>
+</div>
+</div>
+</div>
+<!-- Feed Item 2 -->
+<div class="flex gap-3 items-start">
+<div class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-200 dark:border-slate-700">
+<img alt="Source icon" class="w-4 h-4 opacity-70" data-alt="Medium favicon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEc0iaip4SWT9TmyuL8xsFl8yPlWEfl3ncpifLCCghTt25PBWlvjLIik-EyDnAle2P1l4oDYjwqYVub1E7CSMyqzkBCoxaLK0NPZ80mMamTt0Hm-v4H-ADadpOjT_lqgawQ_JyIg__54Y-GXryXttDzUwla3wkEzNj1qJ5aQJF7AXBfdAJGZXElClZ_QnSPQ3lS9Wr0JiOXb507NE3P46L2-Nnnn4slCGF9ZqEjJ35TRrZyHtXUMR4RLHGoHdURc_mgRXAbKLpOrdN"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate max-w-[120px]" title="medium.com">medium.com</h4>
+<span class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600">DR 88</span>
+</div>
+<p class="text-xs text-slate-500 mt-0.5 line-clamp-2">"How to build backlinks..."</p>
+<div class="flex items-center gap-2 mt-1.5">
+<span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 truncate max-w-[100px]">⚓ "Link building"</span>
+<span class="text-[10px] text-slate-400 ml-auto">5h ago</span>
+</div>
+</div>
+</div>
+<!-- Feed Item 3 -->
+<div class="flex gap-3 items-start">
+<div class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-200 dark:border-slate-700">
+<img alt="Source icon" class="w-4 h-4 opacity-70" data-alt="Hubspot favicon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmsr_GfwNu3iCnl72eXUsaiKOo-nEaNem8055b5bkK_YgME97y2NN-2QXx0JKYPQPg9Miex9BYBYw4quRp1ZbigNypfRq0ckX_zYGFMVMolMhlpKAHZ2cjzRu5ch0uT44xIW_35mEFTjKIEaFGKcWYILAG2O1QNa2MBZ5v826AY8FAfkI7QB5PgZ98SgLFmDEbQBcXbBTSapQP5NAKpTYMaJLn6WVtXEFiMpHQE1LPhz9JSq0qbt2MeS13d3S9a3VmDaCKphXakZJT"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="text-sm font-medium text-primary truncate max-w-[120px]" title="hubspot.com">hubspot.com</h4>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded">DR 93</span>
+</div>
+<p class="text-xs text-slate-500 mt-0.5 line-clamp-2">"Marketing Trends Report"</p>
+<div class="flex items-center gap-2 mt-1.5">
+<span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 truncate max-w-[100px]">⚓ "Digital Strategy"</span>
+<span class="text-[10px] text-slate-400 ml-auto">1d ago</span>
+</div>
+</div>
+</div>
+<!-- Feed Item 4 -->
+<div class="flex gap-3 items-start opacity-70">
+<div class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-200 dark:border-slate-700">
+<span class="material-icons text-xs text-slate-400">public</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate max-w-[120px]">indiehackers.com</h4>
+<span class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600">DR 76</span>
+</div>
+<p class="text-xs text-slate-500 mt-0.5 line-clamp-2">"Startup growth discussion"</p>
+<div class="flex items-center gap-2 mt-1.5">
+<span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 truncate max-w-[100px]">⚓ "Growth"</span>
+<span class="text-[10px] text-slate-400 ml-auto">1d ago</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-border-light dark:border-border-dark mt-auto">
+<button class="w-full text-center text-xs font-medium text-primary hover:text-primary-hover transition-colors">View All Activity</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

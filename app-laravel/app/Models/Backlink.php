@@ -10,6 +10,7 @@ class Backlink extends Model
     use HasFactory;
 
     protected $fillable = [
+        'project_id',
         'source_url',
         'target_url',
         'anchor_text',
@@ -19,12 +20,28 @@ class Backlink extends Model
         'is_dofollow',
         'first_seen_at',
         'last_checked_at',
+        // Extended fields
+        'tier_level',
+        'parent_backlink_id',
+        'spot_type',
+        'published_at',
+        'expires_at',
+        'price',
+        'currency',
+        'invoice_paid',
+        'platform_id',
+        'contact_info',
+        'created_by_user_id',
     ];
 
     protected $casts = [
         'is_dofollow' => 'boolean',
+        'invoice_paid' => 'boolean',
         'first_seen_at' => 'datetime',
         'last_checked_at' => 'datetime',
+        'published_at' => 'date',
+        'expires_at' => 'date',
+        'price' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -35,6 +52,38 @@ class Backlink extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /**
+     * Get the platform associated with this backlink.
+     */
+    public function platform()
+    {
+        return $this->belongsTo(Platform::class);
+    }
+
+    /**
+     * Get the user who created this backlink.
+     */
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    /**
+     * Get the parent backlink (for Tier 2 links).
+     */
+    public function parentBacklink()
+    {
+        return $this->belongsTo(Backlink::class, 'parent_backlink_id');
+    }
+
+    /**
+     * Get child backlinks (Tier 2 links pointing to this backlink).
+     */
+    public function childBacklinks()
+    {
+        return $this->hasMany(Backlink::class, 'parent_backlink_id');
     }
 
     /**

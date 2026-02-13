@@ -101,6 +101,21 @@
             @endif
         </a>
 
+        {{-- Platforms --}}
+        <a
+            href="{{ url('/platforms') }}"
+            @click="$dispatch('toggle-mobile-menu')"
+            class="flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->is('platforms*') ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-600 hover:bg-neutral-100' }}"
+        >
+            <span class="mr-3 text-lg">🏪</span>
+            <span>Plateformes</span>
+        </a>
+
+        {{-- Divider --}}
+        <div class="pt-4 pb-2">
+            <div class="border-t border-neutral-200"></div>
+        </div>
+
         {{-- Commandes --}}
         {{-- TODO: Cette route n'existe pas encore, sera créée dans EPIC-006 (Marketplace) --}}
         <a
@@ -111,11 +126,6 @@
             <span class="mr-3 text-lg">🛒</span>
             <span>Commandes</span>
         </a>
-
-        {{-- Divider --}}
-        <div class="pt-4 pb-2">
-            <div class="border-t border-neutral-200"></div>
-        </div>
 
         {{-- Métriques SEO (optionnel) --}}
         {{-- TODO: Cette section sera ajoutée dans EPIC-005 (Métriques SEO) --}}
