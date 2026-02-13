@@ -33,22 +33,22 @@
             @endif
         </div>
 
-        <form method="GET" action="{{ route('backlinks.index') }}" class="space-y-4">
-            {{-- Recherche textuelle --}}
-            <div>
-                <label for="search" class="block text-sm font-medium text-neutral-700 mb-1">Recherche</label>
-                <input
-                    type="text"
-                    id="search"
-                    name="search"
-                    value="{{ request('search') }}"
-                    placeholder="Rechercher dans URL source, ancre ou URL cible..."
-                    class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-            </div>
+        <form method="GET" action="{{ route('backlinks.index') }}">
+            {{-- Tous les filtres sur une seule ligne --}}
+            <div class="grid grid-cols-5 gap-4 items-end">
+                {{-- Recherche textuelle --}}
+                <div class="col-span-1">
+                    <label for="search" class="block text-sm font-medium text-neutral-700 mb-1">Recherche</label>
+                    <input
+                        type="text"
+                        id="search"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Rechercher..."
+                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+                </div>
 
-            {{-- Filtres sur une seule ligne --}}
-            <div class="grid grid-cols-4 gap-4">
                 {{-- Status Filter --}}
                 <div>
                     <label for="status" class="block text-sm font-medium text-neutral-700 mb-1">Statut</label>
@@ -111,7 +111,7 @@
             </div>
 
             {{-- Submit Button --}}
-            <div class="flex justify-end">
+            <div class="flex justify-end mt-4">
                 <x-button variant="primary" type="submit">
                     Appliquer les filtres
                 </x-button>
