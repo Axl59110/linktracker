@@ -18,59 +18,37 @@
     </x-page-header>
 
     {{-- Filters --}}
-    <div class="bg-white rounded-lg border border-neutral-200 p-6 mb-6" x-data="{ showFilters: window.innerWidth >= 768 }">
+    <div class="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-                <h3 class="text-lg font-semibold text-neutral-900">
-                    Filtres
-                    @if($activeFiltersCount > 0)
-                        <x-badge variant="brand" class="ml-2">{{ $activeFiltersCount }} actif(s)</x-badge>
-                    @endif
-                </h3>
-                {{-- Bouton toggle filtres (mobile uniquement) --}}
-                <button
-                    type="button"
-                    @click="showFilters = !showFilters"
-                    class="md:hidden inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-700 bg-neutral-100 rounded-lg hover:bg-neutral-200 transition-colors"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                    </svg>
-                    <span x-text="showFilters ? 'Masquer' : 'Afficher'"></span>
-                </button>
-            </div>
+            <h3 class="text-lg font-semibold text-neutral-900">
+                Filtres
+                @if($activeFiltersCount > 0)
+                    <x-badge variant="brand" class="ml-2">{{ $activeFiltersCount }} actif(s)</x-badge>
+                @endif
+            </h3>
             @if(request()->hasAny(['search', 'status', 'project_id', 'tier_level', 'spot_type', 'sort']))
                 <x-button variant="secondary" size="sm" href="{{ route('backlinks.index') }}">
-                    Réinitialiser
+                    Réinitialiser tous les filtres
                 </x-button>
             @endif
         </div>
 
-        <form method="GET" action="{{ route('backlinks.index') }}">
-            {{-- Filtres : modale sur mobile, inline sur desktop --}}
-            <div
-                x-show="showFilters || window.innerWidth >= 768"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
-                class="flex flex-col md:grid md:grid-cols-5 gap-4 md:items-end"
-            >
-                {{-- Recherche textuelle --}}
-                <div>
-                    <label for="search" class="block text-sm font-medium text-neutral-700 mb-1">Recherche</label>
-                    <input
-                        type="text"
-                        id="search"
-                        name="search"
-                        value="{{ request('search') }}"
-                        placeholder="Rechercher..."
-                        class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
-                </div>
+        <form method="GET" action="{{ route('backlinks.index') }}" class="space-y-4">
+            {{-- Recherche textuelle --}}
+            <div>
+                <label for="search" class="block text-sm font-medium text-neutral-700 mb-1">Recherche</label>
+                <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    value="{{ request('search') }}"
+                    placeholder="Rechercher dans URL source, ancre ou URL cible..."
+                    class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+            </div>
 
+            {{-- Filtres en grille --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {{-- Status Filter --}}
                 <div>
                     <label for="status" class="block text-sm font-medium text-neutral-700 mb-1">Statut</label>
@@ -130,13 +108,13 @@
                         <option value="internal" {{ request('spot_type') === 'internal' ? 'selected' : '' }}>Interne (PBN)</option>
                     </select>
                 </div>
+            </div>
 
-                {{-- Submit Button --}}
-                <div class="md:flex md:items-end">
-                    <x-button variant="primary" type="submit" class="w-full md:w-auto">
-                        Appliquer
-                    </x-button>
-                </div>
+            {{-- Submit Button --}}
+            <div class="flex justify-end">
+                <x-button variant="primary" type="submit">
+                    Appliquer les filtres
+                </x-button>
             </div>
         </form>
     </div>
@@ -240,7 +218,7 @@
                                             @method('DELETE')
                                             <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-red-50 text-neutral-600 hover:text-red-600 transition-colors" title="Supprimer">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7 h16"/>
                                                 </svg>
                                             </button>
                                         </form>
