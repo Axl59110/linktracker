@@ -17,6 +17,51 @@
         </x-slot:actions>
     </x-page-header>
 
+    {{-- Filters --}}
+    <div class="bg-white rounded-lg border border-neutral-200 p-4 mb-6">
+        <form method="GET" action="{{ route('backlinks.index') }}" class="flex flex-wrap gap-4 items-end">
+            {{-- Status Filter --}}
+            <div class="flex-1 min-w-[200px]">
+                <label for="status" class="block text-sm font-medium text-neutral-700 mb-1">Statut</label>
+                <select
+                    id="status"
+                    name="status"
+                    class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                >
+                    <option value="">Tous les statuts</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Actif</option>
+                    <option value="lost" {{ request('status') === 'lost' ? 'selected' : '' }}>Perdu</option>
+                    <option value="changed" {{ request('status') === 'changed' ? 'selected' : '' }}>Modifié</option>
+                </select>
+            </div>
+
+            {{-- Project Filter --}}
+            <div class="flex-1 min-w-[200px]">
+                <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">Projet</label>
+                <select
+                    id="project_id"
+                    name="project_id"
+                    class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                >
+                    <option value="">Tous les projets</option>
+                    @foreach($projects as $project)
+                        <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>
+                            {{ $project->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Filter Actions --}}
+            <div class="flex gap-2">
+                <x-button variant="primary" type="submit">Filtrer</x-button>
+                @if(request()->hasAny(['status', 'project_id']))
+                    <x-button variant="secondary" href="{{ route('backlinks.index') }}">Réinitialiser</x-button>
+                @endif
+            </div>
+        </form>
+    </div>
+
     @if($backlinks->count() > 0)
         <div class="bg-white rounded-lg border border-neutral-200 overflow-hidden">
             <x-table>
@@ -64,6 +109,13 @@
                 </x-slot:body>
             </x-table>
         </div>
+
+        {{-- Pagination --}}
+        @if($backlinks->hasPages())
+            <div class="mt-6">
+                {{ $backlinks->links() }}
+            </div>
+        @endif
     @else
         <div class="bg-white p-12 rounded-lg border border-neutral-200 text-center">
             <span class="text-6xl mb-4 block">🔗</span>

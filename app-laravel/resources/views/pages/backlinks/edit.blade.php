@@ -98,8 +98,8 @@
                         class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     >
                         <option value="active" {{ old('status', $backlink->status) === 'active' ? 'selected' : '' }}>Actif</option>
-                        <option value="inactive" {{ old('status', $backlink->status) === 'inactive' ? 'selected' : '' }}>Inactif</option>
-                        <option value="broken" {{ old('status', $backlink->status) === 'broken' ? 'selected' : '' }}>Cassé</option>
+                        <option value="lost" {{ old('status', $backlink->status) === 'lost' ? 'selected' : '' }}>Perdu</option>
+                        <option value="changed" {{ old('status', $backlink->status) === 'changed' ? 'selected' : '' }}>Modifié</option>
                     </select>
                     <p class="text-xs text-neutral-500">Le statut actuel du backlink</p>
                 </div>

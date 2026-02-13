@@ -11,15 +11,27 @@ class BacklinkController extends Controller
     /**
      * Display a listing of all backlinks (global view).
      */
-    public function index()
+    public function index(Request $request)
     {
-        // TODO: Ajouter pagination et filtres (status, project, etc.)
-        // TODO: Ajouter search functionality
-        $backlinks = Backlink::with('project')
-            ->latest()
-            ->get();
+        $query = Backlink::with('project')->latest();
 
-        return view('pages.backlinks.index', compact('backlinks'));
+        // Filtrer par status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filtrer par projet
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        // Pagination (15 items par page)
+        $backlinks = $query->paginate(15)->withQueryString();
+
+        // Charger tous les projets pour le filtre
+        $projects = Project::orderBy('name')->get();
+
+        return view('pages.backlinks.index', compact('backlinks', 'projects'));
     }
 
     /**

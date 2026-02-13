@@ -25,7 +25,10 @@
       "Bash(powershell.exe -Command \"php artisan config:clear\")",
       "Bash(powershell.exe -Command \"php artisan cache:clear\")",
       "Bash(powershell.exe -Command \"php artisan view:clear\")",
-      "Bash(powershell.exe:*)"
+      "Bash(powershell.exe:*)",
+      "Skill(code-review:code-review)",
+      "Bash(php artisan:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }
