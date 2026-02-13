@@ -47,8 +47,8 @@
                 />
             </div>
 
-            {{-- Filtres en grille --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {{-- Filtres sur une seule ligne --}}
+            <div class="grid grid-cols-4 gap-4">
                 {{-- Status Filter --}}
                 <div>
                     <label for="status" class="block text-sm font-medium text-neutral-700 mb-1">Statut</label>
@@ -83,7 +83,7 @@
 
                 {{-- Tier Level Filter --}}
                 <div>
-                    <label for="tier_level" class="block text-sm font-medium text-neutral-700 mb-1">Niveau</label>
+                    <label for="tier_level" class="block text-sm font-medium text-neutral-700 mb-1">Tiers</label>
                     <select
                         id="tier_level"
                         name="tier_level"
