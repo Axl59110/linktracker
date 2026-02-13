@@ -151,68 +151,82 @@
     </div>
 
     @if($alerts->count() > 0)
-        <div class="space-y-3">
-            @foreach($alerts as $alert)
-                <div class="bg-white rounded-lg border border-neutral-200 p-5 {{ $alert->is_read ? 'opacity-70' : '' }}">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="text-2xl">{{ $alert->type_icon }}</span>
-                                <h3 class="text-lg font-semibold text-neutral-900">{{ $alert->title }}</h3>
-                                @if(!$alert->is_read)
-                                    <x-badge variant="brand">Nouveau</x-badge>
-                                @endif
-                            </div>
-
-                            <div class="flex items-center gap-2 mb-3">
-                                <x-badge variant="{{ $alert->type_badge_color }}">
-                                    {{ $alert->type_label }}
-                                </x-badge>
-                                <x-badge variant="{{ $alert->severity_badge_color }}">
-                                    {{ ucfirst($alert->severity) }}
-                                </x-badge>
-                                @if($alert->backlink->project)
-                                    <x-badge variant="neutral">
-                                        {{ $alert->backlink->project->name }}
+        <div class="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <x-table>
+                    <x-slot:header>
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase w-12"></th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Alerte</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Sévérité</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Projet</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Date</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase w-24">Actions</th>
+                        </tr>
+                    </x-slot:header>
+                    <x-slot:body>
+                        @foreach($alerts as $alert)
+                            <tr class="hover:bg-neutral-50 {{ $alert->is_read ? 'opacity-60' : '' }}">
+                                <td class="px-4 py-4 text-center">
+                                    <span class="text-2xl">{{ $alert->type_icon }}</span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-medium text-neutral-900">{{ $alert->title }}</span>
+                                        @if(!$alert->is_read)
+                                            <x-badge variant="brand">Nouveau</x-badge>
+                                        @endif
+                                    </div>
+                                    <a href="{{ route('backlinks.show', $alert->backlink) }}" class="text-xs text-brand-600 hover:text-brand-700 hover:underline">
+                                        Voir le backlink →
+                                    </a>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <x-badge variant="{{ $alert->type_badge_color }}">
+                                        {{ $alert->type_label }}
                                     </x-badge>
-                                @endif
-                                <span class="text-xs text-neutral-500">
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <x-badge variant="{{ $alert->severity_badge_color }}">
+                                        {{ ucfirst($alert->severity) }}
+                                    </x-badge>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-neutral-900">
+                                    {{ $alert->backlink->project?->name ?? 'N/A' }}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-neutral-600">
                                     {{ $alert->created_at->diffForHumans() }}
-                                </span>
-                            </div>
-
-                            <p class="text-sm text-neutral-700 whitespace-pre-line mb-3">{{ $alert->message }}</p>
-
-                            <div class="flex items-center gap-3 text-sm">
-                                <a href="{{ route('backlinks.show', $alert->backlink) }}" class="text-brand-600 hover:text-brand-700 hover:underline">
-                                    Voir le backlink →
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2 ml-4">
-                            @if(!$alert->is_read)
-                                <form action="{{ route('alerts.mark-read', $alert) }}" method="POST">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="text-brand-600 hover:text-brand-700 text-sm font-medium" title="Marquer comme lu">
-                                        ✓ Lu
-                                    </button>
-                                </form>
-                            @endif
-                            <form action="{{ route('alerts.destroy', $alert) }}" method="POST" onsubmit="return confirm('Supprimer cette alerte ?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-danger-600 hover:text-danger-700 text-sm font-medium" title="Supprimer">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        @if(!$alert->is_read)
+                                            <form action="{{ route('alerts.mark-read', $alert) }}" method="POST" class="inline-block">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-brand-100 text-brand-600 hover:text-brand-700 transition-colors" title="Marquer comme lu">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @endif
+                                        <form action="{{ route('alerts.destroy', $alert) }}" method="POST" class="inline-block" onsubmit="return confirm('Supprimer cette alerte ?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-red-50 text-neutral-600 hover:text-red-600 transition-colors" title="Supprimer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </x-slot:body>
+                </x-table>
+            </div>
         </div>
 
         {{-- Pagination --}}
