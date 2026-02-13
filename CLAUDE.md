@@ -4,15 +4,231 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Linktracker - Un projet de suivi de liens (Link tracking project).
+**LinkTracker** - Application Laravel de suivi et monitoring de backlinks SEO.
 
-Ce répertoire est actuellement vide et en attente d'initialisation.
+Le projet permet de :
+- Surveiller des backlinks (liens entrants) vers vos sites web
+- Vérifier automatiquement la présence et les attributs des liens
+- Détecter les changements (ancre modifiée, passage en nofollow, perte du lien)
+- Recevoir des alertes en cas de problème
+- Suivre l'historique des vérifications avec taux de disponibilité
 
-## Getting Started
+## Architecture
 
-Le projet n'a pas encore été initialisé. Une fois le code ajouté, ce fichier devra être mis à jour avec :
+### Stack technique
+- **Backend** : Laravel 10.x (PHP 8.1+)
+- **Database** : SQLite (dev) / PostgreSQL (production)
+- **Frontend** : Blade templates + AlpineJS + TailwindCSS
+- **Queue** : Database driver (avec support Redis)
+- **Scheduler** : Laravel Task Scheduling (cron)
 
-- Les commandes de build et de développement
-- L'architecture du code
-- Les conventions de nommage et structure
-- Les dépendances principales et leur rôle
+### Structure du projet
+
+```
+app-laravel/
+├── app/
+│   ├── Console/Commands/      # Commandes Artisan
+│   ├── Http/Controllers/      # Controllers MVC
+│   ├── Jobs/                  # Jobs de queue (CheckBacklinkJob)
+│   ├── Models/                # Modèles Eloquent
+│   └── Services/              # Services métier (BacklinkCheckerService, AlertService)
+├── database/migrations/       # Migrations de base de données
+├── resources/views/           # Templates Blade
+├── routes/web.php            # Routes de l'application
+└── docs/                     # Documentation technique
+```
+
+## Modèles principaux
+
+### 1. Project
+Projet de suivi (site web à monitorer)
+- Nom, URL, description
+- Has many Backlinks
+
+### 2. Backlink
+Lien entrant à surveiller
+- `source_url` : URL de la page contenant le lien
+- `target_url` : URL cible du lien (votre site)
+- `anchor_text` : Texte d'ancre du lien
+- `status` : active, lost, changed
+- `tier_level` : tier1 (lien direct) ou tier2 (lien vers tier1)
+- `spot_type` : external (site tiers) ou internal (PBN)
+- Relations : project, platform, checks, alerts
+
+### 3. BacklinkCheck
+Historique des vérifications d'un backlink
+- `checked_at`, `is_present`, `http_status`, `error_message`
+- Permet de calculer le taux de disponibilité
+
+### 4. Alert
+Alertes générées automatiquement
+- Types : `backlink_lost`, `backlink_changed`, `backlink_recovered`
+- Sévérité : critical, high, medium, low
+- `is_read`, `read_at`
+
+### 5. Platform
+Plateformes d'achat de backlinks (ex: SEMrush, Ahrefs Marketplace)
+
+## Services principaux
+
+### BacklinkCheckerService
+Service de vérification des backlinks :
+- Requête HTTP vers `source_url`
+- Parse HTML avec DOMDocument/DOMXPath
+- Trouve le lien vers `target_url`
+- Extrait ancre, rel attributes, détecte dofollow/nofollow
+- Protection SSRF
+
+### AlertService
+Service de gestion des alertes :
+- `createBacklinkLostAlert()` - Lien perdu
+- `createBacklinkChangedAlert()` - Attributs modifiés
+- `createBacklinkRecoveredAlert()` - Lien récupéré
+- Logique intelligente de sévérité (tier, prix, type de changement)
+
+## Jobs et automatisation
+
+### CheckBacklinkJob
+Job de queue pour vérifier un backlink :
+- Appelle BacklinkCheckerService
+- Crée un BacklinkCheck
+- Met à jour le statut du backlink
+- Crée des alertes via AlertService
+- Retry : 3 tentatives, timeout 120s
+
+### Scheduler (Cron)
+Planification automatique :
+- **Quotidien (2h)** : backlinks non vérifiés depuis 24h
+- **Hebdomadaire (dimanche 3h)** : tous backlinks non vérifiés depuis 7j
+
+Commande : `php artisan app:check-backlinks --frequency=daily`
+
+## Commandes Artisan
+
+```bash
+# Vérifier tous les backlinks (batch)
+php artisan app:check-backlinks --frequency=daily
+php artisan app:check-backlinks --project=1 --limit=50
+
+# Vérifier un backlink spécifique
+php artisan app:check-backlink 42 --verbose
+
+# Lancer le worker de queue
+php artisan queue:work --verbose
+
+# Simuler le cron (dev)
+php artisan schedule:work
+```
+
+## Routes principales
+
+```
+GET  /dashboard                → DashboardController@index
+GET  /projects                 → ProjectController (resource)
+GET  /backlinks                → BacklinkController (resource)
+POST /backlinks/{id}/check     → BacklinkController@check (vérification manuelle)
+GET  /alerts                   → AlertController@index
+GET  /platforms                → PlatformController (resource)
+```
+
+## Conventions de code
+
+### Nommage
+- **Models** : Singulier PascalCase (Backlink, BacklinkCheck)
+- **Controllers** : Resource controllers (BacklinkController)
+- **Services** : Suffixe "Service" (BacklinkCheckerService)
+- **Jobs** : Suffixe "Job" (CheckBacklinkJob)
+- **Migrations** : snake_case avec timestamp
+
+### Base de données
+- Tables : pluriel snake_case (backlinks, backlink_checks)
+- Colonnes : snake_case
+- Foreign keys : `{model}_id` (project_id, backlink_id)
+- Timestamps : `created_at`, `updated_at`
+
+### Blade
+- Composants : kebab-case (`<x-page-header>`)
+- Layouts : resources/views/layouts/app.blade.php
+- Pages : resources/views/pages/{resource}/{action}.blade.php
+
+## Méthodologie de développement
+
+### BMAD (Benchmark, Model, Analyze, Deliver)
+Toujours suivre cette méthodologie pour les nouvelles fonctionnalités :
+
+1. **Benchmark** : Analyser l'existant (grep, read files, comprendre le code)
+2. **Model** : Concevoir la solution (structure, classes, relations)
+3. **Analyze** : Identifier les dépendances et impacts
+4. **Deliver** : Implémenter avec tests et documentation
+
+### Git
+- Commits détaillés avec type (feat, fix, refactor, docs)
+- Co-Author : Claude Sonnet 4.5
+- Branches : master (stable), feature/* (développement)
+
+## Documentation
+
+### Fichiers de documentation
+- `docs/QUEUES.md` : Guide complet du système de queues
+- `docs/EPIC-JOBS-VERIFICATION.md` : Documentation EPIC vérification backlinks
+- `CLAUDE.md` : Ce fichier (guidance pour Claude Code)
+
+### EPICs complétés
+- ✅ EPIC-013 : SaaS UI Redesign (Blade + TailwindCSS)
+- ✅ EPIC-004 : Système d'alertes
+- ✅ Jobs de vérification et extraction d'ancres
+
+### EPICs en cours / à venir
+- ⏳ EPIC-005 : Métriques SEO (Ahrefs, Moz API)
+- ⏳ EPIC-006 : Marketplace et commandes
+- ⏳ EPIC-008 : Configuration et settings
+
+## Configuration environnement
+
+### Développement
+```env
+APP_ENV=local
+DB_CONNECTION=sqlite
+QUEUE_CONNECTION=sync  # Synchrone pour dev
+```
+
+### Production
+```env
+APP_ENV=production
+DB_CONNECTION=pgsql
+QUEUE_CONNECTION=database  # Asynchrone avec worker
+```
+
+### Activation scheduler (production)
+```bash
+# Crontab
+* * * * * cd /path/to/app-laravel && php artisan schedule:run
+```
+
+### Worker queues (production)
+```bash
+# Avec Supervisor (voir docs/QUEUES.md)
+php artisan queue:work database --sleep=3 --tries=3
+```
+
+## Tests et qualité
+
+### Sécurité
+- Protection SSRF dans BacklinkCheckerService
+- Validation stricte des URLs (UrlValidator)
+- Rate limiting sur routes sensibles (5/min pour vérifications manuelles)
+- Échappement SQL dans filtres (wildcards)
+
+### Performance
+- Indexes sur colonnes filtrées (status, project_id, tier_level)
+- Eager loading (with) pour éviter N+1
+- Pagination (20 items/page)
+- Queue asynchrone pour vérifications
+
+## Notes importantes
+
+- **Ne jamais** créer de commits sans instructions explicites
+- **Toujours** utiliser la méthodologie BMAD
+- **Toujours** documenter les EPICs dans docs/
+- **Rate limiting** : respecter les limites sur vérifications externes
+- **Logs** : utiliser Log::info/warning/error pour traçabilité
