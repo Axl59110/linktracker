@@ -366,7 +366,7 @@ sprints:
     end_date: "2026-03-03"
     capacity_points: 44
     committed_points: 43
-    completed_points: 14
+    completed_points: 17
     status: "in_progress"
     goal: "Production-ready : Marketplace complète, performance, sécurité, qualité"
     sprint_plan_path: "docs/sprint-04-plan.md"
@@ -415,8 +415,9 @@ sprints:
       - story_id: "STORY-043"
         title: "Audit SSRF + validation URL"
         points: 3
-        status: "not_started"
-        assigned_to: null
+        status: "completed"
+        assigned_to: "Claude Code"
+        notes: "UrlValidator ajouté à BacklinkController store()+update() et OrderController store()+update(). UrlValidator refactorisé : ne bloque plus les domaines non-résolvables (uniquement IPs privées connues). 11 nouveaux tests SsrfProtectionTest. 307 tests total passent."
       - story_id: "STORY-044"
         title: "Rate limiting avancé"
         points: 3

@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Backlink;
 use App\Models\Project;
-use App\Services\Backlink\BacklinkCheckerService;
 use App\Services\Alert\AlertService;
+use App\Services\Backlink\BacklinkCheckerService;
+use App\Services\Security\UrlValidator;
 use Illuminate\Http\Request;
 
 class BacklinkController extends Controller
@@ -106,7 +107,18 @@ class BacklinkController extends Controller
         $validated = $request->validate([
             // Champs existants
             'project_id' => 'required|exists:projects,id',
-            'source_url' => 'required|url|max:500',
+            'source_url' => [
+                'required',
+                'url',
+                'max:500',
+                function ($attribute, $value, $fail) {
+                    try {
+                        app(UrlValidator::class)->validate($value);
+                    } catch (\App\Exceptions\SsrfException $e) {
+                        $fail("L'URL source est bloquée pour des raisons de sécurité : " . $e->getMessage());
+                    }
+                },
+            ],
             'target_url' => 'required|url|max:500',
             'anchor_text' => 'nullable|string|max:255',
             'rel_attributes' => 'nullable|string|max:100',
@@ -236,7 +248,18 @@ class BacklinkController extends Controller
         $validated = $request->validate([
             // Champs existants
             'project_id' => 'required|exists:projects,id',
-            'source_url' => 'required|url|max:500',
+            'source_url' => [
+                'required',
+                'url',
+                'max:500',
+                function ($attribute, $value, $fail) {
+                    try {
+                        app(UrlValidator::class)->validate($value);
+                    } catch (\App\Exceptions\SsrfException $e) {
+                        $fail("L'URL source est bloquée pour des raisons de sécurité : " . $e->getMessage());
+                    }
+                },
+            ],
             'target_url' => 'required|url|max:500',
             'anchor_text' => 'nullable|string|max:255',
             'rel_attributes' => 'nullable|string|max:100',

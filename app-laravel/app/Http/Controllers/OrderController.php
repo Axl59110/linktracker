@@ -6,6 +6,7 @@ use App\Models\Backlink;
 use App\Models\Order;
 use App\Models\Platform;
 use App\Models\Project;
+use App\Services\Security\UrlValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -43,7 +44,20 @@ class OrderController extends Controller
             'project_id'   => 'required|exists:projects,id',
             'platform_id'  => 'nullable|exists:platforms,id',
             'target_url'   => 'required|url|max:2048',
-            'source_url'   => 'nullable|url|max:2048',
+            'source_url'   => [
+                'nullable',
+                'url',
+                'max:2048',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        try {
+                            app(UrlValidator::class)->validate($value);
+                        } catch (\App\Exceptions\SsrfException $e) {
+                            $fail("L'URL source est bloquée pour des raisons de sécurité : " . $e->getMessage());
+                        }
+                    }
+                },
+            ],
             'anchor_text'  => 'nullable|string|max:255',
             'tier_level'   => 'required|in:tier1,tier2',
             'spot_type'    => 'required|in:external,internal',
@@ -85,7 +99,20 @@ class OrderController extends Controller
             'project_id'   => 'required|exists:projects,id',
             'platform_id'  => 'nullable|exists:platforms,id',
             'target_url'   => 'required|url|max:2048',
-            'source_url'   => 'nullable|url|max:2048',
+            'source_url'   => [
+                'nullable',
+                'url',
+                'max:2048',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        try {
+                            app(UrlValidator::class)->validate($value);
+                        } catch (\App\Exceptions\SsrfException $e) {
+                            $fail("L'URL source est bloquée pour des raisons de sécurité : " . $e->getMessage());
+                        }
+                    }
+                },
+            ],
             'anchor_text'  => 'nullable|string|max:255',
             'tier_level'   => 'required|in:tier1,tier2',
             'spot_type'    => 'required|in:external,internal',

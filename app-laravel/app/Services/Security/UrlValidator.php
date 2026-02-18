@@ -54,29 +54,29 @@ class UrlValidator
 
         $host = $parsed['host'];
 
-        // 4. Résoudre le DNS pour obtenir l'IP
-        $ip = gethostbyname($host);
-
-        // Si gethostbyname retourne le hostname, c'est qu'il n'a pas pu résoudre
-        if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
-            throw new SsrfException("Impossible de résoudre le nom de domaine : {$host}");
-        }
-
-        // 5. Vérifier si l'IP est dans une plage bloquée
-        foreach (self::BLOCKED_IP_RANGES as $range) {
-            if ($this->ipInRange($ip, $range)) {
-                throw new SsrfException("Accès à {$ip} ({$host}) bloqué pour des raisons de sécurité (protection SSRF)");
-            }
-        }
-
-        // 6. Vérifier si c'est directement une IP privée (pour les IPs en hostname)
+        // 4. Vérifier si c'est directement une IP (pour les hôtes sous forme d'IP)
         if (filter_var($host, FILTER_VALIDATE_IP)) {
             foreach (self::BLOCKED_IP_RANGES as $range) {
                 if ($this->ipInRange($host, $range)) {
                     throw new SsrfException("Accès à {$host} bloqué pour des raisons de sécurité (protection SSRF)");
                 }
             }
+            // IP publique directe : OK
+            return;
         }
+
+        // 5. Résoudre le DNS pour obtenir l'IP (si possible)
+        $ip = gethostbyname($host);
+
+        // Si DNS résout vers une IP, vérifier si elle est dans une plage bloquée
+        if ($ip !== $host) {
+            foreach (self::BLOCKED_IP_RANGES as $range) {
+                if ($this->ipInRange($ip, $range)) {
+                    throw new SsrfException("Accès à {$ip} ({$host}) bloqué pour des raisons de sécurité (protection SSRF)");
+                }
+            }
+        }
+        // Si DNS ne résout pas : on laisse passer (le serveur web renverra une erreur réseau)
     }
 
     /**
