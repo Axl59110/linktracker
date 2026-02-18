@@ -22,6 +22,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'webhook_url',
+        'webhook_secret',
+        'webhook_events',
     ];
 
     /**
@@ -42,6 +45,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'webhook_events' => 'array',
     ];
 
     public function projects(): HasMany

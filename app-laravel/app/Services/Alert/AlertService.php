@@ -2,6 +2,7 @@
 
 namespace App\Services\Alert;
 
+use App\Jobs\SendWebhookJob;
 use App\Models\Alert;
 use App\Models\Backlink;
 use Illuminate\Support\Facades\Log;
@@ -44,6 +45,8 @@ class AlertService
             'severity' => $severity,
         ]);
 
+        $this->dispatchWebhookIfConfigured($alert, $backlink);
+
         return $alert;
     }
 
@@ -83,6 +86,8 @@ class AlertService
             'changes' => array_keys($changes),
         ]);
 
+        $this->dispatchWebhookIfConfigured($alert, $backlink);
+
         return $alert;
     }
 
@@ -116,6 +121,8 @@ class AlertService
             'alert_id' => $alert->id,
             'backlink_id' => $backlink->id,
         ]);
+
+        $this->dispatchWebhookIfConfigured($alert, $backlink);
 
         return $alert;
     }
@@ -262,6 +269,26 @@ class AlertService
             'http_status' => 'Statut HTTP',
             default => ucfirst(str_replace('_', ' ', $field)),
         };
+    }
+
+    /**
+     * Dispatche le webhook si l'utilisateur en a configuré un pour ce type d'alerte.
+     */
+    protected function dispatchWebhookIfConfigured(Alert $alert, Backlink $backlink): void
+    {
+        $user = $backlink->createdBy;
+
+        if (!$user || !$user->webhook_url) {
+            return;
+        }
+
+        $subscribedEvents = $user->webhook_events ?? [];
+
+        if (!empty($subscribedEvents) && !in_array($alert->type, $subscribedEvents)) {
+            return;
+        }
+
+        SendWebhookJob::dispatch($alert, $user)->onQueue('default');
     }
 
     /**

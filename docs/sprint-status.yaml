@@ -5,17 +5,17 @@
 version: "6.0.0"
 project_name: "Link Tracker"
 project_level: 4
-current_sprint: 1
-sprint_plan_path: "docs/sprint-01-plan.md"
+current_sprint: 2
+sprint_plan_path: "docs/sprint-02-plan.md"
 
 sprints:
   - sprint_number: 1
     start_date: "2026-02-09"
     end_date: "2026-02-23"  # 2 weeks
     capacity_points: 40
-    committed_points: 28
+    committed_points: 25
     completed_points: 25
-    status: "in_progress"
+    status: "completed"
     goal: "Établir l'infrastructure technique et la gestion des projets"
     stories:
       - story_id: "STORY-001"
@@ -150,53 +150,124 @@ sprints:
           - Config Horizon préparée pour production Linux
           - Tests manuels de dispatch job validés
 
-      - story_id: "STORY-064"
-        title: "Setup Docker Compose Stack"
-        points: 5
-        status: "cancelled"
-        assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
-        notes: |
-          - Story annulée - Utilisation de Laravel Herd à la place
-          - Herd fournit déjà PHP, MySQL/PostgreSQL, Redis, Nginx
-          - Pas besoin de Docker pour l'environnement de développement
 
-      - story_id: "STORY-065"
-        title: "Configure Nginx + TLS 1.3"
+  - sprint_number: 2
+    start_date: "2026-02-17"
+    end_date: "2026-03-03"
+    capacity_points: 50
+    committed_points: 50
+    completed_points: 50
+    status: "completed"
+    goal: "Livrer un produit fonctionnel de bout en bout : backlinks CRUD, monitoring automatique, alertes en temps réel et dashboard de pilotage"
+    stories:
+      - story_id: "STORY-007"
+        title: "Backlinks List Page (Blade)"
         points: 3
-        status: "cancelled"
+        status: "completed"
         assigned_to: "Claude Code"
-        started_at: null
-        completed_at: null
-        notes: |
-          - Story annulée - Herd configure automatiquement Nginx
-          - TLS géré par Herd avec certificats locaux
-          - http://linktracker.test fonctionnel
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémentée — table paginée, filtres, badges, tri, état vide, responsive"
+      - story_id: "STORY-009"
+        title: "Backlink Create/Edit Form (Blade)"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémentée — composant x-backlink-form, modes create/edit, validation SSRF"
+      - story_id: "STORY-010"
+        title: "Backlink Delete + Status Badges"
+        points: 2
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémentée — delete avec confirm, badges x-badge sur toutes les vues"
+      - story_id: "STORY-012"
+        title: "BacklinkCheckerService (adapter existant)"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémenté — HTTP check, DOMXPath, extraction ancre/rel, SSRF protection"
+      - story_id: "STORY-013"
+        title: "CheckBacklinkJob + Queue Dispatch"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémenté — ShouldQueue, 3 tries, 120s timeout, AlertService intégré"
+      - story_id: "STORY-015"
+        title: "Scheduler cron quotidien + commande Artisan"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémenté — CheckBacklinksCommand (batch+queue), CheckBacklinkCommand (verbeux)"
+      - story_id: "STORY-017"
+        title: "AlertService (adapter existant)"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémenté — lost/changed/recovered, sévérité intelligente, déduplication"
+      - story_id: "STORY-011"
+        title: "Backlink Detail Page + Historique"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémentée — show.blade avec historique, taux dispo, alertes liées"
+      - story_id: "STORY-014"
+        title: "Vérification manuelle (bouton + feedback)"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémentée — bouton dans show, route POST /check, rate limit 5/min"
+      - story_id: "STORY-018"
+        title: "Centre de notifications in-app (Blade/Alpine)"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémentée — AlertController + alerts/index, stats cards, filtres, mark-read"
+      - story_id: "STORY-019"
+        title: "Webhook configurable (URL + secret)"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Implémenté — migration users (webhook_url/secret/events), SendWebhookJob, AlertService dispatch, WebhookSettingsController, vue settings/webhook.blade"
+      - story_id: "STORY-020"
+        title: "Dashboard métriques (stats globales)"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémenté — KPI cards (actifs/perdus/modifiés/projets), alertes récentes, projets récents, backlinks récents"
+      - story_id: "STORY-021"
+        title: "Widget alertes récentes sur dashboard"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-17T00:00:00Z"
+        notes: "Déjà implémenté — widget alertes dans dashboard.blade.php avec badge sévérité, lien vers /alerts"
 
 velocity:
-  sprint_1: null  # Will be calculated at sprint end
+  sprint_1: 25
+  sprint_2: null
   rolling_average: null
 
 team:
   size: 1
   developer: "Claude Code (autonomous AI agent)"
   sprint_length_weeks: 2
-  capacity_per_sprint: 40
+  capacity_per_sprint: 50
 
 notes: |
-  Sprint 1 focuses on foundational infrastructure:
-  - Laravel + Vue.js + SQLite + Redis setup (Herd)
-  - Authentication (Sanctum)
-  - Projects CRUD complete
-  - Backlinks table migration
-  - SSRF Protection (security)
-  - Queue management ready (Horizon config for production)
+  Sprint 1 terminé : 25/25 points (100%)
+  - Infrastructure, Auth, Projects CRUD, Backlinks migration, SSRF, Queues
 
-  Stories STORY-064 et STORY-065 annulées car Herd remplace Docker/Nginx.
-
-  Sprint 1 Status: 25/28 points complétés (89%)
-  - 8 stories complétées
-  - 2 stories annulées (Docker/Nginx redondants avec Herd)
-
-  Prêt pour démo live et Sprint 2 planning.
+  Sprint 2 démarré le 2026-02-17 : 50 points
+  - Frontend : Blade + AlpineJS (code existant réutilisé)
+  - Epics : EPIC-002 (Backlinks CRUD), EPIC-003 (Monitoring), EPIC-004 (Alertes), EPIC-007 (Dashboard)
+  - Ordre recommandé : STORY-007 → 009 → 010 → 012 → 013 → 015 → 017 → 011 → 014 → 018 → 019 → 020 → 021

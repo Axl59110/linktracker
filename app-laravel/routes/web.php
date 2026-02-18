@@ -6,6 +6,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\BacklinkController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\AlertController;
+use App\Http\Controllers\WebhookSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,12 @@ Route::patch('/alerts/{alert}/mark-read', [AlertController::class, 'markAsRead']
 Route::patch('/alerts/mark-all-read', [AlertController::class, 'markAllAsRead'])->name('alerts.mark-all-read');
 Route::delete('/alerts/{alert}', [AlertController::class, 'destroy'])->name('alerts.destroy');
 Route::delete('/alerts/destroy-all-read', [AlertController::class, 'destroyAllRead'])->name('alerts.destroy-all-read');
+
+// Settings - Webhook configurable (STORY-019)
+Route::get('/settings/webhook', [WebhookSettingsController::class, 'show'])->name('settings.webhook');
+Route::put('/settings/webhook', [WebhookSettingsController::class, 'update'])->name('settings.webhook.update');
+Route::post('/settings/webhook/test', [WebhookSettingsController::class, 'test'])->name('settings.webhook.test');
+Route::get('/settings/webhook/generate-secret', [WebhookSettingsController::class, 'generateSecret'])->name('settings.webhook.generate-secret');
 
 // Page "En construction" pour fonctionnalités futures
 Route::view('/under-construction', 'pages.under-construction')->name('pages.under-construction');

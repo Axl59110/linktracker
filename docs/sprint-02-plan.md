@@ -1,623 +1,489 @@
-# Sprint 2 Plan: Link Tracker - Backlinks CRUD + HTTP Monitoring
+# Sprint Plan — Sprint 2 : LinkTracker
 
-**Sprint:** 2/6
-**Duration:** 2 semaines
-**Start Date:** 2026-02-13
-**Goal:** Implémenter le CRUD complet des backlinks avec monitoring HTTP automatique
-
----
-
-## 🎯 Sprint Goal
-
-Livrer un système complet de gestion et monitoring des backlinks permettant aux utilisateurs d'ajouter des backlinks, de les vérifier automatiquement toutes les 4 heures via Laravel Horizon, et de consulter l'historique des vérifications.
+**Date :** 2026-02-17
+**Sprint :** 2 (17/02/2026 → 03/03/2026)
+**Scrum Master :** BMAD Agent
+**Niveau projet :** 4
+**Stories :** 13
+**Total points :** 50
+**Capacité sprint :** 50 points (rythme intensif)
+**Frontend :** Blade + AlpineJS (code existant réutilisé)
 
 ---
 
-## 📊 Sprint Metrics
+## Résumé exécutif
 
-- **Committed Points:** 37 points (93% capacity)
-- **Stories:** 8 stories
-- **Capacity:** 40 points (buffer: 3 points)
-- **Team:** Claude Code (autonomous development)
+Le Sprint 2 construit les fonctionnalités cœur de LinkTracker sur les fondations du Sprint 1.
+Objectif : avoir un produit fonctionnel de bout en bout — ajout de backlinks, vérification automatique, détection d'anomalies, alertes en temps réel et dashboard de pilotage.
 
-**Par Epic:**
-- EPIC-002 (Backlinks CRUD): 13 points (3 stories)
-- EPIC-003 (Monitoring Engine): 18 points (4 stories)
-- EPIC-009 (Infrastructure): 3 points (1 story)
-
----
-
-## 📋 Sprint Backlog
-
-### STORY-009: Create Backlink Model + Factory ⭐ **CRITICAL PATH**
-
-**Points:** 3
-**Priority:** Must Have
-**Epic:** EPIC-002 (Backlinks Management)
-
-**User Story:**
-En tant que développeur
-Je veux créer le modèle Backlink avec relations et accessors
-Afin de manipuler les backlinks en Eloquent ORM
-
-**Acceptance Criteria:**
-- [ ] Model `Backlink` créé (app/Models/Backlink.php)
-- [ ] Fillable: source_url, target_url, anchor_text, status, http_status, rel_attributes, is_dofollow
-- [ ] Casts: first_seen_at (datetime), last_checked_at (datetime), is_dofollow (boolean)
-- [ ] Relation belongsTo(Project)
-- [ ] Scopes: scopeActive(), scopeLost(), scopeChanged()
-- [ ] Accessor: getStatusBadgeColorAttribute() pour UI
-- [ ] Factory BacklinkFactory avec états (active, lost, changed)
-- [ ] Tests: BacklinkModelTest.php (relations, scopes)
-
-**Technical Implementation:**
-```php
-// app/Models/Backlink.php
-protected $fillable = [
-    'source_url', 'target_url', 'anchor_text',
-    'status', 'http_status', 'rel_attributes', 'is_dofollow'
-];
-
-protected $casts = [
-    'first_seen_at' => 'datetime',
-    'last_checked_at' => 'datetime',
-    'is_dofollow' => 'boolean',
-];
-
-public function project() {
-    return $this->belongsTo(Project::class);
-}
-
-public function scopeActive($query) {
-    return $query->where('status', 'active');
-}
-
-public function scopeLost($query) {
-    return $query->where('status', 'lost');
-}
-```
-
-**Dependencies:** STORY-006 (table exists)
-**Blocks:** STORY-010, STORY-011, STORY-012, STORY-013
+**Métriques clés :**
+- Stories : 13
+- Points : 50
+- Sprints planifiés : Sprint 2
+- Capacité : 50 points/sprint
+- Fin prévue : 03/03/2026
 
 ---
 
-### STORY-010: Build Backlinks CRUD API
-
-**Points:** 5
-**Priority:** Must Have
-**Epic:** EPIC-002
-
-**User Story:**
-En tant qu'utilisateur
-Je veux ajouter, modifier, consulter et supprimer des backlinks via API
-Afin de gérer ma liste de backlinks à surveiller
-
-**Acceptance Criteria:**
-- [ ] POST /api/v1/projects/{project}/backlinks (create)
-- [ ] GET /api/v1/projects/{project}/backlinks (list with filters: status, search)
-- [ ] GET /api/v1/backlinks/{backlink} (show with checks history)
-- [ ] PATCH /api/v1/backlinks/{backlink} (update)
-- [ ] DELETE /api/v1/backlinks/{backlink} (delete)
-- [ ] Request: StoreBacklinkRequest avec validation + UrlValidator (SSRF)
-- [ ] Request: UpdateBacklinkRequest
-- [ ] Policy: BacklinkPolicy (user can only access own backlinks)
-- [ ] Resource: BacklinkResource avec relations
-- [ ] Pagination: 50 items par page
-- [ ] Tests: BacklinkApiTest.php (CRUD + authorization + SSRF blocking)
-
-**Technical Implementation:**
-```php
-// app/Http/Requests/StoreBacklinkRequest.php
-public function rules() {
-    return [
-        'source_url' => [
-            'required', 'url', 'max:2048',
-            function ($attribute, $value, $fail) {
-                try {
-                    app(UrlValidator::class)->validate($value);
-                } catch (SsrfException $e) {
-                    $fail("L'URL est bloquée pour des raisons de sécurité : " . $e->getMessage());
-                }
-            }
-        ],
-        'target_url' => 'required|url|max:2048',
-        'anchor_text' => 'nullable|string|max:500',
-    ];
-}
-```
-
-**Dependencies:** STORY-009
-**Blocks:** STORY-011, STORY-012
+## Inventaire des stories
 
 ---
 
-### STORY-011: Build Backlinks List Vue Component
+### STORY-007 : Backlinks List Page (Blade)
 
-**Points:** 5
-**Priority:** Must Have
-**Epic:** EPIC-002
+**Epic :** EPIC-002 — Gestion des Backlinks
+**Priorité :** Must Have
+**Points :** 3
 
-**User Story:**
-En tant qu'utilisateur
-Je veux voir tous les backlinks d'un projet avec leur statut
-Afin de surveiller rapidement l'état de mes backlinks
+**User Story :**
+En tant qu'utilisateur,
+Je veux voir la liste de tous mes backlinks par projet,
+Afin de surveiller leur état global en un coup d'œil.
 
-**Acceptance Criteria:**
-- [ ] Component BacklinksList.vue créé
-- [ ] Affiche: source_url (tronqué), target_url, anchor_text, status (badge coloré), http_status, last_checked_at
-- [ ] Filtres: status dropdown (all/active/lost/changed)
-- [ ] Search bar: filtre par source_url ou anchor_text
-- [ ] Bouton "Ajouter Backlink" → router.push create form
-- [ ] Bouton "Vérifier maintenant" sur chaque ligne (trigger manual check)
-- [ ] Actions: Edit, Delete avec confirmation
-- [ ] Pagination 50 items avec infinite scroll ou buttons
-- [ ] Loading states (skeleton)
-- [ ] Empty state quand aucun backlink
-- [ ] Responsive design (mobile table scroll)
+**Critères d'acceptation :**
+- [ ] Tableau paginé (20 items/page) avec colonnes : URL source, URL cible, ancre, statut, dernière vérification
+- [ ] Filtres : par projet, par statut (active/lost/changed), par tier_level
+- [ ] Badge coloré pour le statut (vert/rouge/orange)
+- [ ] Liens vers la page détail du backlink
+- [ ] Bouton "Ajouter un backlink"
+- [ ] Responsive mobile
 
-**Technical Implementation:**
-```vue
-<script setup>
-const filters = ref({
-  status: 'all',
-  search: ''
-})
+**Notes techniques :**
+- BacklinkController@index déjà existant, adapter la vue Blade
+- Utiliser AlpineJS pour les filtres dynamiques (sans rechargement)
+- Eager loading avec `with(['project', 'checks' => fn($q) => $q->latest()->limit(1)])`
+- Route : GET /backlinks
 
-const backlinks = ref([])
-const loading = ref(true)
-
-const fetchBacklinks = async () => {
-  const res = await api.get(`/api/v1/projects/${projectId}/backlinks`, {
-    params: filters.value
-  })
-  backlinks.value = res.data
-}
-
-const checkNow = async (backlinkId) => {
-  await api.post(`/api/v1/backlinks/${backlinkId}/check`)
-  toast.success('Vérification lancée')
-}
-</script>
-```
-
-**Dependencies:** STORY-010
-**Blocks:** None
+**Dépendances :** STORY-006 (migration backlinks ✅ complété)
 
 ---
 
-### STORY-012: Build Backlink Create/Edit Form
+### STORY-009 : Backlink Create/Edit Form (Blade)
 
-**Points:** 3
-**Priority:** Must Have
-**Epic:** EPIC-002
+**Epic :** EPIC-002 — Gestion des Backlinks
+**Priorité :** Must Have
+**Points :** 3
 
-**User Story:**
-En tant qu'utilisateur
-Je veux un formulaire pour ajouter/éditer un backlink
-Afin de configurer les backlinks à monitorer
+**User Story :**
+En tant qu'utilisateur,
+Je veux créer et modifier des backlinks,
+Afin de gérer mon portefeuille de liens entrants.
 
-**Acceptance Criteria:**
-- [ ] Component BacklinkForm.vue créé
-- [ ] Props: projectId (required), backlinkId (optional pour edit)
-- [ ] Champs: source_url (URL input), target_url (URL input), anchor_text (text)
-- [ ] Validation frontend: URL format
-- [ ] Affichage erreur SSRF si URL bloquée
-- [ ] POST /api/v1/projects/{id}/backlinks au submit (create)
-- [ ] PATCH /api/v1/backlinks/{id} (edit)
-- [ ] Success toast + redirect vers liste
-- [ ] Loading state sur bouton submit
+**Critères d'acceptation :**
+- [ ] Formulaire : source_url, target_url, anchor_text, projet (select), tier_level, spot_type, prix (optionnel), plateforme (optionnel)
+- [ ] Validation côté serveur avec messages d'erreur inline
+- [ ] Validation SSRF sur source_url et target_url via UrlValidator (STORY-008 ✅)
+- [ ] Mode création et mode édition (même composant Blade)
+- [ ] Redirection vers la liste avec message de succès
+- [ ] Annuler sans sauvegarder
 
-**Dependencies:** STORY-010
-**Blocks:** None
+**Notes techniques :**
+- Réutiliser BacklinkController@store et @update
+- Formulaire Blade avec AlpineJS pour afficher/masquer champs optionnels
+- StoreBacklinkRequest et UpdateBacklinkRequest avec validation
 
----
-
-### STORY-013: Create BacklinkChecker Service
-
-**Points:** 5
-**Priority:** Must Have
-**Epic:** EPIC-003 (Monitoring Engine)
-
-**User Story:**
-En tant que système
-Je veux un service pour vérifier l'état HTTP d'un backlink
-Afin de détecter si le backlink est présent et actif
-
-**Acceptance Criteria:**
-- [ ] Service BacklinkChecker créé (app/Services/Monitoring/BacklinkChecker.php)
-- [ ] Méthode checkBacklink(Backlink $backlink): BacklinkCheckResult
-- [ ] Utilise GuzzleHttp pour requête HTTP (timeout 30s)
-- [ ] Enregistre: http_status, response_time, is_present
-- [ ] Parse HTML avec DOMDocument pour détecter lien vers target_url
-- [ ] Extrait rel attributes (follow/nofollow)
-- [ ] Extrait anchor_text actuel si trouvé
-- [ ] Gère erreurs HTTP gracieusement (timeout, 404, 500)
-- [ ] Utilise UrlValidator pour SSRF check avant requête
-- [ ] Tests: BacklinkCheckerTest.php avec mocked HTTP responses
-
-**Technical Implementation:**
-```php
-// app/Services/Monitoring/BacklinkChecker.php
-class BacklinkChecker {
-    public function __construct(
-        private UrlValidator $urlValidator,
-        private Client $httpClient
-    ) {}
-
-    public function checkBacklink(Backlink $backlink): BacklinkCheckResult {
-        // 1. SSRF protection
-        $this->urlValidator->validate($backlink->source_url);
-
-        // 2. HTTP request
-        try {
-            $response = $this->httpClient->get($backlink->source_url, [
-                'timeout' => 30,
-                'allow_redirects' => true,
-            ]);
-
-            $statusCode = $response->getStatusCode();
-            $html = $response->getBody()->getContents();
-
-            // 3. Parse HTML
-            $linkFound = $this->findLinkInHtml($html, $backlink->target_url);
-
-            return new BacklinkCheckResult([
-                'http_status' => $statusCode,
-                'is_present' => $linkFound !== null,
-                'anchor_text' => $linkFound?->anchor ?? null,
-                'rel_attributes' => $linkFound?->rel ?? 'follow',
-            ]);
-        } catch (RequestException $e) {
-            return BacklinkCheckResult::failed($e);
-        }
-    }
-}
-```
-
-**Dependencies:** STORY-009, STORY-008 (UrlValidator exists)
-**Blocks:** STORY-014
+**Dépendances :** STORY-007, STORY-008 ✅
 
 ---
 
-### STORY-014: Create CheckBacklink Job
+### STORY-010 : Backlink Delete + Status Badges
 
-**Points:** 5
-**Priority:** Must Have
-**Epic:** EPIC-003
+**Epic :** EPIC-002 — Gestion des Backlinks
+**Priorité :** Must Have
+**Points :** 2
 
-**User Story:**
-En tant que système
-Je veux un job asynchrone pour vérifier un backlink
-Afin de ne pas bloquer l'application pendant la vérification HTTP
+**User Story :**
+En tant qu'utilisateur,
+Je veux supprimer un backlink et visualiser clairement son statut,
+Afin de maintenir un portefeuille propre et lisible.
 
-**Acceptance Criteria:**
-- [ ] Job CheckBacklink créé (app/Jobs/Monitoring/CheckBacklink.php)
-- [ ] Constructor: __construct(Backlink $backlink, bool $isManual = false)
-- [ ] Queue: 'high' si isManual=true, 'default' sinon
-- [ ] Tries: 3 avec backoff [60, 120, 300] secondes
-- [ ] Appelle BacklinkChecker::checkBacklink()
-- [ ] Crée BacklinkCheck record en DB
-- [ ] Met à jour Backlink::last_checked_at
-- [ ] Détecte changements: BacklinkAnalyzer::analyzeChanges()
-- [ ] Dispatch Event: BacklinkStatusChanged si changement
-- [ ] Tests: CheckBacklinkJobTest.php avec Queue::fake()
+**Critères d'acceptation :**
+- [ ] Bouton supprimer avec confirmation AlpineJS (modal)
+- [ ] Delete définitif avec cascade sur BacklinkChecks et Alerts
+- [ ] Badges de statut cohérents sur toutes les pages : vert (active), rouge (lost), orange (changed)
+- [ ] Statut mis à jour visuellement sans rechargement
 
-**Technical Implementation:**
-```php
-// app/Jobs/Monitoring/CheckBacklink.php
-class CheckBacklink implements ShouldQueue {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+**Notes techniques :**
+- BacklinkController@destroy
+- Utiliser AlpineJS `x-show` / `x-on:click` pour la confirmation
+- Composant Blade `<x-status-badge>` réutilisable
 
-    public $tries = 3;
-    public $backoff = [60, 120, 300]; // Exponential backoff
-
-    public function __construct(
-        public Backlink $backlink,
-        public bool $isManual = false
-    ) {
-        $this->onQueue($isManual ? 'high' : 'default');
-    }
-
-    public function handle(
-        BacklinkChecker $checker,
-        BacklinkAnalyzer $analyzer
-    ) {
-        // 1. Check backlink
-        $result = $checker->checkBacklink($this->backlink);
-
-        // 2. Store check result
-        $check = BacklinkCheck::create([
-            'backlink_id' => $this->backlink->id,
-            'http_status' => $result->http_status,
-            'is_present' => $result->is_present,
-            'anchor_text' => $result->anchor_text,
-            'rel_attributes' => $result->rel_attributes,
-            'response_time' => $result->response_time,
-        ]);
-
-        // 3. Update backlink last_checked_at
-        $this->backlink->update(['last_checked_at' => now()]);
-
-        // 4. Analyze changes
-        $changes = $analyzer->analyzeChanges($this->backlink, $check);
-
-        // 5. Dispatch events
-        if ($changes->hasChanges()) {
-            event(new BacklinkStatusChanged($this->backlink, $changes));
-        }
-    }
-}
-```
-
-**Dependencies:** STORY-013, STORY-015
-**Blocks:** STORY-017
+**Dépendances :** STORY-007
 
 ---
 
-### STORY-015: Create BacklinkCheck Model + Migration
+### STORY-011 : Backlink Detail Page + Historique
 
-**Points:** 3
-**Priority:** Must Have
-**Epic:** EPIC-003
+**Epic :** EPIC-002 — Gestion des Backlinks
+**Priorité :** Must Have
+**Points :** 3
 
-**User Story:**
-En tant que développeur
-Je veux stocker l'historique de toutes les vérifications
-Afin de tracker l'évolution des backlinks dans le temps
+**User Story :**
+En tant qu'utilisateur,
+Je veux voir la page détail d'un backlink avec son historique de vérifications,
+Afin de diagnostiquer les problèmes de disponibilité.
 
-**Acceptance Criteria:**
-- [ ] Migration create_backlink_checks_table créée
-- [ ] Colonnes: id, backlink_id, http_status, is_present, anchor_text, rel_attributes, response_time, checked_at, timestamps
-- [ ] Foreign key backlink_id → backlinks.id (cascade delete)
-- [ ] Index: (backlink_id, checked_at DESC)
-- [ ] Model BacklinkCheck créé
-- [ ] Relation belongsTo(Backlink)
-- [ ] Cast: checked_at (datetime), is_present (boolean)
-- [ ] Scope: scopeLatest() pour récupérer dernier check
-- [ ] Factory BacklinkCheckFactory
-- [ ] Tests: BacklinkCheckModelTest.php
+**Critères d'acceptation :**
+- [ ] Infos complètes du backlink (URLs, ancre, attributs rel, tier, prix)
+- [ ] Taux de disponibilité calculé (% de checks is_present=true)
+- [ ] Historique des 30 dernières vérifications (tableau : date, statut HTTP, présent, erreur)
+- [ ] Timeline visuelle de disponibilité (barres colorées)
+- [ ] Bouton "Vérifier maintenant" (STORY-014)
+- [ ] Alertes liées au backlink
 
-**Technical Implementation:**
-```php
-// database/migrations/create_backlink_checks_table.php
-Schema::create('backlink_checks', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('backlink_id')->constrained()->onDelete('cascade');
-    $table->integer('http_status')->nullable();
-    $table->boolean('is_present')->default(false);
-    $table->text('anchor_text')->nullable();
-    $table->string('rel_attributes', 100)->nullable();
-    $table->integer('response_time')->nullable(); // milliseconds
-    $table->timestamp('checked_at')->useCurrent();
-    $table->timestamps();
+**Notes techniques :**
+- BacklinkController@show
+- Calcul taux : `$backlink->checks()->where('is_present', true)->count() / $backlink->checks()->count() * 100`
+- Limiter l'historique aux 30 derniers pour les performances
 
-    $table->index(['backlink_id', 'checked_at']);
-});
-```
-
-**Dependencies:** STORY-009
-**Blocks:** STORY-014
+**Dépendances :** STORY-007, STORY-013
 
 ---
 
-### STORY-017: Schedule Automatic Monitoring
+### STORY-012 : BacklinkCheckerService (adapter existant)
 
-**Points:** 5
-**Priority:** Must Have
-**Epic:** EPIC-003
+**Epic :** EPIC-003 — Monitoring automatique
+**Priorité :** Must Have
+**Points :** 5
 
-**User Story:**
-En tant que système
-Je veux vérifier automatiquement tous les backlinks toutes les 4 heures
-Afin de surveiller l'état des backlinks en continu
+**User Story :**
+En tant que système,
+Je veux vérifier la présence d'un backlink sur une page source,
+Afin de détecter les pertes ou changements d'attributs.
 
-**Acceptance Criteria:**
-- [ ] Command MonitorBacklinks créé (app/Console/Commands/MonitorBacklinks.php)
-- [ ] Récupère tous les backlinks actifs (status = 'active')
-- [ ] Dispatch CheckBacklink job pour chaque backlink
-- [ ] Throttling: max 10 jobs simultanés dans la queue
-- [ ] Logs: nombre de backlinks vérifiés
-- [ ] Scheduled dans Kernel.php: toutes les 4 heures
-- [ ] Endpoint API: POST /api/v1/backlinks/{id}/check (manual trigger)
-- [ ] Tests: MonitorBacklinksTest.php avec Queue::fake()
+**Critères d'acceptation :**
+- [ ] Requête HTTP vers source_url (timeout 30s, User-Agent réaliste)
+- [ ] Parse HTML avec DOMDocument/DOMXPath pour trouver le lien vers target_url
+- [ ] Extraction : ancre actuelle, rel attributes (nofollow, sponsored, ugc), HTTP status
+- [ ] Détection de changements : ancre modifiée, passage en nofollow, perte du lien
+- [ ] Retour structuré : CheckResult (is_present, http_status, anchor_text, rel_attrs, error)
+- [ ] Gestion d'erreurs : timeout, DNS fail, 4xx/5xx
+- [ ] Protection SSRF via UrlValidator (STORY-008 ✅)
+- [ ] Tests unitaires complets (mock HTTP)
 
-**Technical Implementation:**
-```php
-// app/Console/Commands/MonitorBacklinks.php
-class MonitorBacklinks extends Command {
-    protected $signature = 'backlinks:monitor';
+**Notes techniques :**
+- Service existant dans `app/Services/BacklinkCheckerService.php` — auditer et compléter
+- Utiliser `Http::withUserAgent()->timeout(30)->get($url)`
+- DOMXPath pour parser `//a[@href]`
 
-    public function handle() {
-        $backlinks = Backlink::active()
-            ->whereNotNull('source_url')
-            ->get();
-
-        $this->info("Monitoring {$backlinks->count()} backlinks...");
-
-        $backlinks->each(function($backlink) {
-            CheckBacklink::dispatch($backlink)
-                ->onQueue('default');
-        });
-
-        $this->info("Jobs dispatched successfully.");
-    }
-}
-
-// app/Console/Kernel.php
-protected function schedule(Schedule $schedule) {
-    $schedule->command('backlinks:monitor')
-             ->everyFourHours()
-             ->withoutOverlapping();
-}
-```
-
-**Dependencies:** STORY-014
-**Blocks:** None
+**Dépendances :** STORY-008 ✅
 
 ---
 
-### STORY-018: Configure Laravel Horizon for Production
+### STORY-013 : CheckBacklinkJob + Queue Dispatch
 
-**Points:** 3
-**Priority:** Must Have
-**Epic:** EPIC-009 (Infrastructure)
+**Epic :** EPIC-003 — Monitoring automatique
+**Priorité :** Must Have
+**Points :** 5
 
-**User Story:**
-En tant que développeur
-Je veux configurer Horizon pour gérer 100 jobs/minute
-Afin de traiter efficacement toutes les vérifications
+**User Story :**
+En tant que système,
+Je veux dispatcher des jobs de vérification en queue,
+Afin de vérifier les backlinks de manière asynchrone et fiable.
 
-**Acceptance Criteria:**
-- [ ] config/horizon.php ajusté pour production
-- [ ] 3 queues: high (priority manual checks), default (auto checks), low (metrics)
-- [ ] Auto-scaling: minProcesses=3, maxProcesses=10
-- [ ] Balance strategy: 'auto'
-- [ ] Timeout: 60 secondes par job
-- [ ] Failed jobs retention: 7 jours
-- [ ] Métriques accessibles via /horizon/dashboard
-- [ ] Tests: Vérifier que jobs sont dispatched correctement
+**Critères d'acceptation :**
+- [ ] Job `CheckBacklinkJob` avec `implements ShouldQueue`
+- [ ] Appel à BacklinkCheckerService dans le handle()
+- [ ] Création d'un BacklinkCheck après chaque vérification
+- [ ] Mise à jour du statut du Backlink (active/lost/changed)
+- [ ] Création d'alertes via AlertService si changement détecté
+- [ ] Retry : 3 tentatives, backoff exponentiel, timeout 120s
+- [ ] Log des erreurs avec contexte (backlink_id, url, error)
+- [ ] Tests feature du job (mock service)
 
-**Technical Implementation:**
-```php
-// config/horizon.php
-'environments' => [
-    'production' => [
-        'supervisor-1' => [
-            'connection' => 'redis',
-            'queue' => ['high', 'default', 'low'],
-            'balance' => 'auto',
-            'minProcesses' => 3,
-            'maxProcesses' => 10,
-            'balanceMaxShift' => 1,
-            'balanceCooldown' => 3,
-            'tries' => 3,
-            'timeout' => 60,
-        ],
-    ],
-],
-```
+**Notes techniques :**
+- Job existant dans `app/Jobs/CheckBacklinkJob.php` — adapter si nécessaire
+- `$this->tries = 3; $this->timeout = 120;`
+- Dispatcher en queue 'default'
 
-**Dependencies:** None
-**Blocks:** None (indépendant)
+**Dépendances :** STORY-012, STORY-016 ✅
 
 ---
 
-## 🔀 Dependencies Graph Sprint 2
+### STORY-014 : Vérification manuelle (bouton + feedback)
 
-```
-STORY-009 (Backlink Model) **CRITICAL PATH**
-    ↓
-    ├─→ STORY-010 (API CRUD)
-    │       ↓
-    │       ├─→ STORY-011 (List UI)
-    │       └─→ STORY-012 (Form UI)
-    │
-    ├─→ STORY-015 (BacklinkCheck Model)
-    │       ↓
-    └───────┴─→ STORY-013 (BacklinkChecker Service)
-                    ↓
-                STORY-014 (CheckBacklink Job)
-                    ↓
-                STORY-017 (Scheduled Monitoring)
+**Epic :** EPIC-003 — Monitoring automatique
+**Priorité :** Must Have
+**Points :** 3
 
-STORY-018 (Horizon Config) - Parallel (indépendant)
-```
+**User Story :**
+En tant qu'utilisateur,
+Je veux déclencher manuellement la vérification d'un backlink,
+Afin de tester immédiatement sa disponibilité sans attendre le cron.
 
----
+**Critères d'acceptation :**
+- [ ] Bouton "Vérifier maintenant" sur la page détail et la liste
+- [ ] Rate limiting : 5 vérifications manuelles/minute
+- [ ] Dispatch du CheckBacklinkJob avec feedback immédiat
+- [ ] Indicateur de chargement AlpineJS pendant la vérification
+- [ ] Message de succès/erreur après dispatch
+- [ ] En mode sync (dev) : afficher résultat immédiat
 
-## 📝 Ordre Recommandé d'Implémentation
+**Notes techniques :**
+- Route POST : `/backlinks/{id}/check`
+- BacklinkController@check déjà défini dans routes
+- Réponse JSON pour AlpineJS : `{ dispatched: true, message: '...' }`
 
-1. **STORY-018** (Horizon - setup tôt) - 3 pts
-2. **STORY-009** (Backlink Model - bloque tout) - 3 pts
-3. **STORY-015** (BacklinkCheck Model) - 3 pts
-4. **STORY-010** (API CRUD) - 5 pts
-5. **STORY-013** (BacklinkChecker Service) - 5 pts
-6. **STORY-014** (CheckBacklink Job) - 5 pts
-7. **STORY-011** + **STORY-012** (UI en parallèle) - 8 pts
-8. **STORY-017** (Scheduled Monitoring - finalisation) - 5 pts
+**Dépendances :** STORY-011, STORY-013
 
 ---
 
-## ✅ Definition of Done Sprint 2
+### STORY-015 : Scheduler cron quotidien + commande Artisan
 
-Une story est complète quand:
-- [ ] Code implémenté selon acceptance criteria
-- [ ] Tests écrits (Feature + Unit, coverage ≥70%)
-- [ ] Tests passent (php artisan test)
-- [ ] Protection SSRF vérifiée pour toutes les URLs
-- [ ] Code review interne (PHPDoc, conventions Laravel)
-- [ ] Testé manuellement (Herd local)
-- [ ] Documentation inline ajoutée
-- [ ] Aucune erreur dans logs Laravel
+**Epic :** EPIC-003 — Monitoring automatique
+**Priorité :** Must Have
+**Points :** 3
 
----
+**User Story :**
+En tant que système,
+Je veux vérifier automatiquement tous les backlinks selon une planification,
+Afin de détecter les problèmes sans intervention manuelle.
 
-## 📊 Sprint 2 Success Metrics
+**Critères d'acceptation :**
+- [ ] Commande `app:check-backlinks` fonctionnelle avec options `--frequency` et `--project`
+- [ ] Scheduler : quotidien à 2h pour backlinks non vérifiés depuis 24h
+- [ ] Scheduler : hebdomadaire dimanche à 3h pour backlinks non vérifiés depuis 7j
+- [ ] Dispatch en batch avec limite configurable (--limit=50 par défaut)
+- [ ] Log de démarrage et fin avec count de backlinks traités
+- [ ] Test de la commande Artisan
 
-À la fin du Sprint 2, nous aurons:
+**Notes techniques :**
+- Commande existante dans `app/Console/Commands/` — vérifier et compléter
+- `$schedule->command('app:check-backlinks')->dailyAt('02:00')`
+- Filtre : `where('last_checked_at', '<', now()->subDay())`
 
-✅ **Backlinks CRUD complet:**
-- API REST complète (CRUD)
-- UI Vue.js responsive
-- Validation + SSRF protection
-
-✅ **Monitoring HTTP automatique:**
-- BacklinkChecker service fonctionnel
-- Jobs Laravel asynchrones
-- Vérification toutes les 4h via Scheduler
-- Vérification manuelle disponible
-
-✅ **Historique des checks:**
-- Table backlink_checks avec historique
-- Analyse des changements
-
-✅ **Infrastructure queue:**
-- Horizon configuré pour prod
-- 3 queues (high/default/low)
-- Auto-scaling 3-10 workers
-
-**Tests attendus:** +15 tests minimum (total ~55 tests)
+**Dépendances :** STORY-013
 
 ---
 
-## ⚠️ Risques et Mitigations Sprint 2
+### STORY-017 : AlertService (adapter existant)
 
-**Risque 1:** Parsing HTML complexe (sites avec JS rendering)
-- **Mitigation:** Limiter le scope à HTML statique pour v1, noter limitation
+**Epic :** EPIC-004 — Alertes et Notifications
+**Priorité :** Must Have
+**Points :** 5
 
-**Risque 2:** Performance des checks HTTP (timeout)
-- **Mitigation:** Timeout 30s + retry 3x avec backoff
+**User Story :**
+En tant que système,
+Je veux créer des alertes intelligentes lors de changements détectés,
+Afin de notifier l'utilisateur des problèmes critiques.
 
-**Risque 3:** Horizon installation Windows
-- **Mitigation:** Déjà géré dans STORY-016, documentation claire
+**Critères d'acceptation :**
+- [ ] `createBacklinkLostAlert()` — sévérité selon tier (tier1=critical, tier2=high)
+- [ ] `createBacklinkChangedAlert()` — sévérité selon type (nofollow=high, ancre=medium)
+- [ ] `createBacklinkRecoveredAlert()` — sévérité low, fermer les alertes précédentes
+- [ ] Déduplication : pas de nouvelle alerte si alerte non lue du même type existe
+- [ ] Attributs : type, severity, backlink_id, title, message, is_read, read_at
+- [ ] Tests unitaires du service
 
-**Risque 4:** Volume de checks élevé
-- **Mitigation:** Throttling + auto-scaling workers
+**Notes techniques :**
+- Service existant dans `app/Services/AlertService.php` — compléter
+- Déduplication : `Alert::where('backlink_id')->where('type')->where('is_read', false)->exists()`
 
----
-
-## 🔮 Preview Sprint 3
-
-**Sprint 3 Goal:** Système d'alertes et notifications
-
-**Features clés:**
-- Alerts CRUD (détection automatique changements)
-- Email notifications
-- Dashboard avec statistiques
-- Graphiques évolution backlinks
-
-**Estimated:** 35-40 points
+**Dépendances :** STORY-013
 
 ---
 
-## 📁 Fichiers Critiques à Créer
+### STORY-018 : Centre de notifications in-app (Blade/Alpine)
 
-- `app/Models/Backlink.php` - Modèle principal
-- `app/Services/Monitoring/BacklinkChecker.php` - Service vérification HTTP
-- `app/Jobs/Monitoring/CheckBacklink.php` - Job asynchrone
-- `app/Http/Controllers/Api/V1/BacklinkController.php` - Controller API
-- `database/migrations/*_create_backlink_checks_table.php` - Historique
-- `app/Console/Commands/MonitorBacklinks.php` - Command schedulé
-- `resources/js/components/Backlinks/BacklinksList.vue` - Liste UI
-- `resources/js/components/Backlinks/BacklinkForm.vue` - Formulaire UI
+**Epic :** EPIC-004 — Alertes et Notifications
+**Priorité :** Must Have
+**Points :** 5
+
+**User Story :**
+En tant qu'utilisateur,
+Je veux voir mes alertes dans l'application et les marquer comme lues,
+Afin de gérer mes notifications sans quitter l'interface.
+
+**Critères d'acceptation :**
+- [ ] Page `/alerts` avec liste paginée (date, type, sévérité, backlink, statut)
+- [ ] Compteur de non-lues dans la navbar (badge rouge)
+- [ ] Marquer comme lu : bouton unitaire et "Tout marquer comme lu"
+- [ ] Filtre par sévérité et par statut (lues/non-lues)
+- [ ] Badge de sévérité coloré : critique=rouge, high=orange, medium=jaune, low=bleu
+- [ ] Lien vers le backlink concerné
+
+**Notes techniques :**
+- AlertController@index déjà défini
+- Compteur navbar via accessor ou scope sur User
+- AlpineJS pour marquer comme lu via fetch API
+- Routes : PATCH `/alerts/{id}/read` et POST `/alerts/read-all`
+
+**Dépendances :** STORY-017
+
+---
+
+### STORY-019 : Webhook configurable (URL + secret)
+
+**Epic :** EPIC-004 — Alertes et Notifications
+**Priorité :** Must Have
+**Points :** 5
+
+**User Story :**
+En tant qu'utilisateur,
+Je veux configurer un webhook pour recevoir les alertes dans Slack ou un outil externe,
+Afin d'être notifié en temps réel sans surveiller l'application.
+
+**Critères d'acceptation :**
+- [ ] Page de configuration webhook : URL, secret HMAC, types d'alertes à envoyer
+- [ ] Envoi HTTP POST lors de chaque nouvelle alerte (en queue)
+- [ ] Payload JSON : `{ event, alert: { type, severity, backlink_url, message }, timestamp, signature }`
+- [ ] Signature HMAC-SHA256 dans header `X-Webhook-Signature`
+- [ ] Retry 3 fois si échec (timeout 10s)
+- [ ] Log des envois et erreurs
+- [ ] Bouton "Tester le webhook"
+
+**Notes techniques :**
+- Colonne JSON dans users : `webhook_url`, `webhook_secret`, `webhook_events`
+- Job `SendWebhookJob` dispatché par AlertService après création alerte
+- `Http::withHeaders(['X-Webhook-Signature' => $signature])->post($url, $payload)`
+
+**Dépendances :** STORY-017
+
+---
+
+### STORY-020 : Dashboard métriques (stats globales)
+
+**Epic :** EPIC-007 — Dashboard et Rapports
+**Priorité :** Must Have
+**Points :** 5
+
+**User Story :**
+En tant qu'utilisateur,
+Je veux voir un dashboard avec les métriques clés de mon portefeuille de backlinks,
+Afin de piloter ma stratégie SEO en un coup d'œil.
+
+**Critères d'acceptation :**
+- [ ] KPI cards : total backlinks, actifs, perdus, taux de disponibilité global
+- [ ] Graphique disponibilité sur 30 jours
+- [ ] Répartition par statut (barres ou donut)
+- [ ] Top 5 backlinks récemment perdus
+- [ ] Top 5 projets par nombre de backlinks
+- [ ] Dernière vérification globale (timestamp)
+
+**Notes techniques :**
+- DashboardController@index existant — enrichir avec les métriques
+- Cache les stats 5 minutes : `Cache::remember('dashboard_stats', 300, fn() => ...)`
+- Chart.js pour les graphiques
+
+**Dépendances :** STORY-007, STORY-013
+
+---
+
+### STORY-021 : Widget alertes récentes sur dashboard
+
+**Epic :** EPIC-007 — Dashboard et Rapports
+**Priorité :** Must Have
+**Points :** 3
+
+**User Story :**
+En tant qu'utilisateur,
+Je veux voir les dernières alertes directement sur le dashboard,
+Afin d'identifier immédiatement les problèmes urgents.
+
+**Critères d'acceptation :**
+- [ ] Widget "Alertes récentes" : les 5 dernières alertes non lues
+- [ ] Chaque alerte : icône sévérité, message court, backlink concerné, date relative
+- [ ] Lien "Voir toutes les alertes" vers `/alerts`
+- [ ] Si aucune alerte : message positif "Tout va bien"
+
+**Notes techniques :**
+- `Alert::with('backlink')->unread()->latest()->limit(5)->get()` dans DashboardController
+- Composant Blade `<x-alert-widget>`
+
+**Dépendances :** STORY-018, STORY-020
+
+---
+
+## Allocation du Sprint 2
+
+### Sprint 2 (17/02 → 03/03/2026) — 50/50 points
+
+**Objectif :** Livrer un produit fonctionnel de bout en bout : backlinks CRUD, monitoring automatique, alertes en temps réel et dashboard de pilotage.
+
+#### Semaine 1 — Fondations backlinks + moteur de vérification (26 pts)
+
+| Story | Titre | Points | Priorité |
+|-------|-------|--------|---------|
+| STORY-007 | Backlinks List Page | 3 | Must Have |
+| STORY-009 | Backlink Create/Edit Form | 3 | Must Have |
+| STORY-010 | Backlink Delete + Badges | 2 | Must Have |
+| STORY-012 | BacklinkCheckerService | 5 | Must Have |
+| STORY-013 | CheckBacklinkJob + Queue | 5 | Must Have |
+| STORY-015 | Scheduler cron + Artisan | 3 | Must Have |
+| STORY-017 | AlertService | 5 | Must Have |
+
+#### Semaine 2 — Interface complète + dashboard (24 pts)
+
+| Story | Titre | Points | Priorité |
+|-------|-------|--------|---------|
+| STORY-011 | Backlink Detail + Historique | 3 | Must Have |
+| STORY-014 | Vérification manuelle | 3 | Must Have |
+| STORY-018 | Centre de notifications | 5 | Must Have |
+| STORY-019 | Webhook configurable | 5 | Must Have |
+| STORY-020 | Dashboard métriques | 5 | Must Have |
+| STORY-021 | Widget alertes dashboard | 3 | Must Have |
+
+**Risques :**
+- Parsing HTML variable selon les sites (mitigation : tests avec fixtures HTML)
+- Fiabilité des envois webhook externes (mitigation : retry queue + logs)
+- Volume de jobs en queue (mitigation : QUEUE_CONNECTION=sync en dev)
+
+---
+
+## Traçabilité Epic → Stories
+
+| Epic | Nom | Stories | Points |
+|------|-----|---------|--------|
+| EPIC-002 | Gestion des Backlinks | STORY-007, 009, 010, 011 | 11 pts |
+| EPIC-003 | Monitoring automatique | STORY-012, 013, 014, 015 | 16 pts |
+| EPIC-004 | Alertes et Notifications | STORY-017, 018, 019 | 15 pts |
+| EPIC-007 | Dashboard et Rapports | STORY-020, 021 | 8 pts |
+
+---
+
+## Couverture des exigences fonctionnelles
+
+| FR | Description | Story |
+|----|-------------|-------|
+| FR-005 | Ajouter des backlinks | STORY-009 |
+| FR-006 | Lister les backlinks par projet | STORY-007 |
+| FR-007 | Modifier/supprimer un backlink | STORY-009, 010 |
+| FR-008 | Historique des vérifications | STORY-011 |
+| FR-011 | Vérification automatique quotidienne | STORY-015 |
+| FR-012 | Vérification manuelle | STORY-014 |
+| FR-013 | Détection présence + attributs lien | STORY-012 |
+| FR-014 | Mise à jour statut backlink | STORY-013 |
+| FR-015 | Taux de disponibilité | STORY-011 |
+| FR-016 | Alerte backlink perdu | STORY-017 |
+| FR-017 | Alerte attributs modifiés | STORY-017 |
+| FR-018 | Alerte backlink récupéré | STORY-017 |
+| FR-019 | Notifications webhook | STORY-019 |
+| FR-028 | Dashboard métriques globales | STORY-020 |
+| FR-029 | Alertes récentes sur dashboard | STORY-021 |
+
+---
+
+## Definition of Done
+
+Pour qu'une story soit considérée complète :
+- [ ] Code implémenté et commité
+- [ ] Tests écrits et passants
+- [ ] Validation des critères d'acceptation
+- [ ] Pas de régressions sur les tests existants
+- [ ] Code conforme aux conventions du projet (CLAUDE.md)
+
+---
+
+## Ordre d'implémentation recommandé
+
+1. STORY-007 → STORY-009 → STORY-010 (CRUD backlinks — interface visible rapidement)
+2. STORY-012 → STORY-013 → STORY-015 (moteur de vérification)
+3. STORY-017 → STORY-018 → STORY-019 (alertes)
+4. STORY-011 → STORY-014 (détail + vérification manuelle)
+5. STORY-020 → STORY-021 (dashboard)
+
+Lancer `/dev-story STORY-007` pour commencer l'implémentation.
+
+---
+
+**Plan généré avec BMAD Method v6 — Phase 4 (Implementation Planning) — 2026-02-17**

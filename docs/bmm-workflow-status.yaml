@@ -71,6 +71,6 @@ workflow_status:
 
   - name: sprint-planning
     phase: 4
-    status: "docs/sprint-01-plan.md"
+    status: "docs/sprint-02-plan.md"
     description: "Sprint planning with story breakdown"
-    completed_at: "2026-02-09T23:50:00Z"
+    completed_at: "2026-02-17T00:00:00Z"
