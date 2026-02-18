@@ -53,13 +53,37 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        $project->load(['backlinks' => function($query) {
-            $query->latest()->take(10);
-        }]);
-
         $project->loadCount('backlinks');
 
-        return view('pages.projects.show', compact('project'));
+        // Stats avancées pour le pilotage
+        $allBacklinks = $project->backlinks()->get();
+
+        $stats = [
+            'total'            => $allBacklinks->count(),
+            'active'           => $allBacklinks->where('status', 'active')->count(),
+            'lost'             => $allBacklinks->where('status', 'lost')->count(),
+            'changed'          => $allBacklinks->where('status', 'changed')->count(),
+            // Qualité : actif + indexé + dofollow
+            'quality'          => $allBacklinks->where('status', 'active')->where('is_indexed', true)->where('is_dofollow', true)->count(),
+            'not_indexed'      => $allBacklinks->where('is_indexed', false)->count(),
+            'not_dofollow'     => $allBacklinks->where('is_dofollow', false)->count(),
+            'unknown_indexed'  => $allBacklinks->whereNull('is_indexed')->count(),
+            'budget_total'     => $allBacklinks->sum('price'),
+            'budget_active'    => $allBacklinks->where('status', 'active')->sum('price'),
+        ];
+
+        // Score de santé : 0-100 basé sur actifs, indexés, dofollow
+        $stats['health_score'] = $stats['total'] > 0 ? (int) round(
+            ($stats['active'] / $stats['total']) * 60 +
+            ($stats['total'] > 0 && ($stats['total'] - $stats['unknown_indexed']) > 0
+                ? ($stats['quality'] / max(1, $stats['total'] - $stats['unknown_indexed'])) * 40
+                : 0)
+        ) : 0;
+
+        // 10 derniers backlinks pour le tableau
+        $recentBacklinks = $project->backlinks()->latest()->take(10)->get();
+
+        return view('pages.projects.show', compact('project', 'stats', 'recentBacklinks'));
     }
 
     /**

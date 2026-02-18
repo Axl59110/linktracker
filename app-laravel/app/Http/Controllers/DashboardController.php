@@ -48,7 +48,7 @@ class DashboardController extends Controller
 
         $recentBacklinks = Backlink::with('project')
             ->latest()
-            ->take(5)
+            ->take(10)
             ->get();
 
         $recentAlerts = Alert::with('backlink.project')
@@ -98,10 +98,23 @@ class DashboardController extends Controller
 
             foreach ($dates as $date) {
                 $dayQuery = clone $query;
-                $activeVal   = (clone $dayQuery)->where('status', 'active')->whereDate('created_at', '<=', $date)->count();
-                $lostVal     = (clone $dayQuery)->where('status', 'lost')->whereDate('last_checked_at', $date)->count();
-                $changedVal  = (clone $dayQuery)->where('status', 'changed')->whereDate('last_checked_at', $date)->count();
-                $gainedVal   = (clone $dayQuery)->whereDate('created_at', $date)->count();
+                // Pour "gained" : utiliser published_at si renseigné, sinon created_at
+                $gainedVal = (clone $dayQuery)->where(function ($q) use ($date) {
+                    $q->whereNotNull('published_at')->whereDate('published_at', $date)
+                      ->orWhere(function ($q2) use ($date) {
+                          $q2->whereNull('published_at')->whereDate('created_at', $date);
+                      });
+                })->count();
+                // Courbe "active" : cumulatif basé sur published_at ou created_at
+                $activeVal  = (clone $dayQuery)->where('status', 'active')->where(function ($q) use ($date) {
+                    $q->where(function ($q2) use ($date) {
+                        $q2->whereNotNull('published_at')->whereDate('published_at', '<=', $date);
+                    })->orWhere(function ($q2) use ($date) {
+                        $q2->whereNull('published_at')->whereDate('created_at', '<=', $date);
+                    });
+                })->count();
+                $lostVal    = (clone $dayQuery)->where('status', 'lost')->whereDate('last_checked_at', $date)->count();
+                $changedVal = (clone $dayQuery)->where('status', 'changed')->whereDate('last_checked_at', $date)->count();
 
                 $active[]   = $activeVal;
                 $lost[]     = $lostVal;

@@ -18,6 +18,7 @@ class Backlink extends Model
         'http_status',
         'rel_attributes',
         'is_dofollow',
+        'is_indexed',
         'first_seen_at',
         'last_checked_at',
         // Extended fields
@@ -45,6 +46,7 @@ class Backlink extends Model
 
     protected $casts = [
         'is_dofollow' => 'boolean',
+        'is_indexed' => 'boolean',
         'invoice_paid' => 'boolean',
         'first_seen_at' => 'datetime',
         'last_checked_at' => 'datetime',

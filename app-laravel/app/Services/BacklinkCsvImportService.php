@@ -257,12 +257,26 @@ class BacklinkCsvImportService
                 default     => 'active',
             };
 
+            // Indexed : "Yes" → true, "No" → false, vide → null
+            $isIndexed = null;
+            if (isset($raw['indexed']) && $raw['indexed'] !== '') {
+                $isIndexed = strtolower($raw['indexed']) === 'yes' || $raw['indexed'] === '1';
+            }
+
             $price = null;
             if (isset($raw['price']) && $raw['price'] !== '') {
                 $priceVal = (float) str_replace(',', '.', $raw['price']);
                 if ($priceVal > 0) {
                     $price = $priceVal;
                 }
+            }
+
+            // Published at : depuis "Created At" du CSV tiers
+            $publishedAt = null;
+            if (!empty($raw['created at'])) {
+                try {
+                    $publishedAt = \Carbon\Carbon::parse($raw['created at'])->toDateString();
+                } catch (\Exception $e) {}
             }
 
             Backlink::create([
@@ -272,10 +286,12 @@ class BacklinkCsvImportService
                 'anchor_text'   => $raw['anchor'] ?: null,
                 'status'        => $status,
                 'is_dofollow'   => $isDofollow,
+                'is_indexed'    => $isIndexed,
                 'tier_level'    => 'tier1',
                 'spot_type'     => 'external',
                 'price'         => $price,
                 'currency'      => 'EUR',
+                'published_at'  => $publishedAt,
                 'first_seen_at' => now(),
             ]);
 
