@@ -137,7 +137,7 @@ class DashboardChartsTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('90');  // uptimeRate = 90%
-        $response->assertSee('vérifs · 30j');
+        $response->assertSee('vérifs');
     }
 
     public function test_dashboard_shows_no_checks_message_when_no_data(): void

@@ -574,4 +574,54 @@ class BacklinkController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
+    /**
+     * Bulk delete backlinks.
+     * POST /backlinks/bulk-delete
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1|max:500',
+            'ids.*' => 'integer|exists:backlinks,id',
+        ]);
+
+        $deleted = Backlink::whereIn('id', $request->ids)->delete();
+
+        return redirect()->back()->with('success', "{$deleted} backlink(s) supprimé(s).");
+    }
+
+    /**
+     * Bulk edit backlinks (published_at, status, is_indexed).
+     * POST /backlinks/bulk-edit
+     */
+    public function bulkEdit(Request $request)
+    {
+        $request->validate([
+            'ids'          => 'required|array|min:1|max:500',
+            'ids.*'        => 'integer|exists:backlinks,id',
+            'field'        => 'required|in:published_at,status,is_indexed,is_dofollow',
+            'value'        => 'nullable|string|max:20',
+        ]);
+
+        $field = $request->field;
+        $value = $request->value;
+
+        // Conversion selon le champ
+        $update = match ($field) {
+            'published_at' => ['published_at' => $value ?: null],
+            'status'       => in_array($value, ['active', 'lost', 'changed']) ? ['status' => $value] : null,
+            'is_indexed'   => ['is_indexed' => $value === '1' ? true : ($value === '0' ? false : null)],
+            'is_dofollow'  => ['is_dofollow' => $value === '1'],
+            default        => null,
+        };
+
+        if ($update === null) {
+            return redirect()->back()->withErrors(['field' => 'Valeur invalide.']);
+        }
+
+        $updated = Backlink::whereIn('id', $request->ids)->update($update);
+
+        return redirect()->back()->with('success', "{$updated} backlink(s) mis à jour.");
+    }
+
 }

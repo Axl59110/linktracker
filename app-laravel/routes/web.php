@@ -51,6 +51,10 @@ Route::get('/backlinks/export', [BacklinkController::class, 'exportCsv'])->name(
 Route::resource('backlinks', BacklinkController::class)
     ->middleware(['throttle:60,1']);
 
+// Bulk actions (suppression/édition en masse)
+Route::post('/backlinks/bulk-delete', [BacklinkController::class, 'bulkDelete'])->name('backlinks.bulk-delete');
+Route::post('/backlinks/bulk-edit', [BacklinkController::class, 'bulkEdit'])->name('backlinks.bulk-edit');
+
 // Vérification manuelle d'un backlink (STORY-044: 10 req/min par utilisateur)
 Route::post('/backlinks/{backlink}/check', [BacklinkController::class, 'check'])
     ->name('backlinks.check')

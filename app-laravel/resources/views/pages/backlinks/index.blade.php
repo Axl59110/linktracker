@@ -145,17 +145,104 @@
     </div>
 
     @if($backlinks->count() > 0)
+        <div x-data="bulkActions()" class="space-y-3">
+
+        {{-- Barre d'actions en masse (visible quand sélection > 0) --}}
+        <div x-show="selected.length > 0" x-cloak
+             class="bg-brand-600 text-white rounded-xl px-5 py-3 flex items-center gap-4 flex-wrap shadow-lg">
+            <span class="text-sm font-semibold" x-text="selected.length + ' sélectionné(s)'"></span>
+
+            {{-- Bulk delete --}}
+            <form :action="'{{ route('backlinks.bulk-delete') }}'" method="POST" @submit.prevent="confirmBulkDelete($event)">
+                @csrf
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Supprimer
+                </button>
+            </form>
+
+            {{-- Bulk edit : date publication --}}
+            <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-2">
+                @csrf
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <input type="hidden" name="field" value="published_at">
+                <input type="date" name="value"
+                       class="px-2 py-1 text-xs text-neutral-800 border border-brand-400 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-white">
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">
+                    Définir date pub.
+                </button>
+            </form>
+
+            {{-- Bulk edit : statut --}}
+            <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-2">
+                @csrf
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <input type="hidden" name="field" value="status">
+                <select name="value"
+                        class="px-2 py-1 text-xs text-neutral-800 border border-brand-400 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-white">
+                    <option value="active">Actif</option>
+                    <option value="lost">Perdu</option>
+                    <option value="changed">Modifié</option>
+                </select>
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">
+                    Changer statut
+                </button>
+            </form>
+
+            {{-- Bulk edit : indexation --}}
+            <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-2">
+                @csrf
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <input type="hidden" name="field" value="is_indexed">
+                <select name="value"
+                        class="px-2 py-1 text-xs text-neutral-800 border border-brand-400 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-white">
+                    <option value="1">Indexé</option>
+                    <option value="0">Non indexé</option>
+                </select>
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">
+                    Indexation
+                </button>
+            </form>
+
+            <button @click="selected = []"
+                    class="ml-auto text-xs text-white/70 hover:text-white underline">
+                Désélectionner
+            </button>
+        </div>
+
         <div class="bg-white rounded-lg border border-neutral-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <x-table>
                     <x-slot:header>
                         <tr>
+                            <th class="px-4 py-3 w-10">
+                                <input type="checkbox" @change="toggleAll($event)"
+                                       :checked="selected.length === allIds.length && allIds.length > 0"
+                                       class="w-4 h-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                            </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Site</th>
                             <x-sortable-header field="source_url" label="URL Source" />
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Ancre</th>
                             <x-sortable-header field="tier_level" label="Tier" />
                             <x-sortable-header field="spot_type" label="Réseau" />
                             <x-sortable-header field="status" label="Statut" />
+                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase">DF</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase">Indexé</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">DA</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Prix</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase w-24">Actions</th>
@@ -163,7 +250,13 @@
                     </x-slot:header>
                     <x-slot:body>
                         @foreach($backlinks as $backlink)
-                            <tr class="hover:bg-neutral-50">
+                            <tr class="hover:bg-neutral-50" :class="selected.includes({{ $backlink->id }}) ? 'bg-brand-50' : ''">
+                                <td class="px-4 py-3 w-10">
+                                    <input type="checkbox"
+                                           :value="{{ $backlink->id }}"
+                                           x-model="selected"
+                                           class="w-4 h-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                                </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">
                                     {{ $backlink->project?->name ?? 'N/A' }}
                                 </td>
@@ -193,6 +286,26 @@
                                     <x-badge variant="{{ $backlink->status === 'active' ? 'success' : ($backlink->status === 'lost' ? 'danger' : 'warning') }}">
                                         {{ ucfirst($backlink->status) }}
                                     </x-badge>
+                                </td>
+                                {{-- Dofollow --}}
+                                <td class="px-4 py-4 text-center whitespace-nowrap">
+                                    @if($backlink->is_dofollow === true)
+                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">DF</span>
+                                    @elseif($backlink->is_dofollow === false)
+                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">NF</span>
+                                    @else
+                                        <span class="text-neutral-300 text-xs">—</span>
+                                    @endif
+                                </td>
+                                {{-- Indexé --}}
+                                <td class="px-4 py-4 text-center whitespace-nowrap">
+                                    @if($backlink->is_indexed === true)
+                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">Yes</span>
+                                    @elseif($backlink->is_indexed === false)
+                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">No</span>
+                                    @else
+                                        <span class="text-neutral-300 text-xs">—</span>
+                                    @endif
                                 </td>
                                 {{-- Colonne DA --}}
                                 @php
@@ -252,6 +365,8 @@
                 {{ $backlinks->links() }}
             </div>
         @endif
+
+        </div>{{-- /x-data bulkActions --}}
     @else
         <div class="bg-white p-12 rounded-lg border border-neutral-200 text-center">
             <span class="text-6xl mb-4 block">🔗</span>
@@ -261,3 +376,25 @@
         </div>
     @endif
 @endsection
+
+@push('scripts')
+<script>
+function bulkActions() {
+    return {
+        selected: [],
+        allIds: @json($backlinks->pluck('id')),
+
+        toggleAll(e) {
+            this.selected = e.target.checked ? [...this.allIds] : [];
+        },
+
+        confirmBulkDelete(e) {
+            if (!confirm(`Supprimer définitivement ${this.selected.length} backlink(s) ? Cette action est irréversible.`)) {
+                return;
+            }
+            e.target.submit();
+        }
+    };
+}
+</script>
+@endpush

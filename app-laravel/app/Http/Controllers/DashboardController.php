@@ -17,7 +17,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Statistiques mises en cache 5 minutes (invalidées via BacklinkObserver)
+        // Statistiques mises en cache 5 minutes
         $stats = Cache::remember('dashboard_stats', 300, function () {
             $activeBacklinks  = Backlink::where('status', 'active')->count();
             $lostBacklinks    = Backlink::where('status', 'lost')->count();
@@ -29,14 +29,27 @@ class DashboardController extends Controller
             $presentChecks = BacklinkCheck::where('checked_at', '>=', now()->subDays(30))->where('is_present', true)->count();
             $uptimeRate    = $totalChecks > 0 ? round(($presentChecks / $totalChecks) * 100, 1) : null;
 
+            // Stats avancées (pilotage)
+            $qualityLinks    = Backlink::where('status', 'active')->where('is_indexed', true)->where('is_dofollow', true)->count();
+            $notIndexed      = Backlink::where('is_indexed', false)->count();
+            $notDofollow     = Backlink::where('is_dofollow', false)->count();
+            $unknownIndexed  = Backlink::whereNull('is_indexed')->count();
+            $budgetTotal     = Backlink::sum('price');
+            $budgetActive    = Backlink::where('status', 'active')->sum('price');
+
+            $healthScore = $totalBacklinks > 0 ? (int) round(
+                ($activeBacklinks / $totalBacklinks) * 60 +
+                ($totalBacklinks - $unknownIndexed > 0
+                    ? ($qualityLinks / max(1, $totalBacklinks - $unknownIndexed)) * 40
+                    : 0)
+            ) : 0;
+
             return compact(
-                'activeBacklinks',
-                'lostBacklinks',
-                'changedBacklinks',
-                'totalBacklinks',
-                'totalProjects',
-                'totalChecks',
-                'uptimeRate'
+                'activeBacklinks', 'lostBacklinks', 'changedBacklinks',
+                'totalBacklinks', 'totalProjects',
+                'totalChecks', 'uptimeRate',
+                'qualityLinks', 'notIndexed', 'notDofollow', 'unknownIndexed',
+                'budgetTotal', 'budgetActive', 'healthScore'
             );
         });
 

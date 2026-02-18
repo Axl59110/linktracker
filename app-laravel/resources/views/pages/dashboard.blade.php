@@ -9,75 +9,113 @@
 @section('content')
 
 {{-- ═══════════════════════════════════════════════════════════
-     KPI STRIP — données critiques au premier coup d'œil
+     KPI STRIP — Score de santé + pilotage global
      ═══════════════════════════════════════════════════════════ --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+@php
+    $score = $healthScore ?? 0;
+    $scoreColor  = $score >= 75 ? 'text-emerald-600' : ($score >= 50 ? 'text-amber-500' : 'text-red-500');
+    $scoreBg     = $score >= 75 ? 'bg-emerald-50' : ($score >= 50 ? 'bg-amber-50' : 'bg-red-50');
+    $scoreBorder = $score >= 75 ? 'border-emerald-200' : ($score >= 50 ? 'border-amber-200' : 'border-red-200');
+    $scoreLabel  = $score >= 75 ? 'Bonne santé' : ($score >= 50 ? 'Attention' : 'Critique');
+    $scoreStroke = $score >= 75 ? '#10b981' : ($score >= 50 ? '#f59e0b' : '#ef4444');
+@endphp
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
 
-    {{-- Backlinks actifs --}}
-    <div class="bg-white rounded-xl border border-neutral-200 p-5 relative overflow-hidden group hover:border-emerald-200 hover:shadow-sm transition-all duration-200">
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-50/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-        <div class="relative">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold uppercase tracking-widest text-neutral-400">Actifs</span>
-                <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"></span>
+    {{-- Score de santé --}}
+    <div class="bg-white rounded-xl border border-neutral-200 p-5 flex flex-col items-center justify-center">
+        <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-2">Score de santé</p>
+        <div class="relative w-24 h-24 mb-2">
+            <svg class="w-24 h-24 -rotate-90" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f3f4f6" stroke-width="3"/>
+                <circle cx="18" cy="18" r="15.9" fill="none"
+                    stroke="{{ $scoreStroke }}"
+                    stroke-width="3"
+                    stroke-dasharray="{{ $score }}, 100"
+                    stroke-linecap="round"/>
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-xl font-black {{ $scoreColor }}">{{ $score }}</span>
             </div>
-            <p class="text-4xl font-black text-neutral-900 tabular-nums leading-none">{{ $activeBacklinks ?? 0 }}</p>
-            <p class="text-xs text-neutral-400 mt-2">backlinks en ligne</p>
         </div>
+        <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-semibold border rounded-full {{ $scoreBg }} {{ $scoreColor }} {{ $scoreBorder }}">
+            {{ $scoreLabel }}
+        </span>
+        <p class="text-xs text-neutral-400 mt-2">{{ $totalProjects ?? 0 }} sites · {{ $totalBacklinks ?? 0 }} backlinks</p>
     </div>
 
-    {{-- Backlinks perdus --}}
-    <div class="bg-white rounded-xl border border-neutral-200 p-5 relative overflow-hidden group hover:border-red-200 hover:shadow-sm transition-all duration-200">
-        <div class="absolute inset-0 bg-gradient-to-br from-red-50/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-        <div class="relative">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold uppercase tracking-widest text-neutral-400">Perdus</span>
+    {{-- 6 KPI cards --}}
+    <div class="lg:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-4">
+
+        {{-- Total / Actifs --}}
+        <div class="bg-white rounded-xl border border-neutral-200 p-4">
+            <p class="text-xs text-neutral-400 mb-1">Backlinks actifs</p>
+            <p class="text-2xl font-black text-neutral-900 tabular-nums">{{ $activeBacklinks ?? 0 }}</p>
+            <div class="flex gap-2 mt-1.5 text-xs">
                 @if(($lostBacklinks ?? 0) > 0)
-                    <span class="w-2 h-2 rounded-full bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.6)]"></span>
-                @else
-                    <span class="w-2 h-2 rounded-full bg-neutral-200"></span>
+                    <span class="text-red-500">{{ $lostBacklinks }} perdus</span>
                 @endif
-            </div>
-            <p class="text-4xl font-black tabular-nums leading-none {{ ($lostBacklinks ?? 0) > 0 ? 'text-red-500' : 'text-neutral-300' }}">{{ $lostBacklinks ?? 0 }}</p>
-            <p class="text-xs text-neutral-400 mt-2">introuvables</p>
-        </div>
-    </div>
-
-    {{-- Backlinks modifiés --}}
-    <div class="bg-white rounded-xl border border-neutral-200 p-5 relative overflow-hidden group hover:border-amber-200 hover:shadow-sm transition-all duration-200">
-        <div class="absolute inset-0 bg-gradient-to-br from-amber-50/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-        <div class="relative">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold uppercase tracking-widest text-neutral-400">Modifiés</span>
                 @if(($changedBacklinks ?? 0) > 0)
-                    <span class="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]"></span>
-                @else
-                    <span class="w-2 h-2 rounded-full bg-neutral-200"></span>
+                    <span class="text-amber-500">{{ $changedBacklinks }} modifiés</span>
+                @endif
+                @if(($lostBacklinks ?? 0) === 0 && ($changedBacklinks ?? 0) === 0)
+                    <span class="text-emerald-600 font-semibold">Tout OK</span>
                 @endif
             </div>
-            <p class="text-4xl font-black tabular-nums leading-none {{ ($changedBacklinks ?? 0) > 0 ? 'text-amber-500' : 'text-neutral-300' }}">{{ $changedBacklinks ?? 0 }}</p>
-            <p class="text-xs text-neutral-400 mt-2">attributs changés</p>
         </div>
-    </div>
 
-    {{-- Uptime + sites --}}
-    <div class="bg-white rounded-xl border border-neutral-200 p-5 relative overflow-hidden group hover:border-brand-200 hover:shadow-sm transition-all duration-200">
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-50/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-        <div class="relative">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold uppercase tracking-widest text-neutral-400">Uptime</span>
-                <span class="text-xs text-neutral-400 font-medium">{{ $totalProjects ?? 0 }} sites</span>
-            </div>
-            @if(!is_null($uptimeRate ?? null))
-                <p class="text-4xl font-black tabular-nums leading-none {{ ($uptimeRate >= 90) ? 'text-emerald-500' : (($uptimeRate >= 70) ? 'text-amber-500' : 'text-red-500') }}">{{ $uptimeRate }}<span class="text-xl font-bold text-neutral-400">%</span></p>
-                <p class="text-xs text-neutral-400 mt-2">{{ $totalChecks ?? 0 }} vérifs · 30j</p>
-            @else
-                <p class="text-4xl font-black tabular-nums leading-none text-neutral-200">—</p>
-                <p class="text-xs text-neutral-400 mt-2">pas de données</p>
+        {{-- Liens de qualité --}}
+        <div class="bg-white rounded-xl border border-neutral-200 p-4">
+            <p class="text-xs text-neutral-400 mb-1">Liens de qualité</p>
+            <p class="text-2xl font-black text-emerald-600 tabular-nums">{{ $qualityLinks ?? 0 }}</p>
+            <p class="text-xs text-neutral-400 mt-1">Actif + indexé + dofollow</p>
+        </div>
+
+        {{-- Non indexés --}}
+        <div class="bg-white rounded-xl border border-neutral-200 p-4">
+            <p class="text-xs text-neutral-400 mb-1">Non indexés</p>
+            <p class="text-2xl font-black {{ ($notIndexed ?? 0) > 0 ? 'text-amber-500' : 'text-neutral-900' }} tabular-nums">{{ $notIndexed ?? 0 }}</p>
+            @if(($unknownIndexed ?? 0) > 0)
+                <p class="text-xs text-neutral-400 mt-1">+ {{ $unknownIndexed }} inconnus</p>
             @endif
         </div>
-    </div>
 
+        {{-- Nofollow --}}
+        <div class="bg-white rounded-xl border border-neutral-200 p-4">
+            <p class="text-xs text-neutral-400 mb-1">Nofollow</p>
+            <p class="text-2xl font-black {{ ($notDofollow ?? 0) > 0 ? 'text-amber-500' : 'text-neutral-900' }} tabular-nums">{{ $notDofollow ?? 0 }}</p>
+            <p class="text-xs text-neutral-400 mt-1">liens sans jus SEO</p>
+        </div>
+
+        {{-- Budget total --}}
+        <div class="bg-white rounded-xl border border-neutral-200 p-4">
+            <p class="text-xs text-neutral-400 mb-1">Budget total</p>
+            <p class="text-2xl font-black text-neutral-900 tabular-nums">
+                @if(($budgetTotal ?? 0) > 0)
+                    {{ number_format($budgetTotal, 0, ',', ' ') }} €
+                @else
+                    <span class="text-neutral-300">—</span>
+                @endif
+            </p>
+            @if(($budgetActive ?? 0) > 0 && ($budgetActive ?? 0) != ($budgetTotal ?? 0))
+                <p class="text-xs text-neutral-400 mt-1">{{ number_format($budgetActive, 0, ',', ' ') }} € actifs</p>
+            @endif
+        </div>
+
+        {{-- Uptime --}}
+        <div class="bg-white rounded-xl border border-neutral-200 p-4">
+            <p class="text-xs text-neutral-400 mb-1">Uptime · 30j</p>
+            @if(!is_null($uptimeRate ?? null))
+                <p class="text-2xl font-black tabular-nums {{ ($uptimeRate >= 90) ? 'text-emerald-500' : (($uptimeRate >= 70) ? 'text-amber-500' : 'text-red-500') }}">
+                    {{ $uptimeRate }}<span class="text-sm font-bold text-neutral-400">%</span>
+                </p>
+                <p class="text-xs text-neutral-400 mt-1">{{ $totalChecks ?? 0 }} vérifs</p>
+            @else
+                <p class="text-2xl font-black tabular-nums text-neutral-200">—</p>
+                <p class="text-xs text-neutral-400 mt-1">pas de données</p>
+            @endif
+        </div>
+
+    </div>
 </div>
 
 {{-- ═══════════════════════════════════════════════════════════
