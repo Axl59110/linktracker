@@ -5,8 +5,8 @@
 version: "6.0.0"
 project_name: "Link Tracker"
 project_level: 4
-current_sprint: 4
-sprint_plan_path: "docs/sprint-04-plan.md"
+current_sprint: 5
+sprint_plan_path: "docs/sprint-05-plan.md"
 
 sprints:
   - sprint_number: 1
@@ -463,11 +463,93 @@ sprints:
         completed_at: "2026-02-18T23:00:00Z"
         notes: "docs/API.md (routes, rate limiting, exemples), docs/SERVICES.md (BacklinkCheckerService, AlertService, SeoMetricService, UrlValidator, jobs, cache), CLAUDE.md mis à jour (nouveaux modèles, services, routes, EPICs Sprint 1-4)."
 
+  - sprint_number: 5
+    start_date: "2026-02-18"
+    end_date: "2026-03-03"
+    capacity_points: 44
+    committed_points: 47
+    completed_points: 26
+    status: "in_progress"
+    goal: "Formaliser les acquis post-Sprint 4 et avancer sur la qualité des données et l'isolation multi-users"
+    sprint_plan_path: "docs/sprint-05-plan.md"
+    stories:
+      - story_id: "STORY-050"
+        title: "Bulk actions — édition et suppression en masse"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T00:00:00Z"
+        notes: "bulkDelete() + bulkEdit() dans BacklinkController, AlpineJS bulkActions(), routes bulk-delete/bulk-edit"
+      - story_id: "STORY-051"
+        title: "Double graphique synchronisé — courbes qualité + bougies"
+        points: 8
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T00:00:00Z"
+        notes: "renderQuality() (4 courbes cumulatives avec toggle) + renderCandles() (gains/pertes), sélecteur période unique 30j/90j/6m/1an"
+      - story_id: "STORY-052"
+        title: "Dashboard health score + KPI scoring"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T00:00:00Z"
+        notes: "Health score 0-100 SVG donut, 6 KPI cards, identique dashboard et projects/show"
+      - story_id: "STORY-053"
+        title: "Import CSV tiers-parti auto-détecté"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T00:00:00Z"
+        notes: "importThirdParty() avec mapping published_at/is_indexed, project_id toujours requis, PHP 8.4 compat"
+      - story_id: "STORY-054"
+        title: "Champ is_indexed + published_at sur les backlinks"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T00:00:00Z"
+        notes: "Migration is_indexed boolean nullable, published_at existant réutilisé, graphiques basés sur published_at"
+      - story_id: "STORY-055"
+        title: "Intégration Ahrefs API réelle"
+        points: 8
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-056"
+        title: "Re-check automatique avant alerte (faux positifs)"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-057"
+        title: "Badge alertes non lues dans la topbar"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-058"
+        title: "Page /projects vue portfolio KPI"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-059"
+        title: "Formulaire backlink autocomplétion projet + plateforme"
+        points: 2
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-060"
+        title: "Tests régression bulk actions"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-061"
+        title: "Multi-utilisateurs — isolation des données par user_id"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+
 velocity:
   sprint_1: 25
   sprint_2: 50
   sprint_3: 44
-  sprint_4: null
+  sprint_4: 43
+  sprint_5: null
   rolling_average: 40
 
 team:
@@ -487,6 +569,11 @@ notes: |
   Sprint 3 terminé : 44/44 points (100%)
   - Epics : EPIC-005 (Métriques SEO), EPIC-006 (Marketplace fondations), EPIC-007 (Graphiques), EPIC-008 (Settings)
 
-  Sprint 4 démarré le 2026-02-18 : 43 points
+  Sprint 4 terminé : 43/43 points (100%)
   - Epics : EPIC-006 (Marketplace), EPIC-007 (Reporting), EPIC-008 (Auth), EPIC-009 (Performance), EPIC-010 (Sécurité), EPIC-011 (UI/UX), EPIC-012 (Qualité)
-  - Ordre recommandé : STORY-045 → 038 → 040 → 036 → 043 → 037 → 039 → 041 → 042 → 044 → 046 → 047 → 048 → 049
+  - Production-ready : 347 tests passants, tag v1.0.0 créé sur GitHub
+
+  Sprint 5 démarré le 2026-02-18 : 47 points (26 déjà livrés)
+  - STORY-050 à 054 : bulk actions, double graphique, health score KPI, CSV tiers, is_indexed — LIVRÉS
+  - Prochaines stories : STORY-055 (Ahrefs API), STORY-056 (re-check), STORY-057 (badge alertes), STORY-061 (multi-users)
+  - Ordre recommandé : STORY-060 → 061 → 057 → 056 → 055 → 058 → 059
