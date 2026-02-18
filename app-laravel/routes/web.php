@@ -9,6 +9,7 @@ use App\Http\Controllers\AlertController;
 use App\Http\Controllers\WebhookSettingsController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +34,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 Route::get('/api/dashboard/chart', [DashboardController::class, 'chartData'])->name('dashboard.chart');
 
 // Projects - CRUD complet avec nouveau layout Blade
+Route::get('/projects/{project}/report', [ProjectController::class, 'report'])->name('projects.report');
 Route::resource('projects', ProjectController::class);
 
 // Import CSV de backlinks (STORY-031) - AVANT la resource pour éviter le conflit avec {backlink}
@@ -78,6 +80,10 @@ Route::get('/settings/webhook', [WebhookSettingsController::class, 'show'])->nam
 Route::put('/settings/webhook', [WebhookSettingsController::class, 'update'])->name('settings.webhook.update');
 Route::post('/settings/webhook/test', [WebhookSettingsController::class, 'test'])->name('settings.webhook.test');
 Route::get('/settings/webhook/generate-secret', [WebhookSettingsController::class, 'generateSecret'])->name('settings.webhook.generate-secret');
+
+// Profile utilisateur (STORY-046)
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
 // Marketplace - Commandes de liens (STORY-032/033)
 Route::resource('orders', OrderController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);

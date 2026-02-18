@@ -137,7 +137,7 @@
                     </a>
 
                     <a
-                        href="{{ route('pages.under-construction') }}"
+                        href="{{ route('profile.show') }}"
                         class="flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
                     >
                         <svg class="w-4 h-4 mr-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

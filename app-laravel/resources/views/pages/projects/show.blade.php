@@ -12,6 +12,9 @@
     {{-- Page Header --}}
     <x-page-header :title="$project->name" :subtitle="$project->url">
         <x-slot:actions>
+            <x-button variant="secondary" href="{{ route('projects.report', $project) }}" target="_blank">
+                📄 Rapport
+            </x-button>
             <x-button variant="secondary" href="{{ route('projects.edit', $project) }}">
                 Modifier
             </x-button>

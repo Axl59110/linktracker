@@ -366,7 +366,7 @@ sprints:
     end_date: "2026-03-03"
     capacity_points: 44
     committed_points: 43
-    completed_points: 29
+    completed_points: 37
     status: "in_progress"
     goal: "Production-ready : Marketplace complète, performance, sécurité, qualité"
     sprint_plan_path: "docs/sprint-04-plan.md"
@@ -394,8 +394,9 @@ sprints:
       - story_id: "STORY-039"
         title: "Rapport HTML exportable par projet"
         points: 5
-        status: "not_started"
-        assigned_to: null
+        status: "completed"
+        assigned_to: "Claude Code"
+        notes: "ProjectController@report, route GET /projects/{project}/report. Vue HTML autonome avec styles print CSS, stats (total/actif/perdu/modifié), tableau backlinks avec DA. Bouton Rapport dans projects/show. 6 tests ProjectReportTest passent."
       - story_id: "STORY-040"
         title: "Indexes DB performance"
         points: 2
@@ -436,8 +437,9 @@ sprints:
       - story_id: "STORY-046"
         title: "Page profil / changement mot de passe"
         points: 3
-        status: "not_started"
-        assigned_to: null
+        status: "completed"
+        assigned_to: "Claude Code"
+        notes: "ProfileController (show + updatePassword), routes GET /profile et PATCH /profile/password. Vue pages/profile/show.blade.php. Lien dans topbar user menu. 7 tests ProfileControllerTest passent."
       - story_id: "STORY-047"
         title: "Pagination + tri Orders"
         points: 2

@@ -99,4 +99,34 @@ class ProjectController extends Controller
             ->route('projects.index')
             ->with('success', 'Projet supprimé avec succès.');
     }
+
+    /**
+     * STORY-039 : Rapport HTML imprimable du projet
+     */
+    public function report(Project $project)
+    {
+        $project->load(['backlinks' => function ($query) {
+            $query->with('checks')->orderBy('status')->orderBy('source_url');
+        }]);
+
+        $stats = [
+            'total'   => $project->backlinks->count(),
+            'active'  => $project->backlinks->where('status', 'active')->count(),
+            'lost'    => $project->backlinks->where('status', 'lost')->count(),
+            'changed' => $project->backlinks->where('status', 'changed')->count(),
+        ];
+
+        // Enrichir avec les métriques de domaine disponibles
+        $domains = $project->backlinks->map(function ($backlink) {
+            return \App\Models\DomainMetric::extractDomain($backlink->source_url);
+        })->unique()->filter()->values();
+
+        $domainMetrics = \App\Models\DomainMetric::whereIn('domain', $domains)
+            ->get()
+            ->keyBy('domain');
+
+        $generatedAt = now();
+
+        return view('pages.projects.report', compact('project', 'stats', 'domainMetrics', 'generatedAt'));
+    }
 }
