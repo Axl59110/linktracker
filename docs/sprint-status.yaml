@@ -366,7 +366,7 @@ sprints:
     end_date: "2026-03-03"
     capacity_points: 44
     committed_points: 43
-    completed_points: 24
+    completed_points: 29
     status: "in_progress"
     goal: "Production-ready : Marketplace complète, performance, sécurité, qualité"
     sprint_plan_path: "docs/sprint-04-plan.md"
@@ -406,8 +406,9 @@ sprints:
       - story_id: "STORY-041"
         title: "Caching stats dashboard"
         points: 3
-        status: "not_started"
-        assigned_to: null
+        status: "completed"
+        assigned_to: "Claude Code"
+        notes: "DashboardController: stats mise en cache 5min (Cache::remember). BacklinkObserver invalide dashboard_stats sur created/updated/deleted. Observer enregistré dans AppServiceProvider."
       - story_id: "STORY-042"
         title: "Commande Artisan queue-status"
         points: 2
@@ -440,8 +441,9 @@ sprints:
       - story_id: "STORY-047"
         title: "Pagination + tri Orders"
         points: 2
-        status: "not_started"
-        assigned_to: null
+        status: "completed"
+        assigned_to: "Claude Code"
+        notes: "OrderController@index: validation des paramètres (project_id, status, sort, direction). Tri configurable sur ordered_at/expected_at/published_at/price/status/created_at. Sort+direction passés à la vue."
       - story_id: "STORY-048"
         title: "UX — flash messages auto-dismiss"
         points: 2

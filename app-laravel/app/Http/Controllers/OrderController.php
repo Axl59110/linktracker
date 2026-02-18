@@ -15,20 +15,31 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'project_id' => 'nullable|integer|exists:projects,id',
+            'status'     => 'nullable|in:pending,in_progress,published,cancelled,refunded',
+            'sort'       => 'nullable|in:ordered_at,expected_at,published_at,price,status,created_at',
+            'direction'  => 'nullable|in:asc,desc',
+        ]);
+
         $query = Order::with(['project', 'platform']);
 
-        if ($request->filled('project_id')) {
-            $query->where('project_id', $request->project_id);
+        if (!empty($validated['project_id'])) {
+            $query->where('project_id', $validated['project_id']);
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if (!empty($validated['status'])) {
+            $query->where('status', $validated['status']);
         }
 
-        $orders   = $query->latest()->paginate(20)->withQueryString();
+        $sort      = $validated['sort'] ?? 'created_at';
+        $direction = $validated['direction'] ?? 'desc';
+        $query->orderBy($sort, $direction);
+
+        $orders   = $query->paginate(20)->withQueryString();
         $projects = Project::orderBy('name')->get();
 
-        return view('pages.orders.index', compact('orders', 'projects'));
+        return view('pages.orders.index', compact('orders', 'projects', 'sort', 'direction'));
     }
 
     public function create()

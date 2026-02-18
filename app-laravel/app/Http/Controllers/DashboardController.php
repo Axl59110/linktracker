@@ -17,50 +17,50 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Statistiques des backlinks
-        $activeBacklinks  = Backlink::where('status', 'active')->count();
-        $lostBacklinks    = Backlink::where('status', 'lost')->count();
-        $changedBacklinks = Backlink::where('status', 'changed')->count();
-        $totalBacklinks   = Backlink::count();
+        // Statistiques mises en cache 5 minutes (invalidées via BacklinkObserver)
+        $stats = Cache::remember('dashboard_stats', 300, function () {
+            $activeBacklinks  = Backlink::where('status', 'active')->count();
+            $lostBacklinks    = Backlink::where('status', 'lost')->count();
+            $changedBacklinks = Backlink::where('status', 'changed')->count();
+            $totalBacklinks   = Backlink::count();
+            $totalProjects    = Project::count();
 
-        // Statistiques des projets
-        $totalProjects = Project::count();
+            $totalChecks   = BacklinkCheck::where('checked_at', '>=', now()->subDays(30))->count();
+            $presentChecks = BacklinkCheck::where('checked_at', '>=', now()->subDays(30))->where('is_present', true)->count();
+            $uptimeRate    = $totalChecks > 0 ? round(($presentChecks / $totalChecks) * 100, 1) : null;
 
-        // Taux de disponibilité global (30 derniers jours)
-        $totalChecks   = BacklinkCheck::where('checked_at', '>=', now()->subDays(30))->count();
-        $presentChecks = BacklinkCheck::where('checked_at', '>=', now()->subDays(30))->where('is_present', true)->count();
-        $uptimeRate    = $totalChecks > 0 ? round(($presentChecks / $totalChecks) * 100, 1) : null;
+            return compact(
+                'activeBacklinks',
+                'lostBacklinks',
+                'changedBacklinks',
+                'totalBacklinks',
+                'totalProjects',
+                'totalChecks',
+                'uptimeRate'
+            );
+        });
 
-        // Projets récents avec nombre de backlinks
+        // Données fraîches (pas de cache) : projets récents, backlinks récents, alertes
         $recentProjects = Project::withCount('backlinks')
             ->latest()
             ->take(5)
             ->get();
 
-        // Backlinks récents
         $recentBacklinks = Backlink::with('project')
             ->latest()
             ->take(5)
             ->get();
 
-        // Alertes récentes (EPIC-004)
         $recentAlerts = Alert::with('backlink.project')
             ->latest()
             ->take(5)
             ->get();
 
-        return view('pages.dashboard', compact(
-            'activeBacklinks',
-            'lostBacklinks',
-            'changedBacklinks',
-            'totalBacklinks',
-            'totalProjects',
+        return view('pages.dashboard', array_merge($stats, compact(
             'recentProjects',
             'recentBacklinks',
-            'recentAlerts',
-            'uptimeRate',
-            'totalChecks'
-        ));
+            'recentAlerts'
+        )));
     }
 
     /**
