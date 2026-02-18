@@ -14,6 +14,7 @@ class Project extends Model
         'name',
         'url',
         'status',
+        'user_id',
     ];
 
     protected $casts = [
