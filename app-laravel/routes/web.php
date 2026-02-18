@@ -39,7 +39,9 @@ Route::resource('projects', ProjectController::class);
 
 // Import CSV de backlinks (STORY-031) - AVANT la resource pour éviter le conflit avec {backlink}
 Route::get('/backlinks/import', [BacklinkController::class, 'importForm'])->name('backlinks.import');
-Route::post('/backlinks/import', [BacklinkController::class, 'importCsv'])->name('backlinks.import.process');
+Route::post('/backlinks/import', [BacklinkController::class, 'importCsv'])
+    ->name('backlinks.import.process')
+    ->middleware(['throttle:backlink-import']);
 
 // Export CSV de backlinks (STORY-035)
 Route::get('/backlinks/export', [BacklinkController::class, 'exportCsv'])->name('backlinks.export');
@@ -49,15 +51,15 @@ Route::get('/backlinks/export', [BacklinkController::class, 'exportCsv'])->name(
 Route::resource('backlinks', BacklinkController::class)
     ->middleware(['throttle:60,1']);
 
-// Vérification manuelle d'un backlink
+// Vérification manuelle d'un backlink (STORY-044: 10 req/min par utilisateur)
 Route::post('/backlinks/{backlink}/check', [BacklinkController::class, 'check'])
     ->name('backlinks.check')
-    ->middleware(['throttle:5,1']); // Limiter à 5 vérifications manuelles par minute
+    ->middleware(['throttle:backlink-check']);
 
-// Refresh métriques SEO d'un backlink (STORY-025)
+// Refresh métriques SEO d'un backlink (STORY-025, STORY-044: 3 req/min par utilisateur)
 Route::post('/backlinks/{backlink}/seo-metrics', [BacklinkController::class, 'refreshSeoMetrics'])
     ->name('backlinks.seo-metrics')
-    ->middleware(['throttle:3,1']);
+    ->middleware(['throttle:seo-refresh']);
 
 // Platforms - Gestion des plateformes d'achat de liens
 Route::resource('platforms', PlatformController::class)->except(['show']);
