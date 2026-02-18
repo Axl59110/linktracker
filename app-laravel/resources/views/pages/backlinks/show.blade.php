@@ -375,7 +375,7 @@
                         <p x-show="message" x-text="message" class="mt-2 text-xs text-center" :class="success ? 'text-green-600' : 'text-red-600'"></p>
                     </div>
 
-                @elseif(auth()->user()->seo_provider === 'custom')
+                @elseif((auth()->user()->seo_provider ?? 'custom') === 'custom')
                     <div class="text-center py-4">
                         <p class="text-xs text-neutral-500 mb-3">Aucun provider SEO configuré.</p>
                         <a href="{{ route('settings.index') }}?tab=seo"
