@@ -19,6 +19,32 @@
             {{-- Topbar (Breadcrumb + User Menu) --}}
             @include('components.topbar')
 
+            {{-- Flash Messages (centralisés) --}}
+            @if(session('success') || session('error') || session('warning') || session('info'))
+            <div class="px-6 pt-4 max-w-[1600px] mx-auto">
+                @if(session('success'))
+                    <x-alert variant="success" :auto-dismiss="5" class="mb-4">
+                        {{ session('success') }}
+                    </x-alert>
+                @endif
+                @if(session('error'))
+                    <x-alert variant="danger" :auto-dismiss="8" :dismissible="true" class="mb-4">
+                        {{ session('error') }}
+                    </x-alert>
+                @endif
+                @if(session('warning'))
+                    <x-alert variant="warning" :auto-dismiss="6" :dismissible="true" class="mb-4">
+                        {{ session('warning') }}
+                    </x-alert>
+                @endif
+                @if(session('info'))
+                    <x-alert variant="info" :auto-dismiss="5" class="mb-4">
+                        {{ session('info') }}
+                    </x-alert>
+                @endif
+            </div>
+            @endif
+
             {{-- Page Content --}}
             <main class="p-6 max-w-[1600px] mx-auto">
                 @yield('content')

@@ -366,7 +366,7 @@ sprints:
     end_date: "2026-03-03"
     capacity_points: 44
     committed_points: 43
-    completed_points: 17
+    completed_points: 21
     status: "in_progress"
     goal: "Production-ready : Marketplace complète, performance, sécurité, qualité"
     sprint_plan_path: "docs/sprint-04-plan.md"
@@ -410,8 +410,9 @@ sprints:
       - story_id: "STORY-042"
         title: "Commande Artisan queue-status"
         points: 2
-        status: "not_started"
-        assigned_to: null
+        status: "completed"
+        assigned_to: "Claude Code"
+        notes: "Commande QueueStatusCommand créée (app:queue-status). Options --failed, --reset-failed, --limit. 6 tests QueueStatusCommandTest passent."
       - story_id: "STORY-043"
         title: "Audit SSRF + validation URL"
         points: 3
@@ -443,8 +444,9 @@ sprints:
       - story_id: "STORY-048"
         title: "UX — flash messages auto-dismiss"
         points: 2
-        status: "not_started"
-        assigned_to: null
+        status: "completed"
+        assigned_to: "Claude Code"
+        notes: "Composant alert.blade.php refactorisé avec x-data AlpineJS, auto-dismiss configurable (autoDismiss prop en secondes), bouton dismiss optionnel. Flash messages centralisés dans layouts/app.blade.php (success 5s, error 8s, warning 6s, info 5s)."
       - story_id: "STORY-049"
         title: "Documentation technique"
         points: 3
