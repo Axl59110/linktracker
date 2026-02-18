@@ -53,6 +53,11 @@ class Order extends Model
         return $this->belongsTo(Backlink::class);
     }
 
+    public function statusLogs()
+    {
+        return $this->hasMany(OrderStatusLog::class)->orderByDesc('changed_at');
+    }
+
     /**
      * Retourne la couleur du badge selon le statut.
      */

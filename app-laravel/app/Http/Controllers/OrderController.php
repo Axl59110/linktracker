@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Backlink;
 use App\Models\Order;
+use App\Models\OrderStatusLog;
 use App\Models\Platform;
 use App\Models\Project;
 use App\Services\Security\UrlValidator;
@@ -81,7 +82,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['project', 'platform', 'backlink']);
+        $order->load(['project', 'platform', 'backlink', 'statusLogs']);
         return view('pages.orders.show', compact('order'));
     }
 
@@ -147,7 +148,16 @@ class OrderController extends Controller
         ]);
 
         $newStatus = $request->status;
+        $oldStatus = $order->status;
         $order->update(['status' => $newStatus]);
+
+        // Enregistrer le changement de statut dans l'historique
+        OrderStatusLog::create([
+            'order_id'   => $order->id,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'changed_at' => now(),
+        ]);
 
         // Auto-création du backlink quand la commande est publiée
         if ($newStatus === 'published' && $order->source_url && !$order->backlink_id) {

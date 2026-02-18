@@ -93,6 +93,49 @@
                     <x-button variant="primary" type="submit" size="sm">Mettre à jour</x-button>
                 </form>
             </div>
+
+            {{-- Timeline historique statuts --}}
+            @if($order->statusLogs->isNotEmpty())
+            <div class="bg-white rounded-lg border border-neutral-200 p-6">
+                <h3 class="text-sm font-semibold text-neutral-900 mb-4">Historique des statuts</h3>
+                <ol class="relative border-l border-neutral-200 ml-2">
+                    @foreach($order->statusLogs as $log)
+                    <li class="mb-6 ml-6 last:mb-0">
+                        <span class="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-4 ring-white
+                            @if($log->new_status === 'published') bg-success-100 text-success-700
+                            @elseif($log->new_status === 'cancelled' || $log->new_status === 'refunded') bg-danger-100 text-danger-700
+                            @elseif($log->new_status === 'in_progress') bg-brand-100 text-brand-700
+                            @else bg-neutral-100 text-neutral-600
+                            @endif
+                        ">
+                            <span class="text-xs">
+                                @if($log->new_status === 'published') ✓
+                                @elseif($log->new_status === 'cancelled') ✕
+                                @elseif($log->new_status === 'in_progress') →
+                                @elseif($log->new_status === 'refunded') ↩
+                                @else ○
+                                @endif
+                            </span>
+                        </span>
+                        <div class="pl-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm font-medium text-neutral-900">{{ $log->new_status_label }}</span>
+                                @if($log->old_status)
+                                    <span class="text-xs text-neutral-400">← {{ $log->old_status_label }}</span>
+                                @endif
+                            </div>
+                            <time class="text-xs text-neutral-500">
+                                {{ $log->changed_at->format('d/m/Y à H:i') }}
+                            </time>
+                            @if($log->notes)
+                                <p class="text-xs text-neutral-600 mt-1">{{ $log->notes }}</p>
+                            @endif
+                        </div>
+                    </li>
+                    @endforeach
+                </ol>
+            </div>
+            @endif
         </div>
 
         {{-- Sidebar --}}

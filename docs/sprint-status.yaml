@@ -366,7 +366,7 @@ sprints:
     end_date: "2026-03-03"
     capacity_points: 44
     committed_points: 43
-    completed_points: 21
+    completed_points: 24
     status: "in_progress"
     goal: "Production-ready : Marketplace complète, performance, sécurité, qualité"
     sprint_plan_path: "docs/sprint-04-plan.md"
@@ -381,8 +381,9 @@ sprints:
       - story_id: "STORY-037"
         title: "Historique statut commande (timeline)"
         points: 3
-        status: "not_started"
-        assigned_to: null
+        status: "completed"
+        assigned_to: "Claude Code"
+        notes: "Migration order_status_logs, Model OrderStatusLog, relation Order::statusLogs(). Chaque updateStatus enregistre old_status+new_status. Timeline Blade dans orders/show. 5 tests OrderStatusLogTest passent."
       - story_id: "STORY-038"
         title: "Sidebar navigation Orders + Import CSV"
         points: 2
