@@ -69,6 +69,24 @@ Alertes générées automatiquement
 ### 5. Platform
 Plateformes d'achat de backlinks (ex: SEMrush, Ahrefs Marketplace)
 
+### 6. Order
+Commande de backlink auprès d'une plateforme
+- `project_id`, `platform_id`, `source_url`, `target_url`
+- `status` : pending, in_progress, published, cancelled, rejected
+- `ordered_at`, `expected_at`, `published_at`, `price`
+- Workflow : statut `published` → création automatique d'un Backlink (STORY-036)
+- Has many OrderStatusLogs
+
+### 7. OrderStatusLog
+Historique des changements de statut d'une commande (STORY-037)
+- `order_id`, `old_status`, `new_status`, `notes`, `changed_at`
+- Créé automatiquement à chaque `PATCH /orders/{id}/status`
+
+### 8. DomainMetric
+Métriques SEO par domaine (STORY-025)
+- `domain`, `domain_authority`, `spam_score`, `last_fetched_at`
+- `DomainMetric::forDomain($url)` pour upsert par domaine extrait
+
 ## Services principaux
 
 ### BacklinkCheckerService
@@ -77,7 +95,7 @@ Service de vérification des backlinks :
 - Parse HTML avec DOMDocument/DOMXPath
 - Trouve le lien vers `target_url`
 - Extrait ancre, rel attributes, détecte dofollow/nofollow
-- Protection SSRF
+- Protection SSRF via UrlValidator
 
 ### AlertService
 Service de gestion des alertes :
@@ -85,6 +103,25 @@ Service de gestion des alertes :
 - `createBacklinkChangedAlert()` - Attributs modifiés
 - `createBacklinkRecoveredAlert()` - Lien récupéré
 - Logique intelligente de sévérité (tier, prix, type de changement)
+- Notifications email pour alertes critical/high
+
+### SeoMetricService
+Service métriques SEO (Domain Authority, Spam Score) :
+- Pattern Strategy avec providers : CustomSeoProvider, MozSeoProvider
+- Upsert dans `domain_metrics` par domaine
+- Configuration via Settings (clé `seo_provider`)
+
+### BacklinkCsvImportService
+Import de backlinks depuis CSV :
+- Colonnes : source_url, target_url, anchor_text, project_id, tier_level, spot_type
+- Gestion doublons et erreurs (ImportResult)
+
+### UrlValidator (Sécurité SSRF)
+Validation des URLs pour prévenir SSRF :
+- Bloque IPs privées RFC 1918, loopback, link-local
+- Résolution DNS pour domaines
+- Lève `SsrfException` si URL dangereuse
+- Voir `docs/SERVICES.md` pour documentation complète
 
 ## Jobs et automatisation
 
@@ -113,6 +150,14 @@ php artisan app:check-backlinks --project=1 --limit=50
 # Vérifier un backlink spécifique
 php artisan app:check-backlink 42 --verbose
 
+# Statut de la queue (STORY-042)
+php artisan app:queue-status
+php artisan app:queue-status --failed
+php artisan app:queue-status --reset-failed
+
+# Rafraîchir métriques SEO
+php artisan app:refresh-seo-metrics --force
+
 # Lancer le worker de queue
 php artisan queue:work --verbose
 
@@ -124,12 +169,26 @@ php artisan schedule:work
 
 ```
 GET  /dashboard                → DashboardController@index
+GET  /api/dashboard/chart      → DashboardController@chartData (JSON)
 GET  /projects                 → ProjectController (resource)
+GET  /projects/{id}/report     → ProjectController@report (rapport HTML imprimable)
 GET  /backlinks                → BacklinkController (resource)
-POST /backlinks/{id}/check     → BacklinkController@check (vérification manuelle)
+POST /backlinks/{id}/check     → BacklinkController@check (vérif. manuelle, throttle 10/min)
+POST /backlinks/{id}/seo-metrics → BacklinkController@refreshSeoMetrics (throttle 3/min)
+GET  /backlinks/import         → BacklinkController@importForm
+POST /backlinks/import         → BacklinkController@importCsv (throttle 5/min)
+GET  /backlinks/export         → BacklinkController@exportCsv
 GET  /alerts                   → AlertController@index
 GET  /platforms                → PlatformController (resource)
+GET  /orders                   → OrderController (resource)
+PATCH /orders/{id}/status      → OrderController@updateStatus
+GET  /settings                 → SettingsController@index
+GET  /settings/webhook         → WebhookSettingsController@show
+GET  /profile                  → ProfileController@show
+PATCH /profile/password        → ProfileController@updatePassword
 ```
+
+Documentation complète : voir `docs/API.md`
 
 ## Conventions de code
 
@@ -169,19 +228,32 @@ Toujours suivre cette méthodologie pour les nouvelles fonctionnalités :
 ## Documentation
 
 ### Fichiers de documentation
+- `docs/API.md` : Documentation complète des routes et endpoints (STORY-049)
+- `docs/SERVICES.md` : Documentation des services métier (STORY-049)
 - `docs/QUEUES.md` : Guide complet du système de queues
 - `docs/EPIC-JOBS-VERIFICATION.md` : Documentation EPIC vérification backlinks
+- `docs/sprint-status.yaml` : Suivi de progression des sprints BMAD
 - `CLAUDE.md` : Ce fichier (guidance pour Claude Code)
 
-### EPICs complétés
-- ✅ EPIC-013 : SaaS UI Redesign (Blade + TailwindCSS)
-- ✅ EPIC-004 : Système d'alertes
-- ✅ Jobs de vérification et extraction d'ancres
+### EPICs complétés (Sprints 1-4)
+- ✅ EPIC-001 : Setup infrastructure (Herd, SQLite, migrations)
+- ✅ EPIC-002 : Authentification Sanctum (login, logout, profil)
+- ✅ EPIC-003 : Gestion projets et backlinks (CRUD complet)
+- ✅ EPIC-004 : Système d'alertes (lost, changed, recovered)
+- ✅ EPIC-005 : Métriques SEO (Domain Authority, Moz provider)
+- ✅ EPIC-006 : Marketplace et commandes (Orders CRUD, Order → Backlink auto, timeline statut)
+- ✅ EPIC-007 : Reporting (rapport HTML imprimable par projet)
+- ✅ EPIC-008 : Configuration et settings (monitoring, SEO, webhook, profil)
+- ✅ EPIC-009 : Performance (indexes DB, caching dashboard, queue monitoring)
+- ✅ EPIC-010 : Sécurité (audit SSRF UrlValidator, rate limiting avancé)
+- ✅ EPIC-011 : UI/UX (navigation Orders + Import, flash messages auto-dismiss, pagination tri)
+- ✅ EPIC-012 : Qualité (tests 339/339, documentation API/Services)
+- ✅ EPIC-013 : SaaS UI Redesign (Blade + TailwindCSS v4)
 
-### EPICs en cours / à venir
-- ⏳ EPIC-005 : Métriques SEO (Ahrefs, Moz API)
-- ⏳ EPIC-006 : Marketplace et commandes
-- ⏳ EPIC-008 : Configuration et settings
+### EPICs à venir (Sprint 5+)
+- ⏳ Import/export avancé (XLSX, filtres plus riches)
+- ⏳ Multi-utilisateurs et organisations
+- ⏳ Webhooks sortants (Slack, Discord)
 
 ## Configuration environnement
 

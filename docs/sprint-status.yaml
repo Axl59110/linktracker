@@ -363,11 +363,11 @@ sprints:
 
   - sprint_number: 4
     start_date: "2026-02-18"
-    end_date: "2026-03-03"
+    end_date: "2026-02-18"
     capacity_points: 44
     committed_points: 43
-    completed_points: 40
-    status: "in_progress"
+    completed_points: 43
+    status: "completed"
     goal: "Production-ready : Marketplace complète, performance, sécurité, qualité"
     sprint_plan_path: "docs/sprint-04-plan.md"
     stories:
@@ -458,8 +458,10 @@ sprints:
       - story_id: "STORY-049"
         title: "Documentation technique"
         points: 3
-        status: "not_started"
-        assigned_to: null
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T23:00:00Z"
+        notes: "docs/API.md (routes, rate limiting, exemples), docs/SERVICES.md (BacklinkCheckerService, AlertService, SeoMetricService, UrlValidator, jobs, cache), CLAUDE.md mis à jour (nouveaux modèles, services, routes, EPICs Sprint 1-4)."
 
 velocity:
   sprint_1: 25
