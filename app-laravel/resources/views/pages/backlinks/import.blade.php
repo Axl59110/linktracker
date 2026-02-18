@@ -40,18 +40,18 @@
                         <p class="mt-1 text-xs text-neutral-500">Format CSV, maximum 10 Mo. Le format est détecté automatiquement.</p>
                     </div>
 
-                    {{-- Site cible (optionnel si format outil tiers) --}}
+                    {{-- Site cible (obligatoire) --}}
                     <div>
                         <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">
-                            Site cible
-                            <span class="ml-1 text-xs font-normal text-neutral-400">(optionnel pour le format outil tiers)</span>
+                            Site cible <span class="text-red-500">*</span>
                         </label>
                         <select
                             id="project_id"
                             name="project_id"
+                            required
                             class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                         >
-                            <option value="">— Auto (depuis la colonne Operator) —</option>
+                            <option value="">— Sélectionner un site —</option>
                             @foreach($projects as $project)
                                 <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
                                     {{ $project->name }}
@@ -59,7 +59,7 @@
                             @endforeach
                         </select>
                         <p class="mt-1 text-xs text-neutral-400">
-                            Si vous importez depuis un outil tiers, laissez vide : les sites seront créés automatiquement depuis la colonne <code class="font-mono bg-neutral-100 px-1 rounded">Operator</code>.
+                            Les backlinks seront rattachés à ce site, quel que soit le format du fichier CSV.
                         </p>
                     </div>
 
@@ -97,9 +97,6 @@
                     <div class="flex gap-2"><code class="font-mono bg-brand-100 px-1 rounded whitespace-nowrap">Status</code><span>→ Checked = actif, Dead link = perdu</span></div>
                     <div class="flex gap-2"><code class="font-mono bg-brand-100 px-1 rounded whitespace-nowrap">Network</code><span>→ External Site / No Network</span></div>
                     <div class="flex gap-2"><code class="font-mono bg-brand-100 px-1 rounded whitespace-nowrap">Price</code><span>→ Prix en EUR</span></div>
-                    <div class="flex gap-2"><code class="font-mono bg-brand-100 px-1 rounded whitespace-nowrap">Operator</code><span>→ Nom du site (créé si absent)</span></div>
-                    <div class="flex gap-2"><code class="font-mono bg-brand-100 px-1 rounded whitespace-nowrap">Created At</code><span>→ Date de publication</span></div>
-                    <div class="flex gap-2"><code class="font-mono bg-brand-100 px-1 rounded whitespace-nowrap">Contact</code><span>→ Contact</span></div>
                 </div>
             </div>
 

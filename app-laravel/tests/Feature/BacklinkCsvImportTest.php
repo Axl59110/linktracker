@@ -170,6 +170,19 @@ class BacklinkCsvImportTest extends TestCase
         $response->assertSessionHasErrors('project_id');
     }
 
+    public function test_import_endpoint_rejects_missing_project_id(): void
+    {
+        $csv = "source_url,target_url\nhttps://example.com,https://monsite.com\n";
+        $file = UploadedFile::fake()->createWithContent('backlinks.csv', $csv);
+
+        $response = $this->post(route('backlinks.import.process'), [
+            'csv_file' => $file,
+            // pas de project_id
+        ]);
+
+        $response->assertSessionHasErrors('project_id');
+    }
+
     // ── Import format outil tiers (auto-détection) ───────────────────────
 
     private function makeThirdPartyCsv(array $rows = []): string
@@ -178,15 +191,13 @@ class BacklinkCsvImportTest extends TestCase
         $lines  = [$header];
         foreach ($rows as $r) {
             $lines[] = sprintf(
-                '"1","%s","en","200","%s","%s","%s","%s","","No","%s","%s","OK","contact@test.com","User","%s","2026-01-01","2026-01-01",""',
-                $r['spot']     ?? 'https://source.com/page',
-                $r['target']   ?? 'https://target.com',
-                $r['anchor']   ?? 'anchor text',
-                $r['rel']      ?? 'DF',
-                $r['price']    ?? '',
-                $r['status']   ?? 'Checked',
-                $r['network']  ?? 'NO NETWORK',
-                $r['operator'] ?? 'Test Operator',
+                '"1","%s","en","200","%s","%s","%s","%s","","No","%s","NO NETWORK","OK","contact@test.com","User","Test Operator","2026-01-01","2026-01-01",""',
+                $r['spot']   ?? 'https://source.com/page',
+                $r['target'] ?? 'https://target.com',
+                $r['anchor'] ?? 'anchor text',
+                $r['rel']    ?? 'DF',
+                $r['price']  ?? '',
+                $r['status'] ?? 'Checked',
             );
         }
         return implode("\n", $lines) . "\n";
@@ -213,16 +224,15 @@ class BacklinkCsvImportTest extends TestCase
     public function test_third_party_import_creates_backlink(): void
     {
         $csv  = $this->makeThirdPartyCsv([[
-            'spot'     => 'https://blog.com/article',
-            'target'   => 'https://mysite.com/page',
-            'anchor'   => 'My Site',
-            'rel'      => 'DF',
-            'operator' => 'My Site - UK',
+            'spot'   => 'https://blog.com/article',
+            'target' => 'https://mysite.com/page',
+            'anchor' => 'My Site',
+            'rel'    => 'DF',
         ]]);
         $file = $this->makeCsvFile($csv);
 
         $service = new BacklinkCsvImportService();
-        $result  = $service->import($file, null, $this->user->id);
+        $result  = $service->import($file, $this->project);
 
         $this->assertEquals(1, $result['imported']);
         $this->assertEquals('third_party', $result['format']);
@@ -234,43 +244,6 @@ class BacklinkCsvImportTest extends TestCase
         ]);
     }
 
-    public function test_third_party_import_creates_project_from_operator(): void
-    {
-        $csv  = $this->makeThirdPartyCsv([[
-            'spot'     => 'https://source.com/p',
-            'target'   => 'https://target.com',
-            'operator' => 'William Hill - UK',
-        ]]);
-        $file = $this->makeCsvFile($csv);
-
-        $service = new BacklinkCsvImportService();
-        $service->import($file, null, $this->user->id);
-
-        $this->assertDatabaseHas('projects', ['name' => 'William Hill - UK']);
-        $proj = Project::where('name', 'William Hill - UK')->first();
-        $this->assertDatabaseHas('backlinks', [
-            'project_id' => $proj->id,
-            'source_url' => 'https://source.com/p',
-        ]);
-    }
-
-    public function test_third_party_import_reuses_existing_project(): void
-    {
-        $existing = Project::factory()->for($this->user)->create(['name' => 'Existing Operator']);
-
-        $csv = $this->makeThirdPartyCsv([
-            ['spot' => 'https://site1.com/p', 'target' => 'https://t.com', 'operator' => 'Existing Operator'],
-            ['spot' => 'https://site2.com/p', 'target' => 'https://t.com', 'operator' => 'Existing Operator'],
-        ]);
-        $file = $this->makeCsvFile($csv);
-
-        $service = new BacklinkCsvImportService();
-        $service->import($file, null, $this->user->id);
-
-        $this->assertEquals(1, Project::where('name', 'Existing Operator')->count());
-        $this->assertEquals(2, Backlink::where('project_id', $existing->id)->count());
-    }
-
     public function test_third_party_maps_status_correctly(): void
     {
         $csv = $this->makeThirdPartyCsv([
@@ -280,7 +253,7 @@ class BacklinkCsvImportTest extends TestCase
         $file = $this->makeCsvFile($csv);
 
         $service = new BacklinkCsvImportService();
-        $service->import($file, null, $this->user->id);
+        $service->import($file, $this->project);
 
         $this->assertDatabaseHas('backlinks', ['source_url' => 'https://active.com/p', 'status' => 'active']);
         $this->assertDatabaseHas('backlinks', ['source_url' => 'https://lost.com/p',   'status' => 'lost']);
@@ -295,7 +268,7 @@ class BacklinkCsvImportTest extends TestCase
         $file = $this->makeCsvFile($csv);
 
         $service = new BacklinkCsvImportService();
-        $service->import($file, null, $this->user->id);
+        $service->import($file, $this->project);
 
         $this->assertDatabaseHas('backlinks', ['source_url' => 'https://df.com/p', 'is_dofollow' => true]);
         $this->assertDatabaseHas('backlinks', ['source_url' => 'https://nf.com/p', 'is_dofollow' => false]);
@@ -303,40 +276,34 @@ class BacklinkCsvImportTest extends TestCase
 
     public function test_third_party_skips_duplicates(): void
     {
-        $proj = Project::factory()->for($this->user)->create(['name' => 'Dup Operator']);
-        Backlink::factory()->for($proj)->create(['source_url' => 'https://existing.com/p']);
+        Backlink::factory()->for($this->project)->create(['source_url' => 'https://existing.com/p']);
 
-        $csv = $this->makeThirdPartyCsv([[
-            'spot'     => 'https://existing.com/p',
-            'target'   => 'https://t.com',
-            'operator' => 'Dup Operator',
-        ]]);
+        $csv  = $this->makeThirdPartyCsv([['spot' => 'https://existing.com/p', 'target' => 'https://t.com']]);
         $file = $this->makeCsvFile($csv);
 
         $service = new BacklinkCsvImportService();
-        $result  = $service->import($file, null, $this->user->id);
+        $result  = $service->import($file, $this->project);
 
         $this->assertEquals(0, $result['imported']);
         $this->assertEquals(1, $result['skipped']);
     }
 
-    public function test_third_party_import_via_http_without_project_id(): void
+    public function test_third_party_import_via_http(): void
     {
         $csv = $this->makeThirdPartyCsv([[
-            'spot'     => 'https://http-test.com/page',
-            'target'   => 'https://target.com',
-            'operator' => 'HTTP Test Site',
+            'spot'   => 'https://http-test.com/page',
+            'target' => 'https://target.com',
         ]]);
         $file = UploadedFile::fake()->createWithContent('links.csv', $csv);
 
         $response = $this->post(route('backlinks.import.process'), [
-            'csv_file' => $file,
-            // pas de project_id
+            'csv_file'   => $file,
+            'project_id' => $this->project->id,
         ]);
 
         $response->assertRedirect(route('backlinks.index'));
         $response->assertSessionHas('success');
-        $this->assertDatabaseHas('projects', ['name' => 'HTTP Test Site']);
+        $this->assertDatabaseHas('backlinks', ['source_url' => 'https://http-test.com/page']);
     }
 
     // ── Export CSV (STORY-035) ────────────────────────────────────────────

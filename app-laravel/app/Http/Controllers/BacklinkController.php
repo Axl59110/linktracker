@@ -488,32 +488,20 @@ class BacklinkController extends Controller
     {
         $request->validate([
             'csv_file'   => 'required|file|mimes:csv,txt|max:10240', // 10 MB max
-            'project_id' => 'nullable|exists:projects,id',
+            'project_id' => 'required|exists:projects,id',
         ]);
+
+        $project = Project::findOrFail($request->project_id);
 
         /** @var \App\Services\BacklinkCsvImportService $importer */
         $importer = app(\App\Services\BacklinkCsvImportService::class);
-
-        // Détecter le format avant validation du project_id
-        $format = $importer->detectFormat($request->file('csv_file'));
-
-        // Format natif : project_id obligatoire
-        if ($format === 'native' && empty($request->project_id)) {
-            return back()->withErrors(['project_id' => 'Le site cible est requis pour le format natif.'])->withInput();
-        }
-
-        $project = $request->project_id ? Project::findOrFail($request->project_id) : null;
-
-        $result = $importer->import($request->file('csv_file'), $project, auth()->id());
+        $result   = $importer->import($request->file('csv_file'), $project);
 
         if (!empty($result['errors']) && $result['imported'] === 0) {
             return back()->withErrors(['csv_file' => $result['errors'][0]])->withInput();
         }
 
         $message = "{$result['imported']} backlink(s) importé(s).";
-        if (!empty($result['info'])) {
-            $message .= ' ' . $result['info'];
-        }
         if ($result['skipped'] > 0) {
             $message .= " {$result['skipped']} ignoré(s) (doublons ou erreurs).";
         }

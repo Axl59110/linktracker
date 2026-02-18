@@ -33,11 +33,10 @@ class BacklinkCsvImportService
      * Détecte automatiquement le format (natif ou outil tiers).
      *
      * @param  UploadedFile  $file
-     * @param  Project|null  $project  Projet cible (natif). Null accepté si format tiers (projets créés via Operator).
-     * @param  int|null      $userId   ID utilisateur pour création automatique de projets (format tiers).
+     * @param  Project|null  $project  Projet cible (requis pour les deux formats).
      * @return array{imported: int, skipped: int, errors: array<string>, format: string}
      */
-    public function import(UploadedFile $file, ?Project $project = null, ?int $userId = null): array
+    public function import(UploadedFile $file, ?Project $project = null): array
     {
         $handle = fopen($file->getRealPath(), 'r');
         if ($handle === false) {
@@ -51,8 +50,18 @@ class BacklinkCsvImportService
             return ['imported' => 0, 'skipped' => 0, 'errors' => ['Le fichier CSV est vide.'], 'format' => 'unknown'];
         }
 
-        $header = array_map('trim', $rawHeader);
+        $header      = array_map('trim', $rawHeader);
         $headerLower = array_map('strtolower', $header);
+
+        if ($project === null) {
+            fclose($handle);
+            return [
+                'imported' => 0,
+                'skipped'  => 0,
+                'errors'   => ['Un site cible est requis.'],
+                'format'   => 'unknown',
+            ];
+        }
 
         // Détecter le format
         $isThirdParty = $this->isThirdPartyFormat($headerLower);
@@ -62,7 +71,7 @@ class BacklinkCsvImportService
             // Ré-ouvrir pour repasser depuis le début
             $handle = fopen($file->getRealPath(), 'r');
             fgetcsv($handle, 0, ',', '"', ''); // sauter l'en-tête
-            $result = $this->importThirdParty($handle, $headerLower, $project, $userId);
+            $result = $this->importThirdParty($handle, $headerLower, $project);
         } else {
             // Vérifier colonnes requises format natif
             foreach (self::REQUIRED_COLUMNS as $col) {
@@ -75,16 +84,6 @@ class BacklinkCsvImportService
                         'format'   => 'native',
                     ];
                 }
-            }
-
-            if ($project === null) {
-                fclose($handle);
-                return [
-                    'imported' => 0,
-                    'skipped'  => 0,
-                    'errors'   => ['Un site cible est requis pour le format natif.'],
-                    'format'   => 'native',
-                ];
             }
 
             $result = $this->importNative($handle, $headerLower, $project);
@@ -207,22 +206,15 @@ class BacklinkCsvImportService
 
     // ──────────────────────────────────────────────────────────────────────────
     // Import format outil tiers
-    // Colonnes : Id, Spot, Lang, Status Code, Target, Anchor, Rel, Price,
-    //            Invoice Number, Payment processed, Status, Network, Indexed,
-    //            Contact, User, Operator, Checked At, Created At, Order Reference
+    // Colonnes utilisées : Spot, Target, Anchor, Rel, Status, Price
     // ──────────────────────────────────────────────────────────────────────────
 
-    private function importThirdParty($handle, array $headerLower, ?Project $forcedProject, ?int $userId = null): array
+    private function importThirdParty($handle, array $headerLower, Project $project): array
     {
-        $imported        = 0;
-        $skipped         = 0;
-        $errors          = [];
-        $lineNumber      = 1;
-        $projectCache    = []; // ['Operator name' => Project]
-        $createdProjects = 0;
-
-        // Index des colonnes pour accès rapide
-        $col = array_flip($headerLower);
+        $imported   = 0;
+        $skipped    = 0;
+        $errors     = [];
+        $lineNumber = 1;
 
         while (($row = fgetcsv($handle, 0, ',', '"', '')) !== false) {
             $lineNumber++;
@@ -249,65 +241,20 @@ class BacklinkCsvImportService
                 continue;
             }
 
-            // ── Résoudre le projet ──
-            if ($forcedProject !== null) {
-                $project = $forcedProject;
-            } else {
-                $operatorName = $raw['operator'] ?? '';
-                if (empty($operatorName)) {
-                    $operatorName = 'Import CSV';
-                }
-
-                if (!isset($projectCache[$operatorName])) {
-                    // Chercher ou créer le projet
-                    $attributes = ['name' => $operatorName];
-                    if ($userId !== null) {
-                        $attributes['user_id'] = $userId;
-                    }
-                    $proj = Project::firstOrCreate(
-                        $attributes,
-                        [
-                            'url'    => $this->inferProjectUrl($targetUrl),
-                            'status' => 'active',
-                        ]
-                    );
-
-                    if ($proj->wasRecentlyCreated) {
-                        $createdProjects++;
-                    }
-
-                    $projectCache[$operatorName] = $proj;
-                }
-
-                $project = $projectCache[$operatorName];
-            }
-
             // ── Doublon ──
-            $exists = Backlink::where('project_id', $project->id)
-                ->where('source_url', $sourceUrl)
-                ->exists();
-
-            if ($exists) {
+            if (Backlink::where('project_id', $project->id)->where('source_url', $sourceUrl)->exists()) {
                 $skipped++;
                 continue;
             }
 
-            // ── Mapping des champs ──
-            $relRaw    = strtoupper($raw['rel'] ?? 'DF');
+            // ── Mapping des champs utiles ──
+            $relRaw     = strtoupper($raw['rel'] ?? 'DF');
             $isDofollow = ($relRaw === 'DF');
 
             $statusRaw = strtolower($raw['status'] ?? 'checked');
             $status    = match ($statusRaw) {
-                'checked'   => 'active',
-                'dead link'  => 'lost',
-                default      => 'active',
-            };
-
-            $networkRaw = strtoupper($raw['network'] ?? '');
-            $spotType   = match (true) {
-                str_contains($networkRaw, 'EXTERNAL') => 'external',
-                str_contains($networkRaw, 'NO NETWORK') => 'internal',
-                default => 'external',
+                'dead link' => 'lost',
+                default     => 'active',
             };
 
             $price = null;
@@ -318,68 +265,24 @@ class BacklinkCsvImportService
                 }
             }
 
-            $publishedAt = null;
-            if (!empty($raw['created at'])) {
-                try {
-                    $publishedAt = \Carbon\Carbon::parse($raw['created at'])->toDateString();
-                } catch (\Exception $e) {
-                    // ignorer date invalide
-                }
-            }
-
-            $lastCheckedAt = null;
-            if (!empty($raw['checked at'])) {
-                try {
-                    $lastCheckedAt = \Carbon\Carbon::parse($raw['checked at']);
-                } catch (\Exception $e) {
-                    // ignorer date invalide
-                }
-            }
-
-            $httpStatus = null;
-            if (!empty($raw['status code'])) {
-                $httpStatus = (int) $raw['status code'];
-            }
-
             Backlink::create([
-                'project_id'     => $project->id,
-                'source_url'     => $sourceUrl,
-                'target_url'     => $targetUrl,
-                'anchor_text'    => $raw['anchor'] ?: null,
-                'status'         => $status,
-                'is_dofollow'    => $isDofollow,
-                'tier_level'     => 'tier1',
-                'spot_type'      => $spotType,
-                'price'          => $price,
-                'currency'       => 'EUR',
-                'contact_info'   => $raw['contact'] ?: null,
-                'http_status'    => $httpStatus,
-                'published_at'   => $publishedAt,
-                'last_checked_at' => $lastCheckedAt,
-                'first_seen_at'  => now(),
+                'project_id'    => $project->id,
+                'source_url'    => $sourceUrl,
+                'target_url'    => $targetUrl,
+                'anchor_text'   => $raw['anchor'] ?: null,
+                'status'        => $status,
+                'is_dofollow'   => $isDofollow,
+                'tier_level'    => 'tier1',
+                'spot_type'     => 'external',
+                'price'         => $price,
+                'currency'      => 'EUR',
+                'first_seen_at' => now(),
             ]);
 
             $imported++;
         }
 
-        $meta = [];
-        if ($createdProjects > 0) {
-            $meta['info'] = "{$createdProjects} site(s) créé(s) automatiquement depuis la colonne Operator.";
-        }
-
-        return compact('imported', 'skipped', 'errors') + ['format' => 'third_party'] + $meta;
+        return compact('imported', 'skipped', 'errors') + ['format' => 'third_party'];
     }
 
-    /**
-     * Infère l'URL racine du projet à partir d'une URL cible.
-     * Ex: https://footballgroundguide.com/betting → https://footballgroundguide.com
-     */
-    private function inferProjectUrl(string $targetUrl): string
-    {
-        $parsed = parse_url($targetUrl);
-        if ($parsed && isset($parsed['scheme'], $parsed['host'])) {
-            return $parsed['scheme'] . '://' . $parsed['host'];
-        }
-        return $targetUrl;
-    }
 }
