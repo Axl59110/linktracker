@@ -142,7 +142,7 @@
         </div>
         {{-- Sélecteur période --}}
         <div class="flex gap-1 bg-neutral-100 p-1 rounded-lg">
-            @foreach([7 => '7j', 30 => '30j', 90 => '90j'] as $d => $label)
+            @foreach([30 => '30j', 90 => '90j', 180 => '6m', 365 => '1an'] as $d => $label)
                 <button @click="loadChart({{ $d }})"
                     :class="days === {{ $d }} ? 'bg-white text-neutral-900 shadow-sm font-semibold' : 'text-neutral-500 hover:text-neutral-700'"
                     class="px-3 py-1 text-xs rounded-md transition-all duration-150">

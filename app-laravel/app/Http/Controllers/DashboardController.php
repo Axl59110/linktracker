@@ -85,60 +85,86 @@ class DashboardController extends Controller
         $days      = (int) $request->get('days', 30);
         $projectId = $request->get('project_id');
 
-        // Valider les paramètres
-        $days = in_array($days, [7, 30, 90]) ? $days : 30;
+        // Valider les paramètres (ajout 180j et 365j pour voir l'historique réel)
+        $days = in_array($days, [7, 30, 90, 180, 365]) ? $days : 30;
 
         $cacheKey = "dashboard_chart_" . ($projectId ?? 'all') . "_{$days}";
 
         $data = Cache::remember($cacheKey, 600, function () use ($days, $projectId) {
-            $query = Backlink::query();
 
-            if ($projectId) {
-                $query->where('project_id', $projectId);
-            }
+            // Fenêtre temporelle
+            $startDate = now()->subDays($days - 1)->startOfDay();
+            $endDate   = now()->endOfDay();
 
-            // Données groupées par jour pour les 30/7/90 derniers jours
+            // Générer toutes les dates de la fenêtre
             $dates = [];
             for ($i = $days - 1; $i >= 0; $i--) {
                 $dates[] = now()->subDays($i)->format('Y-m-d');
             }
 
+            // --- Requête 1 : gains groupés par jour (published_at dans la fenêtre) ---
+            // Un backlink est "acquis" à sa date de publication réelle.
+            // Si published_at est NULL, on utilise created_at (lien ajouté manuellement).
+            $gainedRaw = Backlink::query()
+                ->when($projectId, fn($q) => $q->where('project_id', $projectId))
+                ->selectRaw("DATE(COALESCE(published_at, DATE(created_at))) as day, COUNT(*) as cnt")
+                ->whereBetween(DB::raw("DATE(COALESCE(published_at, DATE(created_at)))"), [
+                    $startDate->format('Y-m-d'),
+                    $endDate->format('Y-m-d'),
+                ])
+                ->groupByRaw("DATE(COALESCE(published_at, DATE(created_at)))")
+                ->pluck('cnt', 'day')
+                ->toArray();
+
+            // --- Requête 2 : pertes groupées par jour (last_checked_at dans la fenêtre) ---
+            $lostRaw = Backlink::query()
+                ->when($projectId, fn($q) => $q->where('project_id', $projectId))
+                ->where('status', 'lost')
+                ->whereNotNull('last_checked_at')
+                ->selectRaw("DATE(last_checked_at) as day, COUNT(*) as cnt")
+                ->whereBetween(DB::raw("DATE(last_checked_at)"), [
+                    $startDate->format('Y-m-d'),
+                    $endDate->format('Y-m-d'),
+                ])
+                ->groupByRaw("DATE(last_checked_at)")
+                ->pluck('cnt', 'day')
+                ->toArray();
+
+            // --- Requête 3 : cumulatif actifs avant le début de la fenêtre ---
+            // Base de départ : liens actifs publiés AVANT la fenêtre
+            $baseActive = Backlink::query()
+                ->when($projectId, fn($q) => $q->where('project_id', $projectId))
+                ->where('status', 'active')
+                ->where(DB::raw("DATE(COALESCE(published_at, DATE(created_at)))"), '<', $startDate->format('Y-m-d'))
+                ->count();
+
+            // Construire les séries jour par jour (cumulatif = base + gains accumulés)
             $active  = [];
+            $gained  = [];
             $lost    = [];
             $changed = [];
-            $gained  = [];
             $delta   = [];
 
-            foreach ($dates as $date) {
-                $dayQuery = clone $query;
-                // Pour "gained" : utiliser published_at si renseigné, sinon created_at
-                $gainedVal = (clone $dayQuery)->where(function ($q) use ($date) {
-                    $q->whereNotNull('published_at')->whereDate('published_at', $date)
-                      ->orWhere(function ($q2) use ($date) {
-                          $q2->whereNull('published_at')->whereDate('created_at', $date);
-                      });
-                })->count();
-                // Courbe "active" : cumulatif basé sur published_at ou created_at
-                $activeVal  = (clone $dayQuery)->where('status', 'active')->where(function ($q) use ($date) {
-                    $q->where(function ($q2) use ($date) {
-                        $q2->whereNotNull('published_at')->whereDate('published_at', '<=', $date);
-                    })->orWhere(function ($q2) use ($date) {
-                        $q2->whereNull('published_at')->whereDate('created_at', '<=', $date);
-                    });
-                })->count();
-                $lostVal    = (clone $dayQuery)->where('status', 'lost')->whereDate('last_checked_at', $date)->count();
-                $changedVal = (clone $dayQuery)->where('status', 'changed')->whereDate('last_checked_at', $date)->count();
+            $cumulative = $baseActive;
 
-                $active[]   = $activeVal;
-                $lost[]     = $lostVal;
-                $changed[]  = $changedVal;
-                $gained[]   = $gainedVal;
-                // delta = gained - lost (positif = gain net, négatif = perte nette)
-                $delta[]    = $gainedVal - $lostVal;
+            foreach ($dates as $date) {
+                $gainedVal  = (int) ($gainedRaw[$date] ?? 0);
+                $lostVal    = (int) ($lostRaw[$date]   ?? 0);
+
+                $cumulative += $gainedVal - $lostVal;
+
+                $gained[]  = $gainedVal;
+                $lost[]    = $lostVal;
+                $changed[] = 0; // placeholder (changed n'affecte pas le cumulatif)
+                $active[]  = max(0, $cumulative);
+                $delta[]   = $gainedVal - $lostVal;
             }
 
+            // Format des labels : condensé pour les longues périodes
+            $labelFormat = $days <= 90 ? 'd/m' : 'd/m/y';
+
             return [
-                'labels'   => array_map(fn($d) => \Carbon\Carbon::parse($d)->format('d/m'), $dates),
+                'labels'   => array_map(fn($d) => \Carbon\Carbon::parse($d)->format($labelFormat), $dates),
                 'active'   => $active,
                 'lost'     => $lost,
                 'changed'  => $changed,
