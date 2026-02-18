@@ -111,7 +111,9 @@
         </div>
 
         {{-- Commandes --}}
-        {{-- TODO: Cette route n'existe pas encore, sera créée dans EPIC-006 (Marketplace) --}}
+        @php
+            $pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count();
+        @endphp
         <a
             href="{{ url('/orders') }}"
             @click="$dispatch('toggle-mobile-menu')"
@@ -119,6 +121,21 @@
         >
             <span class="mr-3 text-lg">🛒</span>
             <span>Commandes</span>
+            @if($pendingOrdersCount > 0)
+                <span class="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                    {{ $pendingOrdersCount }}
+                </span>
+            @endif
+        </a>
+
+        {{-- Import CSV --}}
+        <a
+            href="{{ route('backlinks.import') }}"
+            @click="$dispatch('toggle-mobile-menu')"
+            class="flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('backlinks.import') ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-600 hover:bg-neutral-100' }}"
+        >
+            <span class="mr-3 text-lg">📥</span>
+            <span>Import CSV</span>
         </a>
 
         {{-- Métriques SEO (optionnel) --}}

@@ -5,8 +5,8 @@
 version: "6.0.0"
 project_name: "Link Tracker"
 project_level: 4
-current_sprint: 3
-sprint_plan_path: "docs/sprint-03-plan.md"
+current_sprint: 4
+sprint_plan_path: "docs/sprint-04-plan.md"
 
 sprints:
   - sprint_number: 1
@@ -361,10 +361,100 @@ sprints:
         completed_at: "2026-02-18T16:00:00Z"
         notes: "BacklinkController@exportCsv (BOM UTF-8, stream, filtres project/status), route GET /backlinks/export, inclus dans BacklinkCsvImportTest"
 
+  - sprint_number: 4
+    start_date: "2026-02-18"
+    end_date: "2026-03-03"
+    capacity_points: 44
+    committed_points: 43
+    completed_points: 14
+    status: "in_progress"
+    goal: "Production-ready : Marketplace complète, performance, sécurité, qualité"
+    sprint_plan_path: "docs/sprint-04-plan.md"
+    stories:
+      - story_id: "STORY-036"
+        title: "Order → Backlink automatique lors publication"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T11:00:00Z"
+        notes: "OrderController@updateStatus crée Backlink via firstOrCreate, lie Order.backlink_id, évite doublons. 5 tests passent."
+      - story_id: "STORY-037"
+        title: "Historique statut commande (timeline)"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-038"
+        title: "Sidebar navigation Orders + Import CSV"
+        points: 2
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T11:00:00Z"
+        notes: "Lien Commandes avec badge pending count, lien Import CSV dans sidebar.blade.php"
+      - story_id: "STORY-039"
+        title: "Rapport HTML exportable par projet"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-040"
+        title: "Indexes DB performance"
+        points: 2
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T11:00:00Z"
+        notes: "Migration add_performance_indexes_sprint4 : indexes backlinks, alerts, domain_metrics, orders"
+      - story_id: "STORY-041"
+        title: "Caching stats dashboard"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-042"
+        title: "Commande Artisan queue-status"
+        points: 2
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-043"
+        title: "Audit SSRF + validation URL"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-044"
+        title: "Rate limiting avancé"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-045"
+        title: "Fix tests pré-existants"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T11:00:00Z"
+        notes: "Backlink.$attributes defaults (tier1/external/false/true), Platform boot() deleting hook, CheckBacklinkJob.handle() AlertService optional, BacklinkController validations corrigées (required_if/required_with), ExampleTest 302. 296 tests passent."
+      - story_id: "STORY-046"
+        title: "Page profil / changement mot de passe"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-047"
+        title: "Pagination + tri Orders"
+        points: 2
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-048"
+        title: "UX — flash messages auto-dismiss"
+        points: 2
+        status: "not_started"
+        assigned_to: null
+      - story_id: "STORY-049"
+        title: "Documentation technique"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+
 velocity:
   sprint_1: 25
   sprint_2: 50
   sprint_3: 44
+  sprint_4: null
   rolling_average: 40
 
 team:
@@ -381,6 +471,9 @@ notes: |
   - Frontend Blade + AlpineJS (code existant réutilisé)
   - Epics : EPIC-002 (Backlinks CRUD), EPIC-003 (Monitoring), EPIC-004 (Alertes), EPIC-007 (Dashboard)
 
-  Sprint 3 démarré le 2026-02-18 : 44 points
+  Sprint 3 terminé : 44/44 points (100%)
   - Epics : EPIC-005 (Métriques SEO), EPIC-006 (Marketplace fondations), EPIC-007 (Graphiques), EPIC-008 (Settings)
-  - Ordre recommandé : STORY-023 → 022 → 024 → 027 → 028 → 025 → 026 → 029 → 030 → 032 → 033 → 031 → 035
+
+  Sprint 4 démarré le 2026-02-18 : 43 points
+  - Epics : EPIC-006 (Marketplace), EPIC-007 (Reporting), EPIC-008 (Auth), EPIC-009 (Performance), EPIC-010 (Sécurité), EPIC-011 (UI/UX), EPIC-012 (Qualité)
+  - Ordre recommandé : STORY-045 → 038 → 040 → 036 → 043 → 037 → 039 → 041 → 042 → 044 → 046 → 047 → 048 → 049

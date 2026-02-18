@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Backlink;
 use App\Models\Order;
 use App\Models\Platform;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -117,7 +119,44 @@ class OrderController extends Controller
             'status' => 'required|in:pending,in_progress,published,cancelled,refunded',
         ]);
 
-        $order->update(['status' => $request->status]);
+        $newStatus = $request->status;
+        $order->update(['status' => $newStatus]);
+
+        // Auto-création du backlink quand la commande est publiée
+        if ($newStatus === 'published' && $order->source_url && !$order->backlink_id) {
+            $backlink = Backlink::firstOrCreate(
+                [
+                    'project_id' => $order->project_id,
+                    'source_url' => $order->source_url,
+                ],
+                [
+                    'target_url'  => $order->target_url ?? '',
+                    'anchor_text' => $order->anchor_text,
+                    'tier_level'  => $order->tier_level ?? 'tier1',
+                    'spot_type'   => $order->spot_type ?? 'external',
+                    'price'       => $order->price,
+                    'currency'    => $order->currency,
+                    'platform_id' => $order->platform_id,
+                    'status'      => 'active',
+                    'first_seen_at'   => now(),
+                    'last_checked_at' => now(),
+                ]
+            );
+
+            $order->update(['backlink_id' => $backlink->id]);
+
+            Log::info('Backlink auto-créé depuis commande publiée', [
+                'order_id'   => $order->id,
+                'backlink_id' => $backlink->id,
+                'created'    => $backlink->wasRecentlyCreated,
+            ]);
+
+            $message = $backlink->wasRecentlyCreated
+                ? "Statut mis à jour et backlink créé automatiquement."
+                : "Statut mis à jour et backlink existant lié.";
+
+            return back()->with('success', $message);
+        }
 
         return back()->with('success', "Statut mis à jour : {$order->status_label}.");
     }

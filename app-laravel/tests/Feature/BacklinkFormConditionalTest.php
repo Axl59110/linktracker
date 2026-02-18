@@ -75,9 +75,9 @@ class BacklinkFormConditionalTest extends TestCase
     }
 
     /**
-     * Test création backlink externe sans plateforme NÉCESSITE contact.
+     * Test création backlink externe sans plateforme ni contact — contact est optionnel.
      */
-    public function test_external_backlink_without_platform_requires_contact(): void
+    public function test_external_backlink_without_platform_can_succeed_without_contact(): void
     {
         $project = Project::factory()->create();
 
@@ -89,10 +89,19 @@ class BacklinkFormConditionalTest extends TestCase
             'spot_type' => 'external',
             'price' => 150.00,
             'currency' => 'EUR',
-            // Pas de platform_id et pas de contact -> devrait échouer
+            // Pas de platform_id et pas de contact -> OK, contact est optionnel
         ]);
 
-        $response->assertSessionHasErrors(['contact_name', 'contact_email']);
+        $response->assertRedirect(route('backlinks.index'));
+
+        $this->assertDatabaseHas('backlinks', [
+            'project_id' => $project->id,
+            'spot_type' => 'external',
+            'price' => '150.00',
+            'currency' => 'EUR',
+            'platform_id' => null,
+            'contact_name' => null,
+        ]);
     }
 
     /**
@@ -127,35 +136,32 @@ class BacklinkFormConditionalTest extends TestCase
     }
 
     /**
-     * Test que les champs financiers sont supprimés pour un backlink interne.
+     * Test qu'un backlink interne (PBN acheté) peut avoir des infos financières.
      */
-    public function test_internal_backlink_removes_financial_fields(): void
+    public function test_internal_backlink_can_have_financial_fields(): void
     {
         $project = Project::factory()->create();
         $platform = Platform::factory()->create();
 
-        // Tenter de créer un backlink interne AVEC des infos financières
+        // Un PBN acheté peut avoir un prix et une plateforme
         $response = $this->post(route('backlinks.store'), [
             'project_id' => $project->id,
             'source_url' => 'https://pbn-site.com/page',
             'target_url' => 'https://target.com',
             'tier_level' => 'tier1',
             'spot_type' => 'internal',
-            'price' => 999.99, // Devrait être ignoré
-            'currency' => 'USD', // Devrait être ignoré
-            'platform_id' => $platform->id, // Devrait être ignoré
-            'contact_name' => 'Ignored', // Devrait être ignoré
+            'price' => 999.99,
+            'currency' => 'USD',
+            'platform_id' => $platform->id,
         ]);
 
         $response->assertRedirect(route('backlinks.index'));
 
-        // Vérifier que les champs financiers/contact sont null
         $backlink = Backlink::latest()->first();
         $this->assertEquals('internal', $backlink->spot_type);
-        $this->assertNull($backlink->price);
-        $this->assertNull($backlink->currency);
-        $this->assertNull($backlink->platform_id);
-        $this->assertNull($backlink->contact_name);
+        $this->assertEquals('999.99', $backlink->price);
+        $this->assertEquals('USD', $backlink->currency);
+        $this->assertEquals($platform->id, $backlink->platform_id);
     }
 
     /**

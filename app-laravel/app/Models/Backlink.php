@@ -36,6 +36,13 @@ class Backlink extends Model
         'created_by_user_id',
     ];
 
+    protected $attributes = [
+        'tier_level'   => 'tier1',
+        'spot_type'    => 'external',
+        'invoice_paid' => false,
+        'is_dofollow'  => true,
+    ];
+
     protected $casts = [
         'is_dofollow' => 'boolean',
         'invoice_paid' => 'boolean',

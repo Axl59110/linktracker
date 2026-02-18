@@ -49,8 +49,9 @@ class CheckBacklinkJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(BacklinkCheckerService $checkerService, AlertService $alertService): void
+    public function handle(BacklinkCheckerService $checkerService, ?AlertService $alertService = null): void
     {
+        $alertService ??= app(AlertService::class);
         Log::info('Starting backlink check', [
             'backlink_id' => $this->backlink->id,
             'source_url' => $this->backlink->source_url,
