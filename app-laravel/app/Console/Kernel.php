@@ -25,6 +25,12 @@ class Kernel extends ConsoleKernel
                  ->at('03:00')
                  ->withoutOverlapping()
                  ->appendOutputTo(storage_path('logs/scheduler.log'));
+
+        // Mise à jour quotidienne des métriques SEO
+        $schedule->command('app:refresh-seo-metrics --limit=100')
+                 ->dailyAt('04:00')
+                 ->withoutOverlapping()
+                 ->appendOutputTo(storage_path('logs/scheduler.log'));
     }
 
     /**

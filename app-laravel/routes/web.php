@@ -7,6 +7,8 @@ use App\Http\Controllers\BacklinkController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\WebhookSettingsController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,9 +30,17 @@ Route::get('/', function () {
 
 // Dashboard principale avec nouveau layout Blade
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/api/dashboard/chart', [DashboardController::class, 'chartData'])->name('dashboard.chart');
 
 // Projects - CRUD complet avec nouveau layout Blade
 Route::resource('projects', ProjectController::class);
+
+// Import CSV de backlinks (STORY-031) - AVANT la resource pour éviter le conflit avec {backlink}
+Route::get('/backlinks/import', [BacklinkController::class, 'importForm'])->name('backlinks.import');
+Route::post('/backlinks/import', [BacklinkController::class, 'importCsv'])->name('backlinks.import.process');
+
+// Export CSV de backlinks (STORY-035)
+Route::get('/backlinks/export', [BacklinkController::class, 'exportCsv'])->name('backlinks.export');
 
 // Backlinks - CRUD complet avec nouveau layout Blade
 // Rate limiting sur index pour éviter DoS via filtres/recherche
@@ -42,6 +52,11 @@ Route::post('/backlinks/{backlink}/check', [BacklinkController::class, 'check'])
     ->name('backlinks.check')
     ->middleware(['throttle:5,1']); // Limiter à 5 vérifications manuelles par minute
 
+// Refresh métriques SEO d'un backlink (STORY-025)
+Route::post('/backlinks/{backlink}/seo-metrics', [BacklinkController::class, 'refreshSeoMetrics'])
+    ->name('backlinks.seo-metrics')
+    ->middleware(['throttle:3,1']);
+
 // Platforms - Gestion des plateformes d'achat de liens
 Route::resource('platforms', PlatformController::class)->except(['show']);
 
@@ -52,11 +67,21 @@ Route::patch('/alerts/mark-all-read', [AlertController::class, 'markAllAsRead'])
 Route::delete('/alerts/{alert}', [AlertController::class, 'destroy'])->name('alerts.destroy');
 Route::delete('/alerts/destroy-all-read', [AlertController::class, 'destroyAllRead'])->name('alerts.destroy-all-read');
 
+// Settings - Configuration globale (STORY-027, STORY-028)
+Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+Route::patch('/settings/monitoring', [SettingsController::class, 'updateMonitoring'])->name('settings.monitoring');
+Route::patch('/settings/seo', [SettingsController::class, 'updateSeo'])->name('settings.seo');
+Route::post('/settings/seo/test', [SettingsController::class, 'testSeoConnection'])->name('settings.seo.test');
+
 // Settings - Webhook configurable (STORY-019)
 Route::get('/settings/webhook', [WebhookSettingsController::class, 'show'])->name('settings.webhook');
 Route::put('/settings/webhook', [WebhookSettingsController::class, 'update'])->name('settings.webhook.update');
 Route::post('/settings/webhook/test', [WebhookSettingsController::class, 'test'])->name('settings.webhook.test');
 Route::get('/settings/webhook/generate-secret', [WebhookSettingsController::class, 'generateSecret'])->name('settings.webhook.generate-secret');
+
+// Marketplace - Commandes de liens (STORY-032/033)
+Route::resource('orders', OrderController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
 
 // Page "En construction" pour fonctionnalités futures
 Route::view('/under-construction', 'pages.under-construction')->name('pages.under-construction');

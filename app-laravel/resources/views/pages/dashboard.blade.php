@@ -18,37 +18,63 @@
 
     {{-- Stats Cards Grid --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {{-- Active Backlinks --}}
-        <x-stats-card
-            label="Backlinks actifs"
-            :value="$activeBacklinks ?? 0"
-            change=""
-            icon="🔗"
-        />
+        <x-stats-card label="Backlinks actifs"   :value="$activeBacklinks ?? 0"  change="" icon="🔗" />
+        <x-stats-card label="Backlinks perdus"   :value="$lostBacklinks ?? 0"    change="" icon="⚠️" />
+        <x-stats-card label="Backlinks modifiés" :value="$changedBacklinks ?? 0" change="" icon="🔄" />
+        <x-stats-card label="Projets"            :value="$totalProjects ?? 0"    change="" icon="📁" />
+    </div>
 
-        {{-- Lost Backlinks --}}
-        <x-stats-card
-            label="Backlinks perdus"
-            :value="$lostBacklinks ?? 0"
-            change=""
-            icon="⚠️"
-        />
+    {{-- Graphiques STORY-029 / STORY-030 --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {{-- Graphique évolution 30j --}}
+        <div class="lg:col-span-2 bg-white p-6 rounded-lg border border-neutral-200" x-data="backlinkChart()">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold text-neutral-900">Évolution des backlinks</h2>
+                <div class="flex gap-1">
+                    @foreach([7 => '7j', 30 => '30j', 90 => '90j'] as $d => $label)
+                        <button @click="loadChart({{ $d }})"
+                            :class="days === {{ $d }} ? 'bg-brand-100 text-brand-700 font-medium' : 'text-neutral-500 hover:bg-neutral-100'"
+                            class="px-3 py-1 text-xs rounded transition-colors">
+                            {{ $label }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+            <div class="relative h-48">
+                <canvas id="backlinkChart"></canvas>
+            </div>
+        </div>
 
-        {{-- Changed Backlinks --}}
-        <x-stats-card
-            label="Backlinks modifiés"
-            :value="$changedBacklinks ?? 0"
-            change=""
-            icon="🔄"
-        />
+        {{-- Graphique donut disponibilité (STORY-030) --}}
+        <div class="bg-white p-6 rounded-lg border border-neutral-200">
+            <h2 class="text-base font-semibold text-neutral-900 mb-4">Disponibilité globale</h2>
 
-        {{-- Total Projects --}}
-        <x-stats-card
-            label="Projets"
-            :value="$totalProjects ?? 0"
-            change=""
-            icon="📁"
-        />
+            @if(!is_null($uptimeRate ?? null))
+                <div class="text-center mb-4">
+                    <span class="text-4xl font-bold {{ ($uptimeRate ?? 0) >= 90 ? 'text-green-600' : (($uptimeRate ?? 0) >= 70 ? 'text-orange-500' : 'text-red-500') }}">
+                        {{ $uptimeRate }}%
+                    </span>
+                    <p class="text-xs text-neutral-500 mt-1">sur 30 derniers jours</p>
+                    <p class="text-xs text-neutral-400">{{ $totalChecks ?? 0 }} vérifications</p>
+                </div>
+                <div class="relative h-32">
+                    <canvas id="uptimeChart"
+                        data-active="{{ $activeBacklinks ?? 0 }}"
+                        data-lost="{{ $lostBacklinks ?? 0 }}"
+                        data-changed="{{ $changedBacklinks ?? 0 }}">
+                    </canvas>
+                </div>
+                <div class="mt-3 space-y-1 text-xs">
+                    <div class="flex justify-between"><span class="text-green-600">● Actifs</span><span>{{ $activeBacklinks ?? 0 }}</span></div>
+                    <div class="flex justify-between"><span class="text-red-500">● Perdus</span><span>{{ $lostBacklinks ?? 0 }}</span></div>
+                    <div class="flex justify-between"><span class="text-orange-400">● Modifiés</span><span>{{ $changedBacklinks ?? 0 }}</span></div>
+                </div>
+            @else
+                <div class="text-center py-8 text-neutral-400">
+                    <p class="text-sm">Aucune vérification effectuée</p>
+                </div>
+            @endif
+        </div>
     </div>
 
     {{-- Content Grid --}}
@@ -190,3 +216,147 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    function backlinkChart() {
+        return {
+            days: 30,
+            chart: null,
+
+            init() {
+                this.loadChart(30);
+            },
+
+            async loadChart(days) {
+                this.days = days;
+
+                try {
+                    const response = await fetch(`/api/dashboard/chart?days=${days}`);
+                    const data = await response.json();
+                    this.renderChart(data);
+                } catch (e) {
+                    console.error('Erreur chargement graphique:', e);
+                }
+            },
+
+            renderChart(data) {
+                const ctx = document.getElementById('backlinkChart');
+                if (!ctx) return;
+
+                if (this.chart) {
+                    this.chart.destroy();
+                }
+
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Actifs',
+                                data: data.active,
+                                borderColor: '#22c55e',
+                                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                pointRadius: 2,
+                            },
+                            {
+                                label: 'Perdus',
+                                data: data.lost,
+                                borderColor: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                pointRadius: 2,
+                            },
+                            {
+                                label: 'Modifiés',
+                                data: data.changed,
+                                borderColor: '#f97316',
+                                backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                pointRadius: 2,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 11 },
+                                    boxWidth: 12,
+                                    padding: 12,
+                                },
+                            },
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 } },
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    font: { size: 10 },
+                                    stepSize: 1,
+                                    precision: 0,
+                                },
+                            },
+                        },
+                    },
+                });
+            },
+        };
+    }
+
+    // Graphique donut disponibilité (STORY-030)
+    document.addEventListener('DOMContentLoaded', function () {
+        const uptimeCanvas = document.getElementById('uptimeChart');
+        if (!uptimeCanvas) return;
+
+        const active  = parseInt(uptimeCanvas.dataset.active  || '0', 10);
+        const lost    = parseInt(uptimeCanvas.dataset.lost    || '0', 10);
+        const changed = parseInt(uptimeCanvas.dataset.changed || '0', 10);
+        const total   = active + lost + changed;
+
+        if (total === 0) return;
+
+        new Chart(uptimeCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: ['Actifs', 'Perdus', 'Modifiés'],
+                datasets: [{
+                    data: [active, lost, changed],
+                    backgroundColor: ['#22c55e', '#ef4444', '#f97316'],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                const total2 = active + lost + changed;
+                                const pct = total2 > 0 ? Math.round((ctx.parsed / total2) * 100) : 0;
+                                return `${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    });
+</script>
+@endpush

@@ -299,6 +299,103 @@
                 </div>
             </div>
 
+            {{-- Métriques SEO --}}
+            <div class="bg-white p-6 rounded-lg border border-neutral-200" x-data="seoMetricsWidget({{ $backlink->id }})">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-neutral-900">Métriques SEO</h3>
+                    @if($domainMetric)
+                        <span class="text-xs text-neutral-400">
+                            {{ $domainMetric->last_updated_at ? $domainMetric->last_updated_at->diffForHumans() : 'jamais' }}
+                        </span>
+                    @endif
+                </div>
+
+                @if($domainMetric && $domainMetric->hasData())
+                    {{-- Badge provider --}}
+                    <div class="mb-4">
+                        <span class="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-neutral-100 text-neutral-600">
+                            via {{ strtoupper($domainMetric->provider) }}
+                        </span>
+                    </div>
+
+                    <div class="space-y-4">
+                        {{-- DA --}}
+                        @if(!is_null($domainMetric->da))
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-neutral-600">Domain Authority</span>
+                                    <span class="font-semibold {{ $domainMetric->authority_color === 'green' ? 'text-green-600' : ($domainMetric->authority_color === 'orange' ? 'text-orange-500' : 'text-red-500') }}">{{ $domainMetric->da }}/100</span>
+                                </div>
+                                <div class="w-full bg-neutral-200 rounded-full h-1.5">
+                                    <div class="h-1.5 rounded-full {{ $domainMetric->authority_color === 'green' ? 'bg-green-500' : ($domainMetric->authority_color === 'orange' ? 'bg-orange-400' : 'bg-red-400') }}"
+                                         style="width: {{ $domainMetric->da }}%"></div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- DR --}}
+                        @if(!is_null($domainMetric->dr))
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-neutral-600">Domain Rating</span>
+                                    <span class="font-semibold text-neutral-800">{{ $domainMetric->dr }}/100</span>
+                                </div>
+                                <div class="w-full bg-neutral-200 rounded-full h-1.5">
+                                    <div class="h-1.5 rounded-full bg-blue-400" style="width: {{ $domainMetric->dr }}%"></div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Spam Score --}}
+                        @if(!is_null($domainMetric->spam_score))
+                            <div class="flex justify-between text-xs">
+                                <span class="text-neutral-600">Spam Score</span>
+                                <span class="font-semibold {{ $domainMetric->spam_color === 'green' ? 'text-green-600' : ($domainMetric->spam_color === 'orange' ? 'text-orange-500' : 'text-red-500') }}">
+                                    {{ $domainMetric->spam_score }}%
+                                </span>
+                            </div>
+                        @endif
+
+                        {{-- Backlinks count --}}
+                        @if(!is_null($domainMetric->backlinks_count))
+                            <div class="flex justify-between text-xs">
+                                <span class="text-neutral-600">Backlinks domaine</span>
+                                <span class="font-semibold text-neutral-800">{{ number_format($domainMetric->backlinks_count) }}</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Bouton refresh --}}
+                    <div class="mt-4">
+                        <button @click="refresh()" :disabled="loading"
+                            class="w-full text-xs text-neutral-500 hover:text-neutral-700 transition-colors py-1.5 border border-neutral-200 rounded hover:bg-neutral-50"
+                            :class="loading ? 'opacity-50 cursor-not-allowed' : ''">
+                            <span x-text="loading ? 'Actualisation…' : '🔄 Actualiser les métriques'"></span>
+                        </button>
+                        <p x-show="message" x-text="message" class="mt-2 text-xs text-center" :class="success ? 'text-green-600' : 'text-red-600'"></p>
+                    </div>
+
+                @elseif(auth()->user()->seo_provider === 'custom')
+                    <div class="text-center py-4">
+                        <p class="text-xs text-neutral-500 mb-3">Aucun provider SEO configuré.</p>
+                        <a href="{{ route('settings.index') }}?tab=seo"
+                           class="text-xs text-brand-600 hover:underline">
+                            Configurer dans les paramètres →
+                        </a>
+                    </div>
+                @else
+                    {{-- Provider configuré mais métriques pas encore chargées --}}
+                    <div class="text-center py-4">
+                        <p class="text-xs text-neutral-500 mb-3">Métriques non encore chargées.</p>
+                        <button @click="refresh()" :disabled="loading"
+                            class="text-xs text-brand-600 hover:underline">
+                            <span x-text="loading ? 'Récupération…' : 'Récupérer les métriques'"></span>
+                        </button>
+                        <p x-show="message" x-text="message" class="mt-2 text-xs" :class="success ? 'text-green-600' : 'text-red-600'"></p>
+                    </div>
+                @endif
+            </div>
+
             {{-- Actions --}}
             <div class="bg-white p-6 rounded-lg border border-neutral-200">
                 <form action="{{ route('backlinks.destroy', $backlink) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce backlink ?')">
@@ -312,3 +409,39 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+function seoMetricsWidget(backlinkId) {
+    return {
+        loading: false,
+        message: null,
+        success: false,
+        async refresh() {
+            this.loading = true;
+            this.message = null;
+            try {
+                const res = await fetch(`/backlinks/${backlinkId}/seo-metrics`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                this.success = data.success;
+                this.message = data.message;
+                if (data.success) {
+                    setTimeout(() => location.reload(), 1500);
+                }
+            } catch (e) {
+                this.success = false;
+                this.message = 'Erreur de connexion.';
+            } finally {
+                this.loading = false;
+            }
+        },
+    };
+}
+</script>
+@endpush

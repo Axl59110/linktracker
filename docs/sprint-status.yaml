@@ -5,8 +5,8 @@
 version: "6.0.0"
 project_name: "Link Tracker"
 project_level: 4
-current_sprint: 2
-sprint_plan_path: "docs/sprint-02-plan.md"
+current_sprint: 3
+sprint_plan_path: "docs/sprint-03-plan.md"
 
 sprints:
   - sprint_number: 1
@@ -252,22 +252,135 @@ sprints:
         completed_at: "2026-02-17T00:00:00Z"
         notes: "Déjà implémenté — widget alertes dans dashboard.blade.php avec badge sévérité, lien vers /alerts"
 
+  - sprint_number: 3
+    start_date: "2026-02-18"
+    end_date: "2026-03-03"
+    capacity_points: 44
+    committed_points: 44
+    completed_points: 44
+    status: "completed"
+    goal: "Enrichir LinkTracker avec les métriques SEO, la configuration centralisée, les graphiques de tendances et les fondations de la marketplace"
+    sprint_plan_path: "docs/sprint-03-plan.md"
+    stories:
+      - story_id: "STORY-022"
+        title: "SeoMetricService — Abstraction multi-providers"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T10:30:00Z"
+        notes: "Interface SeoMetricProviderInterface, DTO DomainMetricsDTO, MozProvider (HTTP fake), CustomProvider, SeoMetricService, config/seo.php — 16 tests passent"
+      - story_id: "STORY-023"
+        title: "Migration domain_metrics + Model"
+        points: 2
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T10:00:00Z"
+        notes: "Migration créée et exécutée, modèle DomainMetric avec scopes stale/fresh, relation dans Backlink, 16 tests passent"
+      - story_id: "STORY-024"
+        title: "FetchSeoMetricsJob + scheduler quotidien"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T11:00:00Z"
+        notes: "FetchSeoMetricsJob (ShouldQueue, retry 2, timeout 60s), RefreshSeoMetricsCommand avec --force/--domain/--limit, scheduler 4h quotidien — 5 tests passent"
+      - story_id: "STORY-025"
+        title: "Affichage métriques SEO sur page détail backlink"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T12:00:00Z"
+        notes: "Section métriques dans show.blade.php (DA/DR/spam avec barres), bouton refresh AJAX, route POST /seo-metrics, BacklinkController@show passe domainMetric — 4 tests passent"
+      - story_id: "STORY-026"
+        title: "Colonne métriques dans liste backlinks"
+        points: 2
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T15:00:00Z"
+        notes: "Colonne DA dans BacklinkController@index (batch N+1 free), view index.blade.php, 6 tests passent"
+      - story_id: "STORY-027"
+        title: "Configuration globale — Page Settings"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T11:30:00Z"
+        notes: "Page /settings avec onglets AlpineJS (Monitoring/SEO/Webhook/Compte), migration users, SettingsController — 8 tests passent"
+      - story_id: "STORY-028"
+        title: "Configuration API SEO + test de connexion"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T11:30:00Z"
+        notes: "Inclus dans STORY-027 : updateSeo, testSeoConnection, chiffrement Crypt, provider Moz/Custom"
+      - story_id: "STORY-029"
+        title: "Graphique évolution backlinks sur dashboard (Chart.js)"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T15:30:00Z"
+        notes: "Chart.js line chart (7j/30j/90j), Alpine backlinkChart(), endpoint GET /api/dashboard/chart avec cache 10min, 12 tests passent"
+      - story_id: "STORY-030"
+        title: "Graphique disponibilité global (uptime 30j)"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T15:30:00Z"
+        notes: "Chart.js doughnut, uptimeRate depuis BacklinkCheck, included in DashboardChartsTest — 12 tests passent"
+      - story_id: "STORY-031"
+        title: "Import backlinks CSV"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T16:00:00Z"
+        notes: "BacklinkCsvImportService (validation, doublons, valeurs défaut), route GET/POST /backlinks/import, vue import.blade.php, 12 tests passent"
+      - story_id: "STORY-032"
+        title: "Structure Marketplace — Models + Migration"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T16:30:00Z"
+        notes: "Migration create_orders_table, Model Order (status_badge/label accessors, scopes), relation Project->orders, OrderController CRUD"
+      - story_id: "STORY-033"
+        title: "Marketplace — Liste et création de commandes (UI)"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T16:30:00Z"
+        notes: "Vues orders/index.blade.php, create, show, edit. Filtres projet/statut, updateStatus, 14 tests passent"
+      - story_id: "STORY-034"
+        title: "Notification email pour alertes critiques"
+        points: 3
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T17:00:00Z"
+        notes: "CriticalAlertNotification (ShouldQueue), intégration dans AlertService.sendEmailIfCritical pour severity critical/high avec email_alerts_enabled, 6 tests passent"
+      - story_id: "STORY-035"
+        title: "Export CSV des backlinks"
+        points: 2
+        status: "completed"
+        assigned_to: "Claude Code"
+        completed_at: "2026-02-18T16:00:00Z"
+        notes: "BacklinkController@exportCsv (BOM UTF-8, stream, filtres project/status), route GET /backlinks/export, inclus dans BacklinkCsvImportTest"
+
 velocity:
   sprint_1: 25
-  sprint_2: null
-  rolling_average: null
+  sprint_2: 50
+  sprint_3: 44
+  rolling_average: 40
 
 team:
   size: 1
   developer: "Claude Code (autonomous AI agent)"
   sprint_length_weeks: 2
-  capacity_per_sprint: 50
+  capacity_per_sprint: 44
 
 notes: |
   Sprint 1 terminé : 25/25 points (100%)
   - Infrastructure, Auth, Projects CRUD, Backlinks migration, SSRF, Queues
 
-  Sprint 2 démarré le 2026-02-17 : 50 points
-  - Frontend : Blade + AlpineJS (code existant réutilisé)
+  Sprint 2 terminé : 50/50 points (100%)
+  - Frontend Blade + AlpineJS (code existant réutilisé)
   - Epics : EPIC-002 (Backlinks CRUD), EPIC-003 (Monitoring), EPIC-004 (Alertes), EPIC-007 (Dashboard)
-  - Ordre recommandé : STORY-007 → 009 → 010 → 012 → 013 → 015 → 017 → 011 → 014 → 018 → 019 → 020 → 021
+
+  Sprint 3 démarré le 2026-02-18 : 44 points
+  - Epics : EPIC-005 (Métriques SEO), EPIC-006 (Marketplace fondations), EPIC-007 (Graphiques), EPIC-008 (Settings)
+  - Ordre recommandé : STORY-023 → 022 → 024 → 027 → 028 → 025 → 026 → 029 → 030 → 032 → 033 → 031 → 035

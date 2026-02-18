@@ -25,6 +25,11 @@ class User extends Authenticatable
         'webhook_url',
         'webhook_secret',
         'webhook_events',
+        'check_frequency',
+        'http_timeout',
+        'email_alerts_enabled',
+        'seo_provider',
+        'seo_api_key_encrypted',
     ];
 
     /**
@@ -43,9 +48,11 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'webhook_events' => 'array',
+        'email_verified_at'    => 'datetime',
+        'password'             => 'hashed',
+        'webhook_events'       => 'array',
+        'email_alerts_enabled' => 'boolean',
+        'http_timeout'         => 'integer',
     ];
 
     public function projects(): HasMany

@@ -75,7 +75,11 @@ class BacklinkController extends Controller
             ->filter(fn($filter) => !empty($validated[$filter]))
             ->count();
 
-        return view('pages.backlinks.index', compact('backlinks', 'projects', 'activeFiltersCount'));
+        // Charger les métriques SEO pour les domaines sources (évite N+1)
+        $domains = $backlinks->map(fn($b) => \App\Models\DomainMetric::extractDomain($b->source_url))->unique()->values();
+        $domainMetrics = \App\Models\DomainMetric::whereIn('domain', $domains)->get()->keyBy('domain');
+
+        return view('pages.backlinks.index', compact('backlinks', 'projects', 'activeFiltersCount', 'domainMetrics'));
     }
 
     /**
@@ -229,7 +233,26 @@ class BacklinkController extends Controller
     {
         $backlink->load(['project', 'checks']);
 
-        return view('pages.backlinks.show', compact('backlink'));
+        $domain = \App\Models\DomainMetric::extractDomain($backlink->source_url);
+        $domainMetric = \App\Models\DomainMetric::where('domain', $domain)->first();
+
+        return view('pages.backlinks.show', compact('backlink', 'domainMetric'));
+    }
+
+    /**
+     * Déclenche une récupération des métriques SEO pour le domaine source du backlink.
+     */
+    public function refreshSeoMetrics(Backlink $backlink)
+    {
+        $domain = \App\Models\DomainMetric::extractDomain($backlink->source_url);
+        $record = \App\Models\DomainMetric::forDomain($domain);
+
+        \App\Jobs\FetchSeoMetricsJob::dispatch($record);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Récupération des métriques lancée pour {$domain}.",
+        ]);
     }
 
     /**
@@ -515,4 +538,108 @@ class BacklinkController extends Controller
 
         return $changes;
     }
+
+    /**
+     * Show the CSV import form. (STORY-031)
+     */
+    public function importForm()
+    {
+        $projects = Project::orderBy('name')->get();
+        return view('pages.backlinks.import', compact('projects'));
+    }
+
+    /**
+     * Process the CSV import. (STORY-031)
+     */
+    public function importCsv(Request $request)
+    {
+        $request->validate([
+            'csv_file'   => 'required|file|mimes:csv,txt|max:5120', // 5 MB max
+            'project_id' => 'required|exists:projects,id',
+        ]);
+
+        $project = Project::findOrFail($request->project_id);
+
+        /** @var \App\Services\BacklinkCsvImportService $importer */
+        $importer = app(\App\Services\BacklinkCsvImportService::class);
+
+        $result = $importer->import($request->file('csv_file'), $project);
+
+        if (!empty($result['errors']) && $result['imported'] === 0) {
+            return back()->withErrors(['csv_file' => $result['errors'][0]])->withInput();
+        }
+
+        $message = "{$result['imported']} backlink(s) importé(s).";
+        if ($result['skipped'] > 0) {
+            $message .= " {$result['skipped']} ignoré(s) (doublons ou erreurs).";
+        }
+        if (!empty($result['errors'])) {
+            $message .= ' Certaines lignes ont des erreurs : ' . implode('; ', array_slice($result['errors'], 0, 3));
+        }
+
+        return redirect()->route('backlinks.index')->with('success', $message);
+    }
+
+    /**
+     * Export backlinks as CSV. (STORY-035)
+     */
+    public function exportCsv(Request $request)
+    {
+        $request->validate([
+            'project_id' => 'nullable|exists:projects,id',
+            'status'     => 'nullable|in:active,lost,changed',
+        ]);
+
+        $query = Backlink::with('project');
+
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $backlinks = $query->orderBy('created_at', 'desc')->get();
+
+        $filename = 'backlinks-' . now()->format('Y-m-d') . '.csv';
+        $headers  = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $columns = [
+            'source_url', 'target_url', 'anchor_text', 'status',
+            'tier_level', 'spot_type', 'price', 'currency',
+            'published_at', 'expires_at', 'project',
+        ];
+
+        $callback = function () use ($backlinks, $columns) {
+            $handle = fopen('php://output', 'w');
+            // BOM UTF-8 pour Excel
+            fputs($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, $columns);
+
+            foreach ($backlinks as $backlink) {
+                fputcsv($handle, [
+                    $backlink->source_url,
+                    $backlink->target_url,
+                    $backlink->anchor_text,
+                    $backlink->status,
+                    $backlink->tier_level,
+                    $backlink->spot_type,
+                    $backlink->price,
+                    $backlink->currency,
+                    $backlink->published_at?->format('Y-m-d'),
+                    $backlink->expires_at?->format('Y-m-d'),
+                    $backlink->project?->name,
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
 }

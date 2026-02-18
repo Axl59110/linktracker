@@ -105,7 +105,23 @@ class Backlink extends Model
     }
 
     /**
-     * Get all alerts for this backlink.
+     * Get the SEO metrics for the source domain of this backlink.
+     */
+    public function domainMetric()
+    {
+        return $this->hasOne(DomainMetric::class, 'domain', 'source_domain');
+    }
+
+    /**
+     * Get the source domain (host) extracted from source_url.
+     */
+    public function getSourceDomainAttribute(): string
+    {
+        return DomainMetric::extractDomain($this->source_url);
+    }
+
+    /**
+     * All alerts for this backlink.
      */
     public function alerts()
     {

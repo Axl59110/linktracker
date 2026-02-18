@@ -5,6 +5,7 @@ namespace App\Services\Alert;
 use App\Jobs\SendWebhookJob;
 use App\Models\Alert;
 use App\Models\Backlink;
+use App\Notifications\CriticalAlertNotification;
 use Illuminate\Support\Facades\Log;
 
 class AlertService
@@ -46,6 +47,7 @@ class AlertService
         ]);
 
         $this->dispatchWebhookIfConfigured($alert, $backlink);
+        $this->sendEmailIfCritical($alert, $backlink);
 
         return $alert;
     }
@@ -87,6 +89,7 @@ class AlertService
         ]);
 
         $this->dispatchWebhookIfConfigured($alert, $backlink);
+        $this->sendEmailIfCritical($alert, $backlink);
 
         return $alert;
     }
@@ -269,6 +272,32 @@ class AlertService
             'http_status' => 'Statut HTTP',
             default => ucfirst(str_replace('_', ' ', $field)),
         };
+    }
+
+    /**
+     * Envoie une notification email pour les alertes critiques (STORY-034).
+     */
+    protected function sendEmailIfCritical(Alert $alert, Backlink $backlink): void
+    {
+        if (!in_array($alert->severity, [Alert::SEVERITY_CRITICAL, Alert::SEVERITY_HIGH])) {
+            return;
+        }
+
+        $user = $backlink->createdBy;
+
+        if (!$user || !$user->email_alerts_enabled) {
+            return;
+        }
+
+        try {
+            $user->notify(new CriticalAlertNotification($alert));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send critical alert notification', [
+                'alert_id' => $alert->id,
+                'user_id'  => $user->id,
+                'error'    => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

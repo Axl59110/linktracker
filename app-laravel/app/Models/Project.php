@@ -37,4 +37,12 @@ class Project extends Model
     {
         return $this->hasMany(Backlink::class);
     }
+
+    /**
+     * Get the orders for the project.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

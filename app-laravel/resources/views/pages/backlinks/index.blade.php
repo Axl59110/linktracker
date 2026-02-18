@@ -156,6 +156,7 @@
                             <x-sortable-header field="tier_level" label="Tier" />
                             <x-sortable-header field="spot_type" label="Réseau" />
                             <x-sortable-header field="status" label="Statut" />
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">DA</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Prix</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase w-24">Actions</th>
                         </tr>
@@ -192,6 +193,20 @@
                                     <x-badge variant="{{ $backlink->status === 'active' ? 'success' : ($backlink->status === 'lost' ? 'danger' : 'warning') }}">
                                         {{ ucfirst($backlink->status) }}
                                     </x-badge>
+                                </td>
+                                {{-- Colonne DA --}}
+                                @php
+                                    $bDomain = \App\Models\DomainMetric::extractDomain($backlink->source_url);
+                                    $bMetric = $domainMetrics[$bDomain] ?? null;
+                                @endphp
+                                <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                    @if($bMetric && !is_null($bMetric->da))
+                                        <span class="font-semibold {{ $bMetric->authority_color === 'green' ? 'text-green-600' : ($bMetric->authority_color === 'orange' ? 'text-orange-500' : 'text-red-500') }}">
+                                            {{ $bMetric->da }}
+                                        </span>
+                                    @else
+                                        <span class="text-neutral-300">–</span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-neutral-900">
                                     @if($backlink->price && $backlink->currency)
