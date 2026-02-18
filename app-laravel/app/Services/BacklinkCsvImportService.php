@@ -45,7 +45,7 @@ class BacklinkCsvImportService
         }
 
         // Lire et normaliser l'en-tête
-        $rawHeader = fgetcsv($handle, 0, ',');
+        $rawHeader = fgetcsv($handle, 0, ',', '"', '');
         if ($rawHeader === false || $rawHeader === null) {
             fclose($handle);
             return ['imported' => 0, 'skipped' => 0, 'errors' => ['Le fichier CSV est vide.'], 'format' => 'unknown'];
@@ -61,7 +61,7 @@ class BacklinkCsvImportService
             fclose($handle);
             // Ré-ouvrir pour repasser depuis le début
             $handle = fopen($file->getRealPath(), 'r');
-            fgetcsv($handle, 0, ','); // sauter l'en-tête
+            fgetcsv($handle, 0, ',', '"', ''); // sauter l'en-tête
             $result = $this->importThirdParty($handle, $headerLower, $project, $userId);
         } else {
             // Vérifier colonnes requises format natif
@@ -121,7 +121,7 @@ class BacklinkCsvImportService
         if ($handle === false) {
             return 'unknown';
         }
-        $rawHeader = fgetcsv($handle, 0, ',');
+        $rawHeader = fgetcsv($handle, 0, ',', '"', '');
         fclose($handle);
 
         if ($rawHeader === false || $rawHeader === null) {
@@ -144,7 +144,7 @@ class BacklinkCsvImportService
         $errors     = [];
         $lineNumber = 1;
 
-        while (($row = fgetcsv($handle, 0, ',')) !== false) {
+        while (($row = fgetcsv($handle, 0, ',', '"', '')) !== false) {
             $lineNumber++;
 
             if (count($row) < count($headerLower)) {
@@ -224,7 +224,7 @@ class BacklinkCsvImportService
         // Index des colonnes pour accès rapide
         $col = array_flip($headerLower);
 
-        while (($row = fgetcsv($handle, 0, ',')) !== false) {
+        while (($row = fgetcsv($handle, 0, ',', '"', '')) !== false) {
             $lineNumber++;
 
             if (count($row) < count($headerLower)) {
