@@ -137,7 +137,7 @@ class DashboardChartsTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('90');  // uptimeRate = 90%
-        $response->assertSee('sur 30 derniers jours');
+        $response->assertSee('vérifs · 30j');
     }
 
     public function test_dashboard_shows_no_checks_message_when_no_data(): void
@@ -145,7 +145,7 @@ class DashboardChartsTest extends TestCase
         $response = $this->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('Aucune vérification effectuée');
+        $response->assertSee('pas de données');
     }
 
     public function test_dashboard_ignores_checks_older_than_30_days(): void
@@ -162,7 +162,7 @@ class DashboardChartsTest extends TestCase
         $response = $this->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('Aucune vérification effectuée');
+        $response->assertSee('pas de données');
     }
 
     public function test_dashboard_stats_cards_show_correct_counts(): void

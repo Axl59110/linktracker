@@ -9,7 +9,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/alpine.js'])
 </head>
-<body class="antialiased bg-neutral-50 text-neutral-600">
+<body class="antialiased bg-neutral-50 text-neutral-700">
     <div id="app" class="min-h-screen">
         {{-- Sidebar Navigation (Desktop) --}}
         @include('components.sidebar')

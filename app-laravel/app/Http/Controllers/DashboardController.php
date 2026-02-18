@@ -93,12 +93,22 @@ class DashboardController extends Controller
             $active  = [];
             $lost    = [];
             $changed = [];
+            $gained  = [];
+            $delta   = [];
 
             foreach ($dates as $date) {
                 $dayQuery = clone $query;
-                $active[]  = (clone $dayQuery)->where('status', 'active')->whereDate('created_at', '<=', $date)->count();
-                $lost[]    = (clone $dayQuery)->where('status', 'lost')->whereDate('last_checked_at', $date)->count();
-                $changed[] = (clone $dayQuery)->where('status', 'changed')->whereDate('last_checked_at', $date)->count();
+                $activeVal   = (clone $dayQuery)->where('status', 'active')->whereDate('created_at', '<=', $date)->count();
+                $lostVal     = (clone $dayQuery)->where('status', 'lost')->whereDate('last_checked_at', $date)->count();
+                $changedVal  = (clone $dayQuery)->where('status', 'changed')->whereDate('last_checked_at', $date)->count();
+                $gainedVal   = (clone $dayQuery)->whereDate('created_at', $date)->count();
+
+                $active[]   = $activeVal;
+                $lost[]     = $lostVal;
+                $changed[]  = $changedVal;
+                $gained[]   = $gainedVal;
+                // delta = gained - lost (positif = gain net, négatif = perte nette)
+                $delta[]    = $gainedVal - $lostVal;
             }
 
             return [
@@ -106,6 +116,8 @@ class DashboardController extends Controller
                 'active'   => $active,
                 'lost'     => $lost,
                 'changed'  => $changed,
+                'gained'   => $gained,
+                'delta'    => $delta,
             ];
         });
 
