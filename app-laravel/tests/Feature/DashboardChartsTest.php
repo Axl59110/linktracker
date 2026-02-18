@@ -34,7 +34,7 @@ class DashboardChartsTest extends TestCase
         $response = $this->get(route('dashboard.chart'));
 
         $response->assertStatus(200);
-        $response->assertJsonStructure(['labels', 'active', 'lost', 'changed']);
+        $response->assertJsonStructure(['labels', 'active', 'perfect', 'not_indexed', 'nofollow', 'gained', 'lost', 'delta']);
     }
 
     public function test_chart_data_default_30_days(): void
@@ -44,8 +44,12 @@ class DashboardChartsTest extends TestCase
         $data = $response->json();
         $this->assertCount(30, $data['labels']);
         $this->assertCount(30, $data['active']);
+        $this->assertCount(30, $data['perfect']);
+        $this->assertCount(30, $data['not_indexed']);
+        $this->assertCount(30, $data['nofollow']);
+        $this->assertCount(30, $data['gained']);
         $this->assertCount(30, $data['lost']);
-        $this->assertCount(30, $data['changed']);
+        $this->assertCount(30, $data['delta']);
     }
 
     public function test_chart_data_7_days(): void

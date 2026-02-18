@@ -119,75 +119,107 @@
 </div>
 
 {{-- ═══════════════════════════════════════════════════════════
-     GRAPHIQUE PRINCIPAL — histogramme gains/pertes + courbe
+     GRAPHIQUES — courbes qualité + bougies gains/pertes
      ═══════════════════════════════════════════════════════════ --}}
-<div class="bg-white rounded-xl border border-neutral-200 mb-6 overflow-hidden"
-     x-data="backlinkChart()">
+<div class="mb-6 space-y-4" x-data="backlinkChart()">
 
-    {{-- Header du graphique --}}
-    <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
-        <div class="flex items-center gap-4">
+    {{-- Header partagé : titre + sélecteur période + toggles --}}
+    <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
             <h2 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Évolution des backlinks</h2>
-            <div class="hidden sm:flex items-center gap-3 text-xs text-neutral-400">
-                <span class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded-sm bg-emerald-400 inline-block"></span>Gains
-                </span>
-                <span class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded-sm bg-red-400 inline-block"></span>Pertes
-                </span>
-                <span class="flex items-center gap-1.5">
-                    <span class="w-5 h-0.5 bg-blue-400 inline-block"></span>Actifs
-                </span>
+            {{-- Sélecteur période (contrôle les deux graphiques) --}}
+            <div class="flex gap-1 bg-neutral-100 p-1 rounded-lg">
+                @foreach([30 => '30j', 90 => '90j', 180 => '6m', 365 => '1an'] as $d => $label)
+                    <button @click="loadCharts({{ $d }})"
+                        :class="days === {{ $d }} ? 'bg-white text-neutral-900 shadow-sm font-semibold' : 'text-neutral-500 hover:text-neutral-700'"
+                        class="px-3 py-1 text-xs rounded-md transition-all duration-150">
+                        {{ $label }}
+                    </button>
+                @endforeach
             </div>
         </div>
-        {{-- Sélecteur période --}}
-        <div class="flex gap-1 bg-neutral-100 p-1 rounded-lg">
-            @foreach([30 => '30j', 90 => '90j', 180 => '6m', 365 => '1an'] as $d => $label)
-                <button @click="loadChart({{ $d }})"
-                    :class="days === {{ $d }} ? 'bg-white text-neutral-900 shadow-sm font-semibold' : 'text-neutral-500 hover:text-neutral-700'"
-                    class="px-3 py-1 text-xs rounded-md transition-all duration-150">
-                    {{ $label }}
+
+        {{-- Graphique 1 : courbes cumulatives --}}
+        <div class="px-6 pt-4 pb-2">
+            {{-- Boutons toggle des séries --}}
+            <div class="flex flex-wrap gap-2 mb-3">
+                <button @click="toggleSeries(0)"
+                        :class="toggles[0] ? 'opacity-100' : 'opacity-40'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-blue-200 bg-blue-50 text-blue-700 transition-opacity">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>Total
                 </button>
-            @endforeach
-        </div>
-    </div>
-
-    {{-- Zone graphique --}}
-    <div class="px-6 py-4">
-        {{-- Indicateur de charge --}}
-        <div x-show="loading" class="flex items-center justify-center h-64">
-            <div class="flex gap-1.5">
-                <span class="w-1.5 h-6 bg-neutral-200 rounded-full animate-pulse" style="animation-delay:0ms"></span>
-                <span class="w-1.5 h-10 bg-neutral-300 rounded-full animate-pulse" style="animation-delay:100ms"></span>
-                <span class="w-1.5 h-8 bg-neutral-200 rounded-full animate-pulse" style="animation-delay:200ms"></span>
-                <span class="w-1.5 h-12 bg-neutral-300 rounded-full animate-pulse" style="animation-delay:300ms"></span>
-                <span class="w-1.5 h-6 bg-neutral-200 rounded-full animate-pulse" style="animation-delay:400ms"></span>
+                <button @click="toggleSeries(1)"
+                        :class="toggles[1] ? 'opacity-100' : 'opacity-40'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 transition-opacity">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>Parfaits
+                </button>
+                <button @click="toggleSeries(2)"
+                        :class="toggles[2] ? 'opacity-100' : 'opacity-40'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-amber-200 bg-amber-50 text-amber-700 transition-opacity">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>Non indexés
+                </button>
+                <button @click="toggleSeries(3)"
+                        :class="toggles[3] ? 'opacity-100' : 'opacity-40'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-violet-200 bg-violet-50 text-violet-700 transition-opacity">
+                    <span class="w-2.5 h-2.5 rounded-full bg-violet-500 inline-block"></span>Nofollow
+                </button>
+            </div>
+            {{-- Canvas graphique 1 --}}
+            <div x-show="loading" class="flex items-center justify-center h-56">
+                <div class="flex gap-1.5">
+                    <span class="w-1.5 h-6 bg-neutral-200 rounded-full animate-pulse" style="animation-delay:0ms"></span>
+                    <span class="w-1.5 h-10 bg-neutral-300 rounded-full animate-pulse" style="animation-delay:100ms"></span>
+                    <span class="w-1.5 h-8 bg-neutral-200 rounded-full animate-pulse" style="animation-delay:200ms"></span>
+                    <span class="w-1.5 h-12 bg-neutral-300 rounded-full animate-pulse" style="animation-delay:300ms"></span>
+                    <span class="w-1.5 h-6 bg-neutral-200 rounded-full animate-pulse" style="animation-delay:400ms"></span>
+                </div>
+            </div>
+            <div x-show="!loading" x-cloak class="relative h-56">
+                <canvas id="chartQuality"></canvas>
             </div>
         </div>
-        <div x-show="!loading" class="relative h-64">
-            <canvas id="backlinkChart"></canvas>
+
+        {{-- Séparateur --}}
+        <div class="mx-6 border-t border-neutral-100 my-1"></div>
+
+        {{-- Graphique 2 : bougies gains / pertes --}}
+        <div class="px-6 pt-2 pb-4">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Gains &amp; Pertes / jour</span>
+                <span class="flex items-center gap-1 text-xs text-neutral-400">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-emerald-400 inline-block"></span>Gains
+                </span>
+                <span class="flex items-center gap-1 text-xs text-neutral-400">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-red-400 inline-block"></span>Pertes
+                </span>
+            </div>
+            <div x-show="!loading" x-cloak class="relative h-32">
+                <canvas id="chartCandles"></canvas>
+            </div>
+            <div x-show="loading" class="h-32"></div>
+        </div>
+
+        {{-- Bande de stats --}}
+        <div class="grid grid-cols-3 divide-x divide-neutral-100 border-t border-neutral-100">
+            <div class="px-6 py-3">
+                <p class="text-xs text-neutral-400 mb-0.5">Total backlinks</p>
+                <p class="text-lg font-black text-neutral-900 tabular-nums">{{ ($activeBacklinks ?? 0) + ($lostBacklinks ?? 0) + ($changedBacklinks ?? 0) }}</p>
+            </div>
+            <div class="px-6 py-3">
+                <p class="text-xs text-neutral-400 mb-0.5">Taux de succès</p>
+                @php
+                    $total = ($activeBacklinks ?? 0) + ($lostBacklinks ?? 0) + ($changedBacklinks ?? 0);
+                    $successRate = $total > 0 ? round(($activeBacklinks ?? 0) / $total * 100) : 0;
+                @endphp
+                <p class="text-lg font-black tabular-nums {{ $successRate >= 80 ? 'text-emerald-600' : ($successRate >= 60 ? 'text-amber-500' : 'text-red-500') }}">{{ $successRate }}%</p>
+            </div>
+            <div class="px-6 py-3">
+                <p class="text-xs text-neutral-400 mb-0.5">Sites actifs</p>
+                <p class="text-lg font-black text-neutral-900 tabular-nums">{{ $totalProjects ?? 0 }}</p>
+            </div>
         </div>
     </div>
 
-    {{-- Bande de stats sous le graphique --}}
-    <div class="grid grid-cols-3 divide-x divide-neutral-100 border-t border-neutral-100">
-        <div class="px-6 py-3">
-            <p class="text-xs text-neutral-400 mb-0.5">Total backlinks</p>
-            <p class="text-lg font-black text-neutral-900 tabular-nums">{{ ($activeBacklinks ?? 0) + ($lostBacklinks ?? 0) + ($changedBacklinks ?? 0) }}</p>
-        </div>
-        <div class="px-6 py-3">
-            <p class="text-xs text-neutral-400 mb-0.5">Taux de succès</p>
-            @php
-                $total = ($activeBacklinks ?? 0) + ($lostBacklinks ?? 0) + ($changedBacklinks ?? 0);
-                $successRate = $total > 0 ? round(($activeBacklinks ?? 0) / $total * 100) : 0;
-            @endphp
-            <p class="text-lg font-black tabular-nums {{ $successRate >= 80 ? 'text-emerald-600' : ($successRate >= 60 ? 'text-amber-500' : 'text-red-500') }}">{{ $successRate }}%</p>
-        </div>
-        <div class="px-6 py-3">
-            <p class="text-xs text-neutral-400 mb-0.5">Sites actifs</p>
-            <p class="text-lg font-black text-neutral-900 tabular-nums">{{ $totalProjects ?? 0 }}</p>
-        </div>
-    </div>
 </div>
 
 {{-- ═══════════════════════════════════════════════════════════
@@ -438,25 +470,32 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-function backlinkChart() {
+function backlinkChart(projectId = null) {
     return {
         days: 30,
-        chart: null,
+        chartQuality: null,
+        chartCandles: null,
         loading: true,
+        toggles: [true, true, true, true],
 
         init() {
-            this.loadChart(30);
+            this.loadCharts(30);
         },
 
-        async loadChart(days) {
+        async loadCharts(days) {
             this.days = days;
             this.loading = true;
 
+            const url = projectId
+                ? `/api/dashboard/chart?days=${days}&project_id=${projectId}`
+                : `/api/dashboard/chart?days=${days}`;
+
             try {
-                const response = await fetch(`/api/dashboard/chart?days=${days}`);
+                const response = await fetch(url);
                 const data = await response.json();
                 await this.$nextTick();
-                this.renderChart(data);
+                this.renderQuality(data);
+                this.renderCandles(data);
             } catch (e) {
                 console.error('Erreur chargement graphique:', e);
             } finally {
@@ -464,68 +503,83 @@ function backlinkChart() {
             }
         },
 
-        renderChart(data) {
-            const ctx = document.getElementById('backlinkChart');
-            if (!ctx) return;
-
-            if (this.chart) {
-                this.chart.destroy();
+        toggleSeries(index) {
+            this.toggles[index] = !this.toggles[index];
+            if (this.chartQuality) {
+                this.chartQuality.data.datasets[index].hidden = !this.toggles[index];
+                this.chartQuality.update();
             }
+        },
 
-            // Couleurs des barres : vert si delta > 0, rouge si delta < 0, neutre si 0
-            const barColors = (data.delta || []).map(v =>
-                v > 0 ? 'rgba(52, 211, 153, 0.75)'   // emerald
-                      : v < 0 ? 'rgba(248, 113, 113, 0.75)'  // red
-                               : 'rgba(200, 200, 200, 0.5)'
-            );
-            const barBorders = (data.delta || []).map(v =>
-                v > 0 ? 'rgba(16, 185, 129, 1)'
-                      : v < 0 ? 'rgba(239, 68, 68, 1)'
-                               : 'rgba(180, 180, 180, 1)'
-            );
+        // ── Graphique 1 : 4 courbes cumulatives ──────────────────────────
+        renderQuality(data) {
+            const ctx = document.getElementById('chartQuality');
+            if (!ctx) return;
+            if (this.chartQuality) this.chartQuality.destroy();
 
-            this.chart = new Chart(ctx, {
+            const tooltipLabels = ['Total', 'Parfaits', 'Non indexés', 'Nofollow'];
+
+            this.chartQuality = new Chart(ctx, {
+                type: 'line',
                 data: {
                     labels: data.labels,
                     datasets: [
-                        // ── Barres delta (gains verts / pertes rouges) ──
                         {
-                            type: 'bar',
-                            label: 'Δ Gain/Perte',
-                            data: data.delta || [],
-                            backgroundColor: barColors,
-                            borderColor: barBorders,
-                            borderWidth: 1,
-                            borderRadius: 3,
-                            borderSkipped: false,
-                            yAxisID: 'yDelta',
-                            order: 2,
-                        },
-                        // ── Courbe backlinks actifs ──
-                        {
-                            type: 'line',
-                            label: 'Actifs',
-                            data: data.active,
+                            label: 'Total',
+                            data: data.active || [],
                             borderColor: 'rgba(59, 130, 246, 0.9)',
-                            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.06)',
                             borderWidth: 2.5,
                             pointRadius: 0,
                             pointHoverRadius: 4,
-                            pointHoverBackgroundColor: 'rgba(59, 130, 246, 1)',
-                            tension: 0.35,
+                            tension: 0.4,
                             fill: true,
-                            yAxisID: 'yActive',
-                            order: 1,
+                            hidden: !this.toggles[0],
+                        },
+                        {
+                            label: 'Parfaits',
+                            data: data.perfect || [],
+                            borderColor: 'rgba(16, 185, 129, 0.9)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            tension: 0.4,
+                            fill: false,
+                            hidden: !this.toggles[1],
+                        },
+                        {
+                            label: 'Non indexés',
+                            data: data.not_indexed || [],
+                            borderColor: 'rgba(245, 158, 11, 0.9)',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [4, 3],
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            tension: 0.4,
+                            fill: false,
+                            hidden: !this.toggles[2],
+                        },
+                        {
+                            label: 'Nofollow',
+                            data: data.nofollow || [],
+                            borderColor: 'rgba(139, 92, 246, 0.9)',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [4, 3],
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            tension: 0.4,
+                            fill: false,
+                            hidden: !this.toggles[3],
                         },
                     ],
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -538,21 +592,7 @@ function backlinkChart() {
                             titleFont: { size: 11, weight: '600' },
                             bodyFont: { size: 12, weight: '700' },
                             callbacks: {
-                                title: (items) => items[0].label,
-                                label: (item) => {
-                                    if (item.datasetIndex === 0) {
-                                        const v = item.parsed.y;
-                                        return ` Δ ${v > 0 ? '+' : ''}${v} backlinks`;
-                                    }
-                                    return ` ${item.parsed.y} actifs`;
-                                },
-                                labelColor: (item) => ({
-                                    borderColor: 'transparent',
-                                    backgroundColor: item.datasetIndex === 0
-                                        ? (item.parsed.y >= 0 ? 'rgba(52,211,153,0.9)' : 'rgba(248,113,113,0.9)')
-                                        : 'rgba(59,130,246,0.9)',
-                                    borderRadius: 2,
-                                }),
+                                label: (item) => ` ${tooltipLabels[item.datasetIndex]} : ${item.parsed.y}`,
                             },
                         },
                     },
@@ -560,37 +600,90 @@ function backlinkChart() {
                         x: {
                             grid: { display: false },
                             border: { display: false },
-                            ticks: {
-                                font: { size: 10 },
-                                color: '#94a3b8',
-                                maxTicksLimit: 10,
-                            },
+                            ticks: { font: { size: 10 }, color: '#94a3b8', maxTicksLimit: 10 },
                         },
-                        yActive: {
+                        y: {
                             position: 'left',
                             beginAtZero: false,
-                            grid: {
-                                color: 'rgba(148, 163, 184, 0.1)',
-                                drawBorder: false,
-                            },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' },
                             border: { display: false },
-                            ticks: {
-                                font: { size: 10 },
-                                color: 'rgba(59, 130, 246, 0.7)',
-                                precision: 0,
-                                maxTicksLimit: 5,
+                            ticks: { font: { size: 10 }, color: '#94a3b8', precision: 0, maxTicksLimit: 5 },
+                        },
+                    },
+                },
+            });
+        },
+
+        // ── Graphique 2 : bougies gains / pertes ─────────────────────────
+        renderCandles(data) {
+            const ctx = document.getElementById('chartCandles');
+            if (!ctx) return;
+            if (this.chartCandles) this.chartCandles.destroy();
+
+            this.chartCandles = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Gains',
+                            data: data.gained || [],
+                            backgroundColor: 'rgba(52, 211, 153, 0.8)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 1,
+                            borderRadius: 3,
+                            borderSkipped: false,
+                        },
+                        {
+                            label: 'Pertes',
+                            data: (data.lost || []).map(v => -v),
+                            backgroundColor: 'rgba(248, 113, 113, 0.8)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 1,
+                            borderRadius: 3,
+                            borderSkipped: false,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                            titleColor: 'rgba(148, 163, 184, 1)',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(51, 65, 85, 0.5)',
+                            borderWidth: 1,
+                            padding: 10,
+                            titleFont: { size: 11, weight: '600' },
+                            bodyFont: { size: 12, weight: '700' },
+                            callbacks: {
+                                label: (item) => {
+                                    const v = item.datasetIndex === 0 ? item.parsed.y : -item.parsed.y;
+                                    const sign = item.datasetIndex === 0 ? '+' : '-';
+                                    return ` ${item.dataset.label} : ${sign}${v}`;
+                                },
                             },
                         },
-                        yDelta: {
-                            position: 'right',
+                    },
+                    scales: {
+                        x: {
                             grid: { display: false },
+                            border: { display: false },
+                            ticks: { font: { size: 10 }, color: '#94a3b8', maxTicksLimit: 10 },
+                        },
+                        y: {
+                            grid: { color: 'rgba(148, 163, 184, 0.08)' },
                             border: { display: false },
                             ticks: {
                                 font: { size: 10 },
                                 color: '#94a3b8',
                                 precision: 0,
-                                maxTicksLimit: 5,
-                                callback: (v) => v > 0 ? `+${v}` : v,
+                                maxTicksLimit: 4,
+                                callback: (v) => v >= 0 ? `+${v}` : v,
                             },
                         },
                     },

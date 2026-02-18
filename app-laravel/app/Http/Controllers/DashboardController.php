@@ -95,6 +95,8 @@ class DashboardController extends Controller
             // Fenêtre temporelle
             $startDate = now()->subDays($days - 1)->startOfDay();
             $endDate   = now()->endOfDay();
+            $startStr  = $startDate->format('Y-m-d');
+            $endStr    = $endDate->format('Y-m-d');
 
             // Générer toutes les dates de la fenêtre
             $dates = [];
@@ -102,74 +104,115 @@ class DashboardController extends Controller
                 $dates[] = now()->subDays($i)->format('Y-m-d');
             }
 
-            // --- Requête 1 : gains groupés par jour (published_at dans la fenêtre) ---
-            // Un backlink est "acquis" à sa date de publication réelle.
-            // Si published_at est NULL, on utilise created_at (lien ajouté manuellement).
-            $gainedRaw = Backlink::query()
-                ->when($projectId, fn($q) => $q->where('project_id', $projectId))
-                ->selectRaw("DATE(COALESCE(published_at, DATE(created_at))) as day, COUNT(*) as cnt")
-                ->whereBetween(DB::raw("DATE(COALESCE(published_at, DATE(created_at)))"), [
-                    $startDate->format('Y-m-d'),
-                    $endDate->format('Y-m-d'),
-                ])
-                ->groupByRaw("DATE(COALESCE(published_at, DATE(created_at)))")
+            // Helper : applique le filtre projet si fourni
+            $base = fn() => Backlink::query()->when($projectId, fn($q) => $q->where('project_id', $projectId));
+
+            // Colonne de date de publication (published_at ou created_at en fallback)
+            $pubDate = "DATE(COALESCE(published_at, DATE(created_at)))";
+
+            // --- Requête 1 : tous les gains groupés par jour ---
+            $gainedRaw = $base()
+                ->selectRaw("{$pubDate} as day, COUNT(*) as cnt")
+                ->whereBetween(DB::raw($pubDate), [$startStr, $endStr])
+                ->groupByRaw($pubDate)
                 ->pluck('cnt', 'day')
                 ->toArray();
 
-            // --- Requête 2 : pertes groupées par jour (last_checked_at dans la fenêtre) ---
-            $lostRaw = Backlink::query()
-                ->when($projectId, fn($q) => $q->where('project_id', $projectId))
+            // --- Requête 2 : gains "parfaits" (actif + indexé + dofollow) ---
+            $gainedPerfectRaw = $base()
+                ->where('status', 'active')
+                ->where('is_indexed', true)
+                ->where('is_dofollow', true)
+                ->selectRaw("{$pubDate} as day, COUNT(*) as cnt")
+                ->whereBetween(DB::raw($pubDate), [$startStr, $endStr])
+                ->groupByRaw($pubDate)
+                ->pluck('cnt', 'day')
+                ->toArray();
+
+            // --- Requête 3 : gains "non indexés" ---
+            $gainedNotIdxRaw = $base()
+                ->where('is_indexed', false)
+                ->selectRaw("{$pubDate} as day, COUNT(*) as cnt")
+                ->whereBetween(DB::raw($pubDate), [$startStr, $endStr])
+                ->groupByRaw($pubDate)
+                ->pluck('cnt', 'day')
+                ->toArray();
+
+            // --- Requête 4 : gains "nofollow" ---
+            $gainedNofollowRaw = $base()
+                ->where('is_dofollow', false)
+                ->selectRaw("{$pubDate} as day, COUNT(*) as cnt")
+                ->whereBetween(DB::raw($pubDate), [$startStr, $endStr])
+                ->groupByRaw($pubDate)
+                ->pluck('cnt', 'day')
+                ->toArray();
+
+            // --- Requête 5 : pertes groupées par jour ---
+            $lostRaw = $base()
                 ->where('status', 'lost')
                 ->whereNotNull('last_checked_at')
                 ->selectRaw("DATE(last_checked_at) as day, COUNT(*) as cnt")
-                ->whereBetween(DB::raw("DATE(last_checked_at)"), [
-                    $startDate->format('Y-m-d'),
-                    $endDate->format('Y-m-d'),
-                ])
+                ->whereBetween(DB::raw("DATE(last_checked_at)"), [$startStr, $endStr])
                 ->groupByRaw("DATE(last_checked_at)")
                 ->pluck('cnt', 'day')
                 ->toArray();
 
-            // --- Requête 3 : cumulatif actifs avant le début de la fenêtre ---
-            // Base de départ : liens actifs publiés AVANT la fenêtre
-            $baseActive = Backlink::query()
-                ->when($projectId, fn($q) => $q->where('project_id', $projectId))
-                ->where('status', 'active')
-                ->where(DB::raw("DATE(COALESCE(published_at, DATE(created_at)))"), '<', $startDate->format('Y-m-d'))
-                ->count();
+            // --- Bases cumulatives AVANT la fenêtre (état actuel projeté) ---
+            $baseTotal    = $base()->where(DB::raw($pubDate), '<', $startStr)->count();
+            $basePerfect  = $base()->where('status', 'active')->where('is_indexed', true)->where('is_dofollow', true)
+                                   ->where(DB::raw($pubDate), '<', $startStr)->count();
+            $baseNotIdx   = $base()->where('is_indexed', false)
+                                   ->where(DB::raw($pubDate), '<', $startStr)->count();
+            $baseNofollow = $base()->where('is_dofollow', false)
+                                   ->where(DB::raw($pubDate), '<', $startStr)->count();
 
-            // Construire les séries jour par jour (cumulatif = base + gains accumulés)
-            $active  = [];
-            $gained  = [];
-            $lost    = [];
-            $changed = [];
-            $delta   = [];
+            // --- Construire les séries jour par jour ---
+            $active     = [];
+            $perfect    = [];
+            $not_indexed = [];
+            $nofollow   = [];
+            $gained     = [];
+            $lost       = [];
+            $delta      = [];
 
-            $cumulative = $baseActive;
+            $cumTotal    = $baseTotal;
+            $cumPerfect  = $basePerfect;
+            $cumNotIdx   = $baseNotIdx;
+            $cumNofollow = $baseNofollow;
 
             foreach ($dates as $date) {
-                $gainedVal  = (int) ($gainedRaw[$date] ?? 0);
-                $lostVal    = (int) ($lostRaw[$date]   ?? 0);
+                $gainedVal        = (int) ($gainedRaw[$date]         ?? 0);
+                $gainedPerfect    = (int) ($gainedPerfectRaw[$date]  ?? 0);
+                $gainedNotIdx     = (int) ($gainedNotIdxRaw[$date]   ?? 0);
+                $gainedNofollow   = (int) ($gainedNofollowRaw[$date] ?? 0);
+                $lostVal          = (int) ($lostRaw[$date]           ?? 0);
 
-                $cumulative += $gainedVal - $lostVal;
+                $cumTotal    += $gainedVal - $lostVal;
+                $cumPerfect  += $gainedPerfect;
+                $cumNotIdx   += $gainedNotIdx;
+                $cumNofollow += $gainedNofollow;
 
-                $gained[]  = $gainedVal;
-                $lost[]    = $lostVal;
-                $changed[] = 0; // placeholder (changed n'affecte pas le cumulatif)
-                $active[]  = max(0, $cumulative);
-                $delta[]   = $gainedVal - $lostVal;
+                $active[]      = max(0, $cumTotal);
+                $perfect[]     = max(0, $cumPerfect);
+                $not_indexed[] = max(0, $cumNotIdx);
+                $nofollow[]    = max(0, $cumNofollow);
+                $gained[]      = $gainedVal;
+                $lost[]        = $lostVal;
+                $delta[]       = $gainedVal - $lostVal;
             }
 
             // Format des labels : condensé pour les longues périodes
             $labelFormat = $days <= 90 ? 'd/m' : 'd/m/y';
 
             return [
-                'labels'   => array_map(fn($d) => \Carbon\Carbon::parse($d)->format($labelFormat), $dates),
-                'active'   => $active,
-                'lost'     => $lost,
-                'changed'  => $changed,
-                'gained'   => $gained,
-                'delta'    => $delta,
+                'labels'      => array_map(fn($d) => \Carbon\Carbon::parse($d)->format($labelFormat), $dates),
+                'active'      => $active,
+                'perfect'     => $perfect,
+                'not_indexed' => $not_indexed,
+                'nofollow'    => $nofollow,
+                'gained'      => $gained,
+                'lost'        => $lost,
+                'delta'       => $delta,
             ];
         });
 
