@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Projets - Link Tracker')
+@section('title', 'Portfolio - Link Tracker')
 
 @section('breadcrumb')
-    <span class="text-neutral-900 font-medium">Projets</span>
+    <span class="text-neutral-900 font-medium">Portfolio</span>
 @endsection
 
 @section('content')
@@ -15,10 +15,10 @@
     @endif
 
     {{-- Page Header --}}
-    <x-page-header title="Projets" subtitle="Gérez vos projets et leurs backlinks">
+    <x-page-header title="Portfolio" subtitle="Gérez vos sites et leurs backlinks">
         <x-slot:actions>
             <x-button variant="primary" href="{{ route('projects.create') }}">
-                + Nouveau projet
+                + Nouveau site
             </x-button>
         </x-slot:actions>
     </x-page-header>
@@ -30,7 +30,7 @@
                 <x-slot:header>
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                            Nom du projet
+                            Nom du site
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                             URL
@@ -81,7 +81,7 @@
                                 <x-button variant="secondary" size="sm" href="{{ route('projects.edit', $project) }}">
                                     Modifier
                                 </x-button>
-                                <form action="{{ route('projects.destroy', $project) }}" method="POST" class="inline-block" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');">
+                                <form action="{{ route('projects.destroy', $project) }}" method="POST" class="inline-block" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce site ?');">
                                     @csrf
                                     @method('DELETE')
                                     <x-button variant="danger" size="sm" type="submit">
@@ -105,10 +105,10 @@
         {{-- Empty State --}}
         <div class="bg-white p-12 rounded-lg border border-neutral-200 text-center">
             <span class="text-6xl mb-4 block">📁</span>
-            <h3 class="text-lg font-semibold text-neutral-900 mb-2">Aucun projet</h3>
-            <p class="text-neutral-500 mb-6">Créez votre premier projet pour commencer à suivre vos backlinks.</p>
+            <h3 class="text-lg font-semibold text-neutral-900 mb-2">Aucun site</h3>
+            <p class="text-neutral-500 mb-6">Créez votre premier site pour commencer à suivre vos backlinks.</p>
             <x-button variant="primary" href="{{ route('projects.create') }}">
-                Créer un projet
+                Créer un site
             </x-button>
         </div>
     @endif

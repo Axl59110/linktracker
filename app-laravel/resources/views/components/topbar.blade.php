@@ -54,7 +54,7 @@
         <div class="hidden md:flex items-center space-x-4 text-sm text-neutral-500">
             <span>{{ $activeBacklinksCount }} actifs</span>
             <span class="w-1 h-1 bg-neutral-300 rounded-full"></span>
-            <span>{{ $projectsCount }} projets</span>
+            <span>{{ $projectsCount }} sites</span>
         </div>
 
         {{-- User Menu --}}

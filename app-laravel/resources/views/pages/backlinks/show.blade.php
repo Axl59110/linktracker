@@ -274,7 +274,7 @@
         <div class="space-y-6">
             {{-- Project --}}
             <div class="bg-white p-6 rounded-lg border border-neutral-200">
-                <h3 class="text-sm font-semibold text-neutral-900 mb-3">Projet</h3>
+                <h3 class="text-sm font-semibold text-neutral-900 mb-3">Site</h3>
                 <a href="{{ route('projects.show', $backlink->project) }}" class="text-brand-500 hover:underline">
                     {{ $backlink->project->name }}
                 </a>

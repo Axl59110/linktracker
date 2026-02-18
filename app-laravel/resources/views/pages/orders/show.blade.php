@@ -144,7 +144,7 @@
                 <h3 class="text-xs font-semibold text-neutral-500 uppercase mb-3">Informations</h3>
                 <dl class="space-y-3 text-sm">
                     <div>
-                        <dt class="text-xs text-neutral-500">Projet</dt>
+                        <dt class="text-xs text-neutral-500">Site</dt>
                         <dd class="font-medium text-neutral-900">{{ $order->project->name }}</dd>
                     </div>
                     @if($order->platform)

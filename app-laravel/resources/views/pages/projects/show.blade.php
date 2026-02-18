@@ -3,7 +3,7 @@
 @section('title', $project->name . ' - Link Tracker')
 
 @section('breadcrumb')
-    <a href="{{ route('projects.index') }}" class="text-neutral-500 hover:text-neutral-700">Projets</a>
+    <a href="{{ route('projects.index') }}" class="text-neutral-500 hover:text-neutral-700">Portfolio</a>
     <span class="text-neutral-400 mx-2">/</span>
     <span class="text-neutral-900 font-medium">{{ $project->name }}</span>
 @endsection
@@ -129,7 +129,7 @@
             <div class="text-center py-12">
                 <span class="text-6xl mb-4 block">🔗</span>
                 <h3 class="text-base font-semibold text-neutral-900 mb-2">Aucun backlink</h3>
-                <p class="text-sm text-neutral-500 mb-6">Commencez par ajouter des backlinks à suivre pour ce projet.</p>
+                <p class="text-sm text-neutral-500 mb-6">Commencez par ajouter des backlinks à suivre pour ce site.</p>
                 <x-button variant="primary" href="{{ url('/backlinks/create?project_id=' . $project->id) }}">
                     Ajouter un backlink
                 </x-button>

@@ -160,7 +160,7 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Alerte</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Type</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Sévérité</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Projet</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Site</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Date</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase w-24">Actions</th>
                         </tr>

@@ -24,10 +24,10 @@
                 <form action="{{ route('backlinks.import.process') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
                     @csrf
 
-                    {{-- Projet cible --}}
+                    {{-- Site cible --}}
                     <div>
                         <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">
-                            Projet cible <span class="text-red-500">*</span>
+                            Site cible <span class="text-red-500">*</span>
                         </label>
                         <select
                             id="project_id"
@@ -35,7 +35,7 @@
                             required
                             class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                         >
-                            <option value="">Sélectionner un projet</option>
+                            <option value="">Sélectionner un site</option>
                             @foreach($projects as $project)
                                 <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
                                     {{ $project->name }}
@@ -125,7 +125,7 @@ https://autre.com/page,https://monsite.com,Cliquez ici</pre>
             <div class="bg-white rounded-lg border border-neutral-200 p-4">
                 <h3 class="text-xs font-semibold text-neutral-700 mb-2">Notes importantes</h3>
                 <ul class="text-xs text-neutral-600 space-y-1">
-                    <li>• Les doublons (même URL source + projet) sont ignorés</li>
+                    <li>• Les doublons (même URL source + site) sont ignorés</li>
                     <li>• Les lignes invalides sont ignorées avec un rapport</li>
                     <li>• L'encodage UTF-8 est recommandé</li>
                 </ul>

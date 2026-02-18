@@ -154,7 +154,7 @@
     {{-- Barre d'outils (non imprimée) --}}
     <div class="print-bar">
         <div>
-            <a href="{{ route('projects.show', $project) }}" class="btn-back">← Retour au projet</a>
+            <a href="{{ route('projects.show', $project) }}" class="btn-back">← Retour au site</a>
             <strong>Rapport : {{ $project->name }}</strong>
         </div>
         <button onclick="window.print()" class="btn-print">🖨️ Imprimer / Enregistrer PDF</button>
@@ -203,7 +203,7 @@
         <h2 class="section-title">Liste des backlinks ({{ $stats['total'] }})</h2>
 
         @if($project->backlinks->isEmpty())
-            <p style="color: #6b7280; font-style: italic;">Aucun backlink pour ce projet.</p>
+            <p style="color: #6b7280; font-style: italic;">Aucun backlink pour ce site.</p>
         @else
             <table>
                 <thead>

@@ -26,14 +26,14 @@
             <form action="{{ route('orders.store') }}" method="POST" class="space-y-5">
                 @csrf
 
-                {{-- Projet --}}
+                {{-- Site --}}
                 <div>
                     <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">
-                        Projet <span class="text-red-500">*</span>
+                        Site <span class="text-red-500">*</span>
                     </label>
                     <select id="project_id" name="project_id" required
                         class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        <option value="">Sélectionner un projet</option>
+                        <option value="">Sélectionner un site</option>
                         @foreach($projects as $project)
                             <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
                                 {{ $project->name }}

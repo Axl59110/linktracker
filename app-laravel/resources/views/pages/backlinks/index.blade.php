@@ -66,7 +66,7 @@
 
                 {{-- Project Filter --}}
                 <div>
-                    <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">Projet</label>
+                    <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">Site</label>
                     <select
                         id="project_id"
                         name="project_id"
@@ -150,7 +150,7 @@
                 <x-table>
                     <x-slot:header>
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Projet</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Site</th>
                             <x-sortable-header field="source_url" label="URL Source" />
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Ancre</th>
                             <x-sortable-header field="tier_level" label="Tier" />

@@ -21,9 +21,9 @@
     <div class="bg-white rounded-lg border border-neutral-200 p-4 mb-6">
         <form method="GET" action="{{ route('orders.index') }}" class="flex flex-wrap gap-3 items-end">
             <div>
-                <label class="block text-xs font-medium text-neutral-700 mb-1">Projet</label>
+                <label class="block text-xs font-medium text-neutral-700 mb-1">Site</label>
                 <select name="project_id" class="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="">Tous les projets</option>
+                    <option value="">Tous les sites</option>
                     @foreach($projects as $project)
                         <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>
                             {{ $project->name }}
@@ -55,7 +55,7 @@
                 <x-table>
                     <x-slot:header>
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Projet</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Site</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">URL cible</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Plateforme</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Prix</th>

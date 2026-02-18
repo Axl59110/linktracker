@@ -48,7 +48,7 @@
                     required
                     class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
-                    <option value="tier1">Tier 1 - Lien vers projet</option>
+                    <option value="tier1">Tier 1 - Lien vers site</option>
                     <option value="tier2">Tier 2 - Lien vers autre backlink</option>
                 </select>
                 @error('tier_level')
@@ -84,10 +84,10 @@
             Informations principales
         </h3>
         <div class="grid grid-cols-1 gap-6">
-            {{-- Projet --}}
+            {{-- Site --}}
             <div>
                 <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">
-                    Projet <span class="text-danger-600">*</span>
+                    Site <span class="text-danger-600">*</span>
                 </label>
                 <select
                     id="project_id"
@@ -95,7 +95,7 @@
                     required
                     class="block w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 @error('project_id') border-danger-500 @enderror"
                 >
-                    <option value="">Sélectionner un projet</option>
+                    <option value="">Sélectionner un site</option>
                     @foreach($projects as $project)
                         <option value="{{ $project->id }}" {{ old('project_id', $backlink?->project_id ?? $selectedProjectId) == $project->id ? 'selected' : '' }}>
                             {{ $project->name }}
@@ -117,7 +117,7 @@
                 <input
                     type="text"
                     x-model="search"
-                    placeholder="Filtrer par projet ou URL..."
+                    placeholder="Filtrer par site ou URL..."
                     class="block w-full px-4 py-2 mb-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                 />
 
@@ -135,11 +135,11 @@
                             {{ old('parent_backlink_id', $backlink?->parent_backlink_id) == $tier1->id ? 'selected' : '' }}
                             x-show="search === '' || '{{ strtolower($tier1->source_url) }} {{ strtolower($tier1->project->name ?? '') }}'.includes(search.toLowerCase())"
                         >
-                            {{ $tier1->project->name ?? 'Sans projet' }} - {{ Str::limit($tier1->source_url, 80) }}
+                            {{ $tier1->project->name ?? 'Sans site' }} - {{ Str::limit($tier1->source_url, 80) }}
                         </option>
                     @endforeach
                 </select>
-                <p class="mt-1 text-xs text-neutral-500">Utilisez le champ de recherche pour filtrer par projet ou URL</p>
+                <p class="mt-1 text-xs text-neutral-500">Utilisez le champ de recherche pour filtrer par site ou URL</p>
                 @error('parent_backlink_id')
                     <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
                 @enderror

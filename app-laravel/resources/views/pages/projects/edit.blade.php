@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Modifier un projet - Link Tracker')
+@section('title', 'Modifier un site - Link Tracker')
 
 @section('breadcrumb')
-    <a href="{{ route('projects.index') }}" class="text-neutral-500 hover:text-neutral-700">Projets</a>
+    <a href="{{ route('projects.index') }}" class="text-neutral-500 hover:text-neutral-700">Portfolio</a>
     <span class="text-neutral-400 mx-2">/</span>
     <span class="text-neutral-900 font-medium">Modifier {{ $project->name }}</span>
 @endsection
 
 @section('content')
     {{-- Page Header --}}
-    <x-page-header title="Modifier le projet" subtitle="Mettez à jour les informations du projet" />
+    <x-page-header title="Modifier le site" subtitle="Mettez à jour les informations du site" />
 
     {{-- Form Card --}}
     <div class="bg-white p-8 rounded-lg border border-neutral-200 max-w-2xl">
@@ -21,23 +21,23 @@
             <div class="space-y-6">
                 {{-- Name Field --}}
                 <x-form-input
-                    label="Nom du projet"
+                    label="Nom du site"
                     name="name"
                     type="text"
                     :value="old('name', $project->name)"
                     required
-                    helper="Le nom de votre projet (ex: Mon Site Web)"
+                    helper="Le nom de votre site (ex: Mon Site Web)"
                     :error="$errors->first('name')"
                 />
 
                 {{-- URL Field --}}
                 <x-form-input
-                    label="URL du projet"
+                    label="URL du site"
                     name="url"
                     type="url"
                     :value="old('url', $project->url)"
                     required
-                    helper="L'URL complète de votre projet (ex: https://example.com)"
+                    helper="L'URL complète de votre site (ex: https://example.com)"
                     :error="$errors->first('url')"
                     placeholder="https://example.com"
                 />
@@ -55,7 +55,7 @@
                         <option value="active" {{ old('status', $project->status) === 'active' ? 'selected' : '' }}>Actif</option>
                         <option value="inactive" {{ old('status', $project->status) === 'inactive' ? 'selected' : '' }}>Inactif</option>
                     </select>
-                    <p class="text-xs text-neutral-500">Le statut du projet</p>
+                    <p class="text-xs text-neutral-500">Le statut du site</p>
                 </div>
             </div>
 
