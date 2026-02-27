@@ -7,13 +7,6 @@
 @endsection
 
 @section('content')
-    {{-- Success Message --}}
-    @if(session('success'))
-        <x-alert variant="success" class="mb-6">
-            {{ session('success') }}
-        </x-alert>
-    @endif
-
     {{-- Page Header --}}
     <x-page-header title="Portfolio" subtitle="Gérez vos sites et leurs backlinks">
         <x-slot:actions>

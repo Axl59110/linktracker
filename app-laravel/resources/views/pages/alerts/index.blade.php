@@ -7,10 +7,6 @@
 @endsection
 
 @section('content')
-    @if(session('success'))
-        <x-alert variant="success" class="mb-6">{{ session('success') }}</x-alert>
-    @endif
-
     <x-page-header title="Alertes" subtitle="Surveillez les changements de vos backlinks">
         <x-slot:actions>
             @if($stats['unread'] > 0)

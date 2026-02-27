@@ -7,14 +7,6 @@
 @endsection
 
 @section('content')
-    @if(session('success'))
-        <x-alert variant="success" class="mb-6">{{ session('success') }}</x-alert>
-    @endif
-
-    @if(session('error'))
-        <x-alert variant="danger" class="mb-6">{{ session('error') }}</x-alert>
-    @endif
-
     <x-page-header title="Paramètres" subtitle="Configurez tous les aspects de votre instance LinkTracker" />
 
     {{-- Navigation par onglets --}}

@@ -7,10 +7,6 @@
 @endsection
 
 @section('content')
-    @if(session('success'))
-        <x-alert variant="success" class="mb-6">{{ session('success') }}</x-alert>
-    @endif
-
     <x-page-header title="Commandes" subtitle="Gérez vos achats de backlinks">
         <x-slot:actions>
             <x-button variant="primary" href="{{ route('orders.create') }}">+ Nouvelle commande</x-button>

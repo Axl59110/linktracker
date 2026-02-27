@@ -9,10 +9,6 @@
 @endsection
 
 @section('content')
-    @if(session('success'))
-        <x-alert variant="success" class="mb-6">{{ session('success') }}</x-alert>
-    @endif
-
     <x-page-header title="Commande #{{ $order->id }}" subtitle="{{ $order->project->name }}">
         <x-slot:actions>
             <x-badge variant="{{ $order->status_badge }}" class="text-sm px-3 py-1">

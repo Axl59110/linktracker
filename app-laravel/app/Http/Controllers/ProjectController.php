@@ -38,8 +38,7 @@ class ProjectController extends Controller
             'status' => 'nullable|in:active,inactive',
         ]);
 
-        // TODO: Ajouter user_id quand l'auth sera implémentée
-        // $validated['user_id'] = auth()->id();
+        $validated['user_id'] = auth()->id() ?? 1;
 
         $project = Project::create($validated);
 

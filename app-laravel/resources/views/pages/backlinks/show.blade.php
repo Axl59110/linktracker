@@ -9,18 +9,6 @@
 @endsection
 
 @section('content')
-    @if(session('success'))
-        <x-alert variant="success" class="mb-6">{{ session('success') }}</x-alert>
-    @endif
-
-    @if(session('warning'))
-        <x-alert variant="warning" class="mb-6">{{ session('warning') }}</x-alert>
-    @endif
-
-    @if(session('error'))
-        <x-alert variant="danger" class="mb-6">{{ session('error') }}</x-alert>
-    @endif
-
     <x-page-header title="Détails du backlink" subtitle="Informations complètes sur ce backlink">
         <x-slot:actions>
             <form action="{{ route('backlinks.check', $backlink) }}" method="POST" class="inline-block" onsubmit="return confirm('Lancer une vérification manuelle de ce backlink maintenant ?');">

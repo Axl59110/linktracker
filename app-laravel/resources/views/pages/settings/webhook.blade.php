@@ -9,14 +9,6 @@
 @endsection
 
 @section('content')
-    @if(session('success'))
-        <x-alert variant="success" class="mb-6">{{ session('success') }}</x-alert>
-    @endif
-
-    @if(session('error'))
-        <x-alert variant="danger" class="mb-6">{{ session('error') }}</x-alert>
-    @endif
-
     <x-page-header title="Configuration Webhook" subtitle="Recevez des notifications en temps réel dans Slack ou tout autre service externe" />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
