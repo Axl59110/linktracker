@@ -1,4 +1,4 @@
-@props(['field', 'label'])
+@props(['field', 'label', 'route' => null])
 
 @php
     $currentSort = request('sort');
@@ -9,7 +9,10 @@
     $queryParams['sort'] = $field;
     $queryParams['direction'] = $newDirection;
 
-    $url = route('backlinks.index', $queryParams);
+    $url = $route ?? route('backlinks.index', $queryParams);
+    if ($route) {
+        $url = $route . '?' . http_build_query($queryParams);
+    }
     $isActive = $currentSort === $field;
 @endphp
 

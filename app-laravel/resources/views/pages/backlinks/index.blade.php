@@ -115,29 +115,32 @@
         </form>
     </div>
 
-    {{-- Résultats --}}
-    <div class="mb-4 flex items-center justify-between">
+    {{-- Résultats + sélecteur par page --}}
+    <div class="mb-4 flex items-center justify-between gap-4">
         <p class="text-sm text-neutral-600">
             <span class="font-semibold text-neutral-900">{{ $backlinks->total() }}</span> backlink(s) trouvé(s)
             @if($activeFiltersCount > 0)
                 <span class="text-neutral-500">({{ $activeFiltersCount }} filtre(s) actif(s))</span>
             @endif
         </p>
-        @if(request('sort'))
-            @php
-                $sortLabels = [
-                    'created_at' => 'Date de création',
-                    'source_url' => 'URL Source',
-                    'status' => 'Statut',
-                    'tier_level' => 'Niveau',
-                    'spot_type' => 'Type de réseau',
-                    'last_checked_at' => 'Dernière vérification'
-                ];
-            @endphp
-            <p class="text-xs text-neutral-500">
-                Tri : {{ $sortLabels[request('sort')] ?? 'Date de création' }} ({{ request('direction') === 'asc' ? 'croissant' : 'décroissant' }})
-            </p>
-        @endif
+        <div class="flex items-center gap-2">
+            @if(request('sort'))
+                @php $sortLabels = ['created_at' => 'Date', 'source_url' => 'URL', 'status' => 'Statut', 'tier_level' => 'Tier', 'spot_type' => 'Réseau', 'last_checked_at' => 'Vérifié']; @endphp
+                <span class="text-xs text-neutral-400">Tri : {{ $sortLabels[request('sort')] ?? '' }} ({{ request('direction') === 'asc' ? '↑' : '↓' }})</span>
+            @endif
+            <form method="GET" action="{{ route('backlinks.index') }}" class="flex items-center gap-1.5">
+                @foreach(request()->except('per_page', 'page') as $key => $val)
+                    <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                @endforeach
+                <label class="text-xs text-neutral-500 whitespace-nowrap">Par page :</label>
+                <select name="per_page" onchange="this.form.submit()"
+                        class="text-xs border border-neutral-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                    @foreach([15, 25, 50, 100] as $n)
+                        <option value="{{ $n }}" {{ request('per_page', 15) == $n ? 'selected' : '' }}>{{ $n }}</option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
     </div>
 
     @if($backlinks->count() > 0)
@@ -226,124 +229,108 @@
                 <x-table>
                     <x-slot:header>
                         <tr>
-                            <th class="px-4 py-3 w-10">
+                            <th class="px-3 py-2 w-8">
                                 <input type="checkbox" @change="toggleAll($event)"
                                        :checked="selected.length === allIds.length && allIds.length > 0"
-                                       class="w-4 h-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                                       class="w-3.5 h-3.5 rounded border-neutral-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Site</th>
-                            <x-sortable-header field="source_url" label="URL Source" />
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Ancre</th>
-                            <x-sortable-header field="tier_level" label="Tier" />
-                            <x-sortable-header field="spot_type" label="Réseau" />
-                            <x-sortable-header field="status" label="Statut" />
-                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase">DF</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase">Indexé</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">DA</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Prix</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase w-24">Actions</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase whitespace-nowrap">Site</th>
+                            <x-sortable-header field="source_url" label="URL Source" class="px-3 py-2" />
+                            <th class="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase whitespace-nowrap">Ancre</th>
+                            <x-sortable-header field="tier_level" label="Tier" class="px-3 py-2" />
+                            <x-sortable-header field="spot_type" label="Réseau" class="px-3 py-2" />
+                            <x-sortable-header field="status" label="Statut" class="px-3 py-2" />
+                            <th class="px-3 py-2 text-center text-xs font-medium text-neutral-500 uppercase">DF</th>
+                            <th class="px-3 py-2 text-center text-xs font-medium text-neutral-500 uppercase">Idx</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase whitespace-nowrap">Prix</th>
+                            <x-sortable-header field="last_checked_at" label="Vérifié" class="px-3 py-2" />
+                            <th class="px-3 py-2 text-center text-xs font-medium text-neutral-500 uppercase w-20">Actions</th>
                         </tr>
                     </x-slot:header>
                     <x-slot:body>
                         @foreach($backlinks as $backlink)
                             <tr class="hover:bg-neutral-50" :class="selected.includes({{ $backlink->id }}) ? 'bg-brand-50' : ''">
-                                <td class="px-4 py-3 w-10">
-                                    <input type="checkbox"
-                                           :value="{{ $backlink->id }}"
-                                           x-model="selected"
-                                           class="w-4 h-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                                <td class="px-3 py-2 w-8">
+                                    <input type="checkbox" :value="{{ $backlink->id }}" x-model="selected"
+                                           class="w-3.5 h-3.5 rounded border-neutral-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">
+                                <td class="px-3 py-2 whitespace-nowrap text-xs font-medium text-neutral-900 max-w-[120px] truncate">
                                     {{ $backlink->project?->name ?? 'N/A' }}
                                 </td>
-                                <td class="px-4 py-4 max-w-md">
-                                    <a href="{{ $backlink->source_url }}" target="_blank" class="text-sm text-brand-500 hover:text-brand-600 hover:underline truncate block">
+                                <td class="px-3 py-2 max-w-[220px]">
+                                    <a href="{{ $backlink->source_url }}" target="_blank" class="text-xs text-brand-500 hover:text-brand-600 hover:underline truncate block">
                                         {{ $backlink->source_url }}
                                     </a>
                                 </td>
-                                <td class="px-4 py-4 max-w-xs">
+                                <td class="px-3 py-2 max-w-[140px]">
                                     @if($backlink->anchor_text)
-                                        <span class="text-sm font-semibold text-neutral-900">{{ $backlink->anchor_text }}</span>
+                                        <span class="text-xs font-semibold text-neutral-900 truncate block">{{ $backlink->anchor_text }}</span>
                                     @else
-                                        <span class="text-xs text-neutral-400 italic">Pas d'ancre</span>
+                                        <span class="text-xs text-neutral-300 italic">—</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <x-badge variant="{{ $backlink->tier_level === 'tier1' ? 'neutral' : 'warning' }}">
-                                        {{ $backlink->tier_level === 'tier1' ? 'Tier 1' : 'Tier 2' }}
+                                        {{ $backlink->tier_level === 'tier1' ? 'T1' : 'T2' }}
                                     </x-badge>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <x-badge variant="{{ $backlink->spot_type === 'internal' ? 'success' : 'neutral' }}">
-                                        {{ $backlink->spot_type === 'internal' ? 'Interne' : 'Externe' }}
+                                        {{ $backlink->spot_type === 'internal' ? 'PBN' : 'Ext.' }}
                                     </x-badge>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <x-badge variant="{{ $backlink->status === 'active' ? 'success' : ($backlink->status === 'lost' ? 'danger' : 'warning') }}">
-                                        {{ ucfirst($backlink->status) }}
+                                        {{ $backlink->status === 'active' ? 'Actif' : ($backlink->status === 'lost' ? 'Perdu' : 'Modifié') }}
                                     </x-badge>
                                 </td>
-                                {{-- Dofollow --}}
-                                <td class="px-4 py-4 text-center whitespace-nowrap">
+                                <td class="px-3 py-2 text-center whitespace-nowrap">
                                     @if($backlink->is_dofollow === true)
-                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">DF</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">DF</span>
                                     @elseif($backlink->is_dofollow === false)
-                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">NF</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">NF</span>
                                     @else
                                         <span class="text-neutral-300 text-xs">—</span>
                                     @endif
                                 </td>
-                                {{-- Indexé --}}
-                                <td class="px-4 py-4 text-center whitespace-nowrap">
+                                <td class="px-3 py-2 text-center whitespace-nowrap">
                                     @if($backlink->is_indexed === true)
-                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">Yes</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">✓</span>
                                     @elseif($backlink->is_indexed === false)
-                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">No</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">✗</span>
                                     @else
                                         <span class="text-neutral-300 text-xs">—</span>
                                     @endif
                                 </td>
-                                {{-- Colonne DA --}}
-                                @php
-                                    $bDomain = \App\Models\DomainMetric::extractDomain($backlink->source_url);
-                                    $bMetric = $domainMetrics[$bDomain] ?? null;
-                                @endphp
-                                <td class="px-4 py-4 whitespace-nowrap text-sm">
-                                    @if($bMetric && !is_null($bMetric->da))
-                                        <span class="font-semibold {{ $bMetric->authority_color === 'green' ? 'text-green-600' : ($bMetric->authority_color === 'orange' ? 'text-orange-500' : 'text-red-500') }}">
-                                            {{ $bMetric->da }}
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-neutral-700">
+                                    @if($backlink->price && $backlink->currency)
+                                        {{ number_format($backlink->price, 0) }} {{ $backlink->currency }}
+                                    @else
+                                        <span class="text-neutral-300">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-neutral-500">
+                                    @if($backlink->last_checked_at)
+                                        <span title="{{ $backlink->last_checked_at->format('d/m/Y H:i') }}">
+                                            {{ $backlink->last_checked_at->diffForHumans(null, true) }}
                                         </span>
                                     @else
-                                        <span class="text-neutral-300">–</span>
+                                        <span class="text-neutral-300">Jamais</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-neutral-900">
-                                    @if($backlink->price && $backlink->currency)
-                                        {{ number_format($backlink->price, 2) }} {{ $backlink->currency }}
-                                    @else
-                                        <span class="text-neutral-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-center">
-                                    <div class="flex items-center justify-center gap-1">
-                                        <a href="{{ route('backlinks.show', $backlink) }}" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-neutral-100 text-neutral-600 hover:text-brand-600 transition-colors" title="Voir">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                            </svg>
+                                <td class="px-3 py-2 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-0.5">
+                                        <a href="{{ route('backlinks.show', $backlink) }}" class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-neutral-100 text-neutral-500 hover:text-brand-600 transition-colors" title="Voir">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                         </a>
-                                        <a href="{{ route('backlinks.edit', $backlink) }}" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-neutral-100 text-neutral-600 hover:text-brand-600 transition-colors" title="Modifier">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                            </svg>
+                                        <a href="{{ route('backlinks.edit', $backlink) }}" class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-neutral-100 text-neutral-500 hover:text-brand-600 transition-colors" title="Modifier">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         </a>
                                         <form action="{{ route('backlinks.destroy', $backlink) }}" method="POST" class="inline-block" onsubmit="return confirm('Supprimer ce backlink ?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-red-50 text-neutral-600 hover:text-red-600 transition-colors" title="Supprimer">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7 h16"/>
-                                                </svg>
+                                            <button type="submit" class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-red-50 text-neutral-500 hover:text-red-600 transition-colors" title="Supprimer">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                             </button>
                                         </form>
                                     </div>

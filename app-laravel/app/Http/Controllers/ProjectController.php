@@ -50,11 +50,11 @@ class ProjectController extends Controller
     /**
      * Display the specified project.
      */
-    public function show(Project $project)
+    public function show(Project $project, Request $request)
     {
         $project->loadCount('backlinks');
 
-        // Stats avancées pour le pilotage
+        // Stats avancées pour le pilotage (sur tous les backlinks)
         $allBacklinks = $project->backlinks()->get();
 
         $stats = [
@@ -62,7 +62,6 @@ class ProjectController extends Controller
             'active'           => $allBacklinks->where('status', 'active')->count(),
             'lost'             => $allBacklinks->where('status', 'lost')->count(),
             'changed'          => $allBacklinks->where('status', 'changed')->count(),
-            // Qualité : actif + indexé + dofollow
             'quality'          => $allBacklinks->where('status', 'active')->where('is_indexed', true)->where('is_dofollow', true)->count(),
             'not_indexed'      => $allBacklinks->where('is_indexed', false)->count(),
             'not_dofollow'     => $allBacklinks->where('is_dofollow', false)->count(),
@@ -71,7 +70,6 @@ class ProjectController extends Controller
             'budget_active'    => $allBacklinks->where('status', 'active')->sum('price'),
         ];
 
-        // Score de santé : 0-100 basé sur actifs, indexés, dofollow
         $stats['health_score'] = $stats['total'] > 0 ? (int) round(
             ($stats['active'] / $stats['total']) * 60 +
             ($stats['total'] > 0 && ($stats['total'] - $stats['unknown_indexed']) > 0
@@ -79,10 +77,41 @@ class ProjectController extends Controller
                 : 0)
         ) : 0;
 
-        // 10 derniers backlinks pour le tableau
-        $recentBacklinks = $project->backlinks()->latest()->take(10)->get();
+        // Tableau backlinks filtrable + paginé (même logique que BacklinkController@index)
+        $validated = $request->validate([
+            'search'     => 'nullable|string|max:255',
+            'status'     => 'nullable|in:active,lost,changed',
+            'tier_level' => 'nullable|in:tier1,tier2',
+            'spot_type'  => 'nullable|in:external,internal',
+            'sort'       => 'nullable|in:created_at,source_url,status,tier_level,spot_type,last_checked_at',
+            'direction'  => 'nullable|in:asc,desc',
+            'per_page'   => 'nullable|integer|in:15,25,50,100',
+        ]);
 
-        return view('pages.projects.show', compact('project', 'stats', 'recentBacklinks'));
+        $query = $project->backlinks()->with('project');
+
+        if (!empty($validated['search'])) {
+            $search = str_replace(['%', '_'], ['\%', '\_'], $validated['search']);
+            $query->where(function ($q) use ($search) {
+                $q->where('source_url', 'like', "%{$search}%")
+                  ->orWhere('anchor_text', 'like', "%{$search}%")
+                  ->orWhere('target_url', 'like', "%{$search}%");
+            });
+        }
+        if (!empty($validated['status']))     { $query->where('status', $validated['status']); }
+        if (!empty($validated['tier_level'])) { $query->where('tier_level', $validated['tier_level']); }
+        if (!empty($validated['spot_type']))  { $query->where('spot_type', $validated['spot_type']); }
+
+        $query->orderBy($validated['sort'] ?? 'created_at', $validated['direction'] ?? 'desc');
+
+        $perPage = (int) ($validated['per_page'] ?? 15);
+        $backlinks = $query->paginate($perPage)->withQueryString();
+
+        $activeFiltersCount = collect(['search', 'status', 'tier_level', 'spot_type'])
+            ->filter(fn($f) => !empty($validated[$f]))
+            ->count();
+
+        return view('pages.projects.show', compact('project', 'stats', 'backlinks', 'activeFiltersCount'));
     }
 
     /**

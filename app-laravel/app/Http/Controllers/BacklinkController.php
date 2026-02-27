@@ -25,6 +25,7 @@ class BacklinkController extends Controller
             'spot_type' => 'nullable|in:external,internal',
             'sort' => 'nullable|in:created_at,source_url,status,tier_level,spot_type,last_checked_at',
             'direction' => 'nullable|in:asc,desc',
+            'per_page' => 'nullable|integer|in:15,25,50,100',
         ]);
 
         $query = Backlink::with('project');
@@ -66,7 +67,8 @@ class BacklinkController extends Controller
         $query->orderBy($sortField, $sortDirection);
 
         // Pagination (15 items par page)
-        $backlinks = $query->paginate(15)->withQueryString();
+        $perPage = (int) ($validated['per_page'] ?? 15);
+        $backlinks = $query->paginate($perPage)->withQueryString();
 
         // Charger tous les projets pour le filtre
         $projects = Project::orderBy('name')->get();
@@ -76,11 +78,7 @@ class BacklinkController extends Controller
             ->filter(fn($filter) => !empty($validated[$filter]))
             ->count();
 
-        // Charger les métriques SEO pour les domaines sources (évite N+1)
-        $domains = $backlinks->map(fn($b) => \App\Models\DomainMetric::extractDomain($b->source_url))->unique()->values();
-        $domainMetrics = \App\Models\DomainMetric::whereIn('domain', $domains)->get()->keyBy('domain');
-
-        return view('pages.backlinks.index', compact('backlinks', 'projects', 'activeFiltersCount', 'domainMetrics'));
+        return view('pages.backlinks.index', compact('backlinks', 'projects', 'activeFiltersCount'));
     }
 
     /**

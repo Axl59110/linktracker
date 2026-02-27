@@ -207,114 +207,266 @@
     {{-- ═══════════════════════════════════════════════════════════
          TABLEAU DES BACKLINKS
          ═══════════════════════════════════════════════════════════ --}}
-    <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
-            <h2 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Backlinks récents</h2>
-            @if($stats['total'] > 10)
-                <a href="{{ url('/backlinks?project_id=' . $project->id) }}"
-                   class="text-xs text-brand-600 hover:text-brand-700 font-medium">
-                    Voir tous ({{ $stats['total'] }}) →
-                </a>
+
+    {{-- Filtres --}}
+    <div class="bg-white rounded-lg border border-neutral-200 p-5 mb-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-neutral-900">
+                Filtres
+                @if($activeFiltersCount > 0)
+                    <x-badge variant="brand" class="ml-2">{{ $activeFiltersCount }} actif(s)</x-badge>
+                @endif
+            </h3>
+            @if($activeFiltersCount > 0)
+                <x-button variant="secondary" size="sm" href="{{ route('projects.show', $project) }}">
+                    Réinitialiser
+                </x-button>
             @endif
         </div>
+        <form method="GET" action="{{ route('projects.show', $project) }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <input type="text" name="search" value="{{ request('search') }}"
+                   placeholder="URL, ancre..."
+                   class="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            <select name="status" class="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <option value="">Tous les statuts</option>
+                <option value="active"  {{ request('status') === 'active'  ? 'selected' : '' }}>Actif</option>
+                <option value="lost"    {{ request('status') === 'lost'    ? 'selected' : '' }}>Perdu</option>
+                <option value="changed" {{ request('status') === 'changed' ? 'selected' : '' }}>Modifié</option>
+            </select>
+            <select name="tier_level" class="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <option value="">Tous les tiers</option>
+                <option value="tier1" {{ request('tier_level') === 'tier1' ? 'selected' : '' }}>Tier 1</option>
+                <option value="tier2" {{ request('tier_level') === 'tier2' ? 'selected' : '' }}>Tier 2</option>
+            </select>
+            <select name="spot_type" class="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <option value="">Tous les réseaux</option>
+                <option value="external" {{ request('spot_type') === 'external' ? 'selected' : '' }}>Externe</option>
+                <option value="internal" {{ request('spot_type') === 'internal' ? 'selected' : '' }}>Interne (PBN)</option>
+            </select>
+            <div class="lg:col-span-4 flex justify-end">
+                <x-button variant="primary" type="submit" size="sm">Appliquer</x-button>
+            </div>
+        </form>
+    </div>
 
-        @if($recentBacklinks->count() > 0)
+    {{-- Résultats + sélecteur par page --}}
+    <div class="mb-3 flex items-center justify-between gap-4">
+        <p class="text-sm text-neutral-600">
+            <span class="font-semibold text-neutral-900">{{ $backlinks->total() }}</span> backlink(s)
+            @if($activeFiltersCount > 0)
+                <span class="text-neutral-500">({{ $activeFiltersCount }} filtre(s) actif(s))</span>
+            @endif
+        </p>
+        <form method="GET" action="{{ route('projects.show', $project) }}" class="flex items-center gap-1.5">
+            @foreach(request()->except('per_page', 'page') as $key => $val)
+                <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+            @endforeach
+            <label class="text-xs text-neutral-500 whitespace-nowrap">Par page :</label>
+            <select name="per_page" onchange="this.form.submit()"
+                    class="text-xs border border-neutral-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                @foreach([15, 25, 50, 100] as $n)
+                    <option value="{{ $n }}" {{ request('per_page', 15) == $n ? 'selected' : '' }}>{{ $n }}</option>
+                @endforeach
+            </select>
+        </form>
+    </div>
+
+    @if($backlinks->count() > 0)
+        <div x-data="bulkActions()" class="space-y-3">
+
+        {{-- Barre d'actions en masse --}}
+        <div x-show="selected.length > 0" x-cloak
+             class="bg-brand-600 text-white rounded-xl px-5 py-3 flex items-center gap-4 flex-wrap shadow-lg">
+            <span class="text-sm font-semibold" x-text="selected.length + ' sélectionné(s)'"></span>
+
+            <form :action="'{{ route('backlinks.bulk-delete') }}'" method="POST" @submit.prevent="confirmBulkDelete($event)">
+                @csrf
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Supprimer
+                </button>
+            </form>
+
+            <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-2">
+                @csrf
+                <template x-for="id in selected" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+                <input type="hidden" name="field" value="published_at">
+                <input type="date" name="value" class="px-2 py-1 text-xs text-neutral-800 border border-brand-400 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-white">
+                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">Définir date pub.</button>
+            </form>
+
+            <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-2">
+                @csrf
+                <template x-for="id in selected" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+                <input type="hidden" name="field" value="status">
+                <select name="value" class="px-2 py-1 text-xs text-neutral-800 border border-brand-400 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-white">
+                    <option value="active">Actif</option>
+                    <option value="lost">Perdu</option>
+                    <option value="changed">Modifié</option>
+                </select>
+                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">Changer statut</button>
+            </form>
+
+            <button @click="selected = []" class="ml-auto text-xs text-white/70 hover:text-white underline">Désélectionner</button>
+        </div>
+
+        <div class="bg-white rounded-lg border border-neutral-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr class="bg-neutral-50 border-b border-neutral-100">
-                            <th class="px-5 py-2.5 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">URL Source / Ancre</th>
-                            <th class="px-5 py-2.5 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Statut</th>
-                            <th class="px-5 py-2.5 text-center text-xs font-semibold text-neutral-400 uppercase tracking-wider">Dofollow</th>
-                            <th class="px-5 py-2.5 text-center text-xs font-semibold text-neutral-400 uppercase tracking-wider">Indexé</th>
-                            <th class="px-5 py-2.5 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Tier</th>
-                            <th class="px-5 py-2.5 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Prix</th>
-                            <th class="px-5 py-2.5 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Publié</th>
+                <x-table>
+                    <x-slot:header>
+                        <tr>
+                            <th class="px-3 py-2 w-8">
+                                <input type="checkbox" @change="toggleAll($event)"
+                                       :checked="selected.length === allIds.length && allIds.length > 0"
+                                       class="w-3.5 h-3.5 rounded border-neutral-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                            </th>
+                            <x-sortable-header field="source_url" label="URL Source" class="px-3 py-2" :route="route('projects.show', $project)" />
+                            <th class="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase whitespace-nowrap">Ancre</th>
+                            <x-sortable-header field="tier_level" label="Tier" class="px-3 py-2" :route="route('projects.show', $project)" />
+                            <x-sortable-header field="spot_type" label="Réseau" class="px-3 py-2" :route="route('projects.show', $project)" />
+                            <x-sortable-header field="status" label="Statut" class="px-3 py-2" :route="route('projects.show', $project)" />
+                            <th class="px-3 py-2 text-center text-xs font-medium text-neutral-500 uppercase">DF</th>
+                            <th class="px-3 py-2 text-center text-xs font-medium text-neutral-500 uppercase">Idx</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase whitespace-nowrap">Prix</th>
+                            <x-sortable-header field="last_checked_at" label="Vérifié" class="px-3 py-2" :route="route('projects.show', $project)" />
+                            <th class="px-3 py-2 text-center text-xs font-medium text-neutral-500 uppercase w-20">Actions</th>
                         </tr>
-                    </thead>
-                    <tbody class="divide-y divide-neutral-50">
-                        @foreach($recentBacklinks as $backlink)
-                            @php
-                                $statusMap = [
-                                    'active'  => ['label' => 'Actif',    'class' => 'text-emerald-700 bg-emerald-50 border-emerald-200'],
-                                    'lost'    => ['label' => 'Perdu',    'class' => 'text-red-700 bg-red-50 border-red-200'],
-                                    'changed' => ['label' => 'Modifié', 'class' => 'text-amber-700 bg-amber-50 border-amber-200'],
-                                ];
-                                $s = $statusMap[$backlink->status] ?? ['label' => ucfirst($backlink->status), 'class' => 'text-neutral-600 bg-neutral-50 border-neutral-200'];
-                            @endphp
-                            <tr class="hover:bg-neutral-50 transition-colors">
-                                <td class="px-5 py-3">
-                                    <a href="{{ $backlink->source_url }}" target="_blank"
-                                       class="text-brand-500 hover:text-brand-600 hover:underline font-mono text-xs block truncate max-w-xs">
-                                        {{ Str::limit($backlink->source_url, 55) }}
+                    </x-slot:header>
+                    <x-slot:body>
+                        @foreach($backlinks as $backlink)
+                            <tr class="hover:bg-neutral-50" :class="selected.includes({{ $backlink->id }}) ? 'bg-brand-50' : ''">
+                                <td class="px-3 py-2 w-8">
+                                    <input type="checkbox" :value="{{ $backlink->id }}" x-model="selected"
+                                           class="w-3.5 h-3.5 rounded border-neutral-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                                </td>
+                                <td class="px-3 py-2 max-w-[220px]">
+                                    <a href="{{ $backlink->source_url }}" target="_blank" class="text-xs text-brand-500 hover:text-brand-600 hover:underline truncate block">
+                                        {{ $backlink->source_url }}
                                     </a>
+                                </td>
+                                <td class="px-3 py-2 max-w-[140px]">
                                     @if($backlink->anchor_text)
-                                        <span class="text-xs text-neutral-400 italic">{{ Str::limit($backlink->anchor_text, 40) }}</span>
-                                    @endif
-                                </td>
-                                <td class="px-5 py-3 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full {{ $s['class'] }}">
-                                        {{ $s['label'] }}
-                                    </span>
-                                </td>
-                                <td class="px-5 py-3 text-center whitespace-nowrap">
-                                    @if($backlink->is_dofollow === true)
-                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">DF</span>
-                                    @elseif($backlink->is_dofollow === false)
-                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">NF</span>
+                                        <span class="text-xs font-semibold text-neutral-900 truncate block">{{ $backlink->anchor_text }}</span>
                                     @else
-                                        <span class="text-neutral-300 text-xs">—</span>
+                                        <span class="text-xs text-neutral-300 italic">—</span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-3 text-center whitespace-nowrap">
-                                    @if($backlink->is_indexed === true)
-                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">Yes</span>
-                                    @elseif($backlink->is_indexed === false)
-                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">No</span>
-                                    @else
-                                        <span class="text-neutral-300 text-xs">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-5 py-3 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold border rounded-full text-neutral-600 bg-neutral-50 border-neutral-200">
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <x-badge variant="{{ $backlink->tier_level === 'tier1' ? 'neutral' : 'warning' }}">
                                         {{ $backlink->tier_level === 'tier1' ? 'T1' : 'T2' }}
-                                    </span>
+                                    </x-badge>
                                 </td>
-                                <td class="px-5 py-3 whitespace-nowrap text-xs text-neutral-600">
-                                    @if($backlink->price)
-                                        {{ number_format($backlink->price, 0, ',', ' ') }} {{ $backlink->currency ?? 'EUR' }}
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <x-badge variant="{{ $backlink->spot_type === 'internal' ? 'success' : 'neutral' }}">
+                                        {{ $backlink->spot_type === 'internal' ? 'PBN' : 'Ext.' }}
+                                    </x-badge>
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <x-badge variant="{{ $backlink->status === 'active' ? 'success' : ($backlink->status === 'lost' ? 'danger' : 'warning') }}">
+                                        {{ $backlink->status === 'active' ? 'Actif' : ($backlink->status === 'lost' ? 'Perdu' : 'Modifié') }}
+                                    </x-badge>
+                                </td>
+                                <td class="px-3 py-2 text-center whitespace-nowrap">
+                                    @if($backlink->is_dofollow === true)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">DF</span>
+                                    @elseif($backlink->is_dofollow === false)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">NF</span>
+                                    @else
+                                        <span class="text-neutral-300 text-xs">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-center whitespace-nowrap">
+                                    @if($backlink->is_indexed === true)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-semibold border rounded-full text-emerald-700 bg-emerald-50 border-emerald-200">✓</span>
+                                    @elseif($backlink->is_indexed === false)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-semibold border rounded-full text-red-600 bg-red-50 border-red-200">✗</span>
+                                    @else
+                                        <span class="text-neutral-300 text-xs">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-neutral-700">
+                                    @if($backlink->price && $backlink->currency)
+                                        {{ number_format($backlink->price, 0) }} {{ $backlink->currency }}
                                     @else
                                         <span class="text-neutral-300">—</span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-3 whitespace-nowrap text-xs text-neutral-400">
-                                    {{ ($backlink->published_at ?? $backlink->created_at)?->format('d/m/Y') ?? '—' }}
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-neutral-500">
+                                    @if($backlink->last_checked_at)
+                                        <span title="{{ $backlink->last_checked_at->format('d/m/Y H:i') }}">
+                                            {{ $backlink->last_checked_at->diffForHumans(null, true) }}
+                                        </span>
+                                    @else
+                                        <span class="text-neutral-300">Jamais</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-0.5">
+                                        <a href="{{ route('backlinks.show', $backlink) }}" class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-neutral-100 text-neutral-500 hover:text-brand-600 transition-colors" title="Voir">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        </a>
+                                        <a href="{{ route('backlinks.edit', $backlink) }}" class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-neutral-100 text-neutral-500 hover:text-brand-600 transition-colors" title="Modifier">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        </a>
+                                        <form action="{{ route('backlinks.destroy', $backlink) }}" method="POST" class="inline-block" onsubmit="return confirm('Supprimer ce backlink ?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-red-50 text-neutral-500 hover:text-red-600 transition-colors" title="Supprimer">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
-                    </tbody>
-                </table>
+                    </x-slot:body>
+                </x-table>
             </div>
-        @else
-            <div class="flex flex-col items-center justify-center py-16 text-center">
-                <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
-                    <svg class="w-6 h-6 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                    </svg>
-                </div>
-                <p class="text-sm font-semibold text-neutral-600 mb-1">Aucun backlink</p>
-                <p class="text-xs text-neutral-400 mb-4">Ajoutez des backlinks à suivre pour ce site.</p>
-                <x-button variant="primary" href="{{ url('/backlinks/create?project_id=' . $project->id) }}">
-                    + Ajouter un backlink
-                </x-button>
-            </div>
+        </div>
+
+        @if($backlinks->hasPages())
+            <div class="mt-4">{{ $backlinks->links() }}</div>
         @endif
-    </div>
+
+        </div>{{-- /x-data bulkActions --}}
+    @else
+        <div class="bg-white p-12 rounded-lg border border-neutral-200 text-center">
+            <span class="text-6xl mb-4 block">🔗</span>
+            <h3 class="text-lg font-semibold text-neutral-900 mb-2">Aucun backlink</h3>
+            <p class="text-neutral-500 mb-6">Ajoutez des backlinks à suivre pour ce site.</p>
+            <x-button variant="primary" href="{{ url('/backlinks/create?project_id=' . $project->id) }}">
+                + Ajouter un backlink
+            </x-button>
+        </div>
+    @endif
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+function bulkActions() {
+    return {
+        selected: [],
+        allIds: @json($backlinks->pluck('id')),
+
+        toggleAll(e) {
+            this.selected = e.target.checked ? [...this.allIds] : [];
+        },
+
+        confirmBulkDelete(e) {
+            if (!confirm(`Supprimer définitivement ${this.selected.length} backlink(s) ? Cette action est irréversible.`)) {
+                return;
+            }
+            e.target.submit();
+        }
+    };
+}
+
 function backlinkChart(projectId) {
     return {
         days: 30,
