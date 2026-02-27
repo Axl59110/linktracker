@@ -272,6 +272,16 @@
             <div class="bg-white p-6 rounded-lg border border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-900 mb-3">Dates</h3>
                 <div class="space-y-2 text-sm">
+                    @if($backlink->published_at)
+                        <div>
+                            <div class="text-neutral-600">Publication du lien</div>
+                            <div class="font-medium text-neutral-900">{{ $backlink->published_at->format('d/m/Y') }}</div>
+                        </div>
+                    @endif
+                    <div>
+                        <div class="text-neutral-600">Ajouté dans LinkTracker</div>
+                        <div class="text-neutral-900">{{ $backlink->created_at->format('d/m/Y H:i') }}</div>
+                    </div>
                     <div>
                         <div class="text-neutral-600">Première détection</div>
                         <div class="text-neutral-900">{{ $backlink->first_seen_at?->format('d/m/Y H:i') ?? 'N/A' }}</div>
@@ -280,10 +290,19 @@
                         <div class="text-neutral-600">Dernière vérification</div>
                         <div class="text-neutral-900">{{ $backlink->last_checked_at?->format('d/m/Y H:i') ?? 'N/A' }}</div>
                     </div>
-                    <div>
-                        <div class="text-neutral-600">Créé le</div>
-                        <div class="text-neutral-900">{{ $backlink->created_at->format('d/m/Y H:i') }}</div>
-                    </div>
+                    @if($backlink->expires_at)
+                        <div>
+                            <div class="text-neutral-600">Expiration</div>
+                            <div class="text-neutral-900 {{ $backlink->expires_at->isPast() ? 'text-red-600 font-medium' : '' }}">
+                                {{ $backlink->expires_at->format('d/m/Y') }}
+                                @if($backlink->expires_at->isFuture())
+                                    <span class="text-neutral-400 text-xs">(dans {{ $backlink->expires_at->diffForHumans(null, true) }})</span>
+                                @else
+                                    <span class="text-red-500 text-xs">(expiré)</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 

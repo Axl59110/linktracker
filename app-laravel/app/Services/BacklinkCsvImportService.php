@@ -185,6 +185,11 @@ class BacklinkCsvImportService
                 continue;
             }
 
+            $publishedAt = null;
+            if (!empty($data['published_at'])) {
+                try { $publishedAt = \Carbon\Carbon::parse($data['published_at'])->toDateString(); } catch (\Exception) {}
+            }
+
             Backlink::create([
                 'project_id'    => $project->id,
                 'source_url'    => $data['source_url'],
@@ -195,6 +200,7 @@ class BacklinkCsvImportService
                 'spot_type'     => $data['spot_type'] ?? 'external',
                 'price'         => isset($data['price']) && $data['price'] !== '' ? (float) $data['price'] : null,
                 'currency'      => $data['currency'] ?: 'EUR',
+                'published_at'  => $publishedAt,
                 'first_seen_at' => now(),
             ]);
 
