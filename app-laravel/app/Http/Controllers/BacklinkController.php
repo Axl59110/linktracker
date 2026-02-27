@@ -109,6 +109,7 @@ class BacklinkController extends Controller
                 'required',
                 'url',
                 'max:500',
+                \Illuminate\Validation\Rule::unique('backlinks', 'source_url')->where('project_id', $request->project_id),
                 function ($attribute, $value, $fail) {
                     try {
                         app(UrlValidator::class)->validate($value);
@@ -250,6 +251,7 @@ class BacklinkController extends Controller
                 'required',
                 'url',
                 'max:500',
+                \Illuminate\Validation\Rule::unique('backlinks', 'source_url')->where('project_id', $request->project_id)->ignore($backlink->id),
                 function ($attribute, $value, $fail) {
                     try {
                         app(UrlValidator::class)->validate($value);
