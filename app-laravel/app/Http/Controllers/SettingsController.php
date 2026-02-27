@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\CheckBacklinkJob;
+use App\Models\Backlink;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class SettingsController extends Controller
@@ -11,7 +15,58 @@ class SettingsController extends Controller
     public function index()
     {
         $user = auth()->user();
-        return view('pages.settings.index', compact('user'));
+
+        $queueStats = [
+            'pending'  => DB::table('jobs')->count(),
+            'failed'   => DB::table('failed_jobs')->count(),
+            'total'    => Backlink::count(),
+            'checked_today' => Backlink::whereDate('last_checked_at', today())->count(),
+            'never_checked' => Backlink::whereNull('last_checked_at')->count(),
+            'overdue'  => Backlink::where(function ($q) {
+                $q->whereNull('last_checked_at')
+                  ->orWhere('last_checked_at', '<', now()->subDay());
+            })->count(),
+        ];
+
+        return view('pages.settings.index', compact('user', 'queueStats'));
+    }
+
+    public function runCheck(Request $request)
+    {
+        $validated = $request->validate([
+            'frequency' => ['required', 'in:daily,weekly,all'],
+            'status'    => ['nullable', 'in:active,lost,changed,all'],
+        ]);
+
+        $frequency = $validated['frequency'];
+        $status    = $validated['status'] ?? 'all';
+
+        $query = Backlink::query();
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        if ($frequency === 'daily') {
+            $query->where(function ($q) {
+                $q->whereNull('last_checked_at')
+                  ->orWhere('last_checked_at', '<', now()->subDay());
+            });
+        } elseif ($frequency === 'weekly') {
+            $query->where(function ($q) {
+                $q->whereNull('last_checked_at')
+                  ->orWhere('last_checked_at', '<', now()->subWeek());
+            });
+        }
+
+        $backlinks = $query->get();
+        $count = $backlinks->count();
+
+        foreach ($backlinks as $backlink) {
+            CheckBacklinkJob::dispatch($backlink);
+        }
+
+        return back()->with('success', "{$count} backlink(s) ajouté(s) à la queue de vérification.");
     }
 
     public function updateMonitoring(Request $request)

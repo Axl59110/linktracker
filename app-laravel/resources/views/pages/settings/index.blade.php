@@ -37,7 +37,74 @@
         </div>
 
         {{-- Onglet Monitoring --}}
-        <div x-show="activeTab === 'monitoring'" x-cloak>
+        <div x-show="activeTab === 'monitoring'" x-cloak class="space-y-6">
+
+            {{-- KPI de statut queue --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg border border-neutral-200 p-4">
+                    <p class="text-xs text-neutral-500 uppercase font-medium mb-1">Total backlinks</p>
+                    <p class="text-2xl font-semibold text-neutral-900">{{ $queueStats['total'] }}</p>
+                </div>
+                <div class="bg-white rounded-lg border border-neutral-200 p-4">
+                    <p class="text-xs text-neutral-500 uppercase font-medium mb-1">Vérifiés auj.</p>
+                    <p class="text-2xl font-semibold text-green-600">{{ $queueStats['checked_today'] }}</p>
+                </div>
+                <div class="bg-white rounded-lg border border-{{ $queueStats['overdue'] > 0 ? 'amber' : 'neutral' }}-200 p-4 {{ $queueStats['overdue'] > 0 ? 'bg-amber-50' : 'bg-white' }}">
+                    <p class="text-xs text-neutral-500 uppercase font-medium mb-1">En retard (&gt;24h)</p>
+                    <p class="text-2xl font-semibold {{ $queueStats['overdue'] > 0 ? 'text-amber-600' : 'text-neutral-900' }}">{{ $queueStats['overdue'] }}</p>
+                </div>
+                <div class="bg-white rounded-lg border border-{{ $queueStats['pending'] > 0 ? 'blue' : 'neutral' }}-200 p-4 {{ $queueStats['pending'] > 0 ? 'bg-blue-50' : 'bg-white' }}">
+                    <p class="text-xs text-neutral-500 uppercase font-medium mb-1">En queue</p>
+                    <p class="text-2xl font-semibold {{ $queueStats['pending'] > 0 ? 'text-blue-600' : 'text-neutral-900' }}">{{ $queueStats['pending'] }}</p>
+                    @if($queueStats['failed'] > 0)
+                        <p class="text-xs text-red-500 mt-1">{{ $queueStats['failed'] }} échoué(s)</p>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Lancer une vérification manuelle --}}
+            <div class="bg-white rounded-lg border border-neutral-200 p-6 max-w-2xl">
+                <h2 class="text-base font-semibold text-neutral-900 mb-1">Lancer une vérification</h2>
+                <p class="text-sm text-neutral-500 mb-5">Dispatche les jobs de vérification dans la queue. Un worker doit être actif pour les traiter.</p>
+
+                <form method="POST" action="{{ route('settings.monitoring.run-check') }}">
+                    @csrf
+                    <div class="flex items-end gap-3 flex-wrap">
+                        <div>
+                            <label class="block text-xs font-medium text-neutral-600 mb-1">Périmètre</label>
+                            <select name="frequency" class="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                                <option value="daily">Non vérifiés depuis 24h</option>
+                                <option value="weekly">Non vérifiés depuis 7j</option>
+                                <option value="all">Tous les backlinks</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-neutral-600 mb-1">Statut</label>
+                            <select name="status" class="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                                <option value="all">Tous</option>
+                                <option value="active">Actifs uniquement</option>
+                                <option value="lost">Perdus uniquement</option>
+                                <option value="changed">Modifiés uniquement</option>
+                            </select>
+                        </div>
+                        <x-button type="submit" variant="primary">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Lancer la vérification
+                        </x-button>
+                    </div>
+                </form>
+
+                {{-- Instructions worker --}}
+                <div class="mt-5 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                    <p class="text-xs font-medium text-neutral-700 mb-1.5">Démarrer le worker (terminal)</p>
+                    <code class="text-xs text-neutral-600 font-mono">php artisan queue:work --timeout=120</code>
+                    <p class="text-xs text-neutral-400 mt-1">En prod, utilisez Supervisor pour un worker permanent.</p>
+                </div>
+            </div>
+
+            {{-- Paramètres de monitoring --}}
             <div class="bg-white rounded-lg border border-neutral-200 p-6 max-w-2xl">
                 <h2 class="text-base font-semibold text-neutral-900 mb-6">Paramètres de monitoring</h2>
 
@@ -49,7 +116,7 @@
                         {{-- Fréquence de vérification --}}
                         <div>
                             <label class="block text-sm font-medium text-neutral-700 mb-2">
-                                Fréquence de vérification
+                                Fréquence de vérification automatique
                             </label>
                             <div class="space-y-2">
                                 @foreach(['hourly' => 'Toutes les heures', 'daily' => 'Quotidienne (recommandé)', 'weekly' => 'Hebdomadaire'] as $value => $label)
@@ -94,6 +161,7 @@
                     </div>
                 </form>
             </div>
+
         </div>
 
         {{-- Onglet APIs SEO --}}

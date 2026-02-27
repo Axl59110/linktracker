@@ -78,6 +78,7 @@ Route::delete('/alerts/destroy-all-read', [AlertController::class, 'destroyAllRe
 // Settings - Configuration globale (STORY-027, STORY-028)
 Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 Route::patch('/settings/monitoring', [SettingsController::class, 'updateMonitoring'])->name('settings.monitoring');
+Route::post('/settings/monitoring/run-check', [SettingsController::class, 'runCheck'])->name('settings.monitoring.run-check');
 Route::patch('/settings/seo', [SettingsController::class, 'updateSeo'])->name('settings.seo');
 Route::post('/settings/seo/test', [SettingsController::class, 'testSeoConnection'])->name('settings.seo.test');
 
