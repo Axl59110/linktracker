@@ -152,19 +152,19 @@
         <div class="px-6 pt-4 pb-2">
             {{-- Boutons toggle --}}
             <div class="flex flex-wrap gap-2 mb-3">
-                <button @click="toggleSeries(0)" :class="toggles[0] ? 'opacity-100' : 'opacity-40'"
+                <button @click="toggleSeries(0)" :class="t0 ? 'opacity-100' : 'opacity-40'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-blue-200 bg-blue-50 text-blue-700 transition-opacity">
                     <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>Total
                 </button>
-                <button @click="toggleSeries(1)" :class="toggles[1] ? 'opacity-100' : 'opacity-40'"
+                <button @click="toggleSeries(1)" :class="t1 ? 'opacity-100' : 'opacity-40'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 transition-opacity">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>Parfaits
                 </button>
-                <button @click="toggleSeries(2)" :class="toggles[2] ? 'opacity-100' : 'opacity-40'"
+                <button @click="toggleSeries(2)" :class="t2 ? 'opacity-100' : 'opacity-40'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-amber-200 bg-amber-50 text-amber-700 transition-opacity">
                     <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>Non indexés
                 </button>
-                <button @click="toggleSeries(3)" :class="toggles[3] ? 'opacity-100' : 'opacity-40'"
+                <button @click="toggleSeries(3)" :class="t3 ? 'opacity-100' : 'opacity-40'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-violet-200 bg-violet-50 text-violet-700 transition-opacity">
                     <span class="w-2.5 h-2.5 rounded-full bg-violet-500 inline-block"></span>Nofollow
                 </button>
@@ -276,15 +276,69 @@
 
         {{-- Barre d'actions en masse --}}
         <div x-show="selected.length > 0" x-cloak
-             class="bg-brand-600 text-white rounded-xl px-5 py-3 flex items-center gap-4 flex-wrap shadow-lg">
-            <span class="text-sm font-semibold" x-text="selected.length + ' sélectionné(s)'"></span>
+             class="bg-white border border-neutral-200 rounded-xl px-4 py-2.5 flex items-center gap-3 flex-wrap shadow-sm">
 
+            {{-- Compteur --}}
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-700 bg-neutral-100 px-2.5 py-1 rounded-full"
+                  x-text="selected.length + ' sélectionné(s)'"></span>
+
+            <div class="w-px h-5 bg-neutral-200 flex-shrink-0"></div>
+
+            {{-- Bulk check --}}
+            <form :action="'{{ route('backlinks.bulk-check') }}'" method="POST">
+                @csrf
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-brand-600 hover:bg-brand-50 border border-neutral-200 hover:border-brand-200 rounded-lg transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Vérifier
+                </button>
+            </form>
+
+            {{-- Bulk edit : date publication --}}
+            <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-1.5">
+                @csrf
+                <template x-for="id in selected" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+                <input type="hidden" name="field" value="published_at">
+                <input type="date" name="value"
+                       class="px-2 py-1 text-xs text-neutral-700 border border-neutral-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-brand-400">
+                <button type="submit"
+                        class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 border border-neutral-200 rounded-lg transition-colors whitespace-nowrap">
+                    Date pub.
+                </button>
+            </form>
+
+            {{-- Bulk edit : statut --}}
+            <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-1.5">
+                @csrf
+                <template x-for="id in selected" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+                <input type="hidden" name="field" value="status">
+                <select name="value"
+                        class="px-2 py-1 text-xs text-neutral-700 border border-neutral-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-brand-400">
+                    <option value="active">Actif</option>
+                    <option value="lost">Perdu</option>
+                    <option value="changed">Modifié</option>
+                </select>
+                <button type="submit"
+                        class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 border border-neutral-200 rounded-lg transition-colors">
+                    Statut
+                </button>
+            </form>
+
+            <div class="w-px h-5 bg-neutral-200 flex-shrink-0"></div>
+
+            {{-- Bulk delete --}}
             <form :action="'{{ route('backlinks.bulk-delete') }}'" method="POST" @submit.prevent="confirmBulkDelete($event)">
                 @csrf
                 <template x-for="id in selected" :key="id">
                     <input type="hidden" name="ids[]" :value="id">
                 </template>
-                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300 rounded-lg transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
@@ -292,27 +346,10 @@
                 </button>
             </form>
 
-            <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-2">
-                @csrf
-                <template x-for="id in selected" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
-                <input type="hidden" name="field" value="published_at">
-                <input type="date" name="value" class="px-2 py-1 text-xs text-neutral-800 border border-brand-400 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-white">
-                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">Définir date pub.</button>
-            </form>
-
-            <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-2">
-                @csrf
-                <template x-for="id in selected" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
-                <input type="hidden" name="field" value="status">
-                <select name="value" class="px-2 py-1 text-xs text-neutral-800 border border-brand-400 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-white">
-                    <option value="active">Actif</option>
-                    <option value="lost">Perdu</option>
-                    <option value="changed">Modifié</option>
-                </select>
-                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">Changer statut</button>
-            </form>
-
-            <button @click="selected = []" class="ml-auto text-xs text-white/70 hover:text-white underline">Désélectionner</button>
+            <button @click="selected = []"
+                    class="ml-auto text-xs text-neutral-400 hover:text-neutral-600 transition-colors">
+                ✕ Désélectionner
+            </button>
         </div>
 
         <div class="bg-white rounded-lg border border-neutral-200 overflow-hidden">
@@ -410,6 +447,15 @@
                                         <a href="{{ route('backlinks.show', $backlink) }}" class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-neutral-100 text-neutral-500 hover:text-brand-600 transition-colors" title="Voir">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                         </a>
+                                        <span x-data="inlineCheck('{{ route('backlinks.check', $backlink) }}', '{{ csrf_token() }}')" class="relative inline-flex">
+                                            <button @click="run()" :disabled="loading"
+                                                    class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-brand-50 transition-colors cursor-pointer"
+                                                    :class="loading ? 'text-brand-400' : (result === true ? 'text-emerald-500' : (result === false ? 'text-red-500' : 'text-neutral-500 hover:text-brand-600'))"
+                                                    title="Vérifier maintenant">
+                                                <svg x-show="!loading" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                                <svg x-show="loading" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                            </button>
+                                        </span>
                                         <a href="{{ route('backlinks.edit', $backlink) }}" class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-neutral-100 text-neutral-500 hover:text-brand-600 transition-colors" title="Modifier">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         </a>
@@ -467,13 +513,42 @@ function bulkActions() {
     };
 }
 
+function inlineCheck(url, token) {
+    return {
+        loading: false,
+        result: null,
+        async run() {
+            if (this.loading) return;
+            this.loading = true;
+            this.result = null;
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'X-Requested-With': 'fetch',
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                this.result = data.success ? data.is_present : false;
+            } catch {
+                this.result = false;
+            } finally {
+                this.loading = false;
+                setTimeout(() => { this.result = null; }, 3000);
+            }
+        },
+    };
+}
+
 function backlinkChart(projectId) {
+    let chartQuality = null;
+    let chartCandles = null;
     return {
         days: 30,
         loading: true,
-        chartQuality: null,
-        chartCandles: null,
-        toggles: [true, true, true, true],
+        t0: true, t1: true, t2: true, t3: true,
 
         init() { this.loadCharts(30); },
 
@@ -483,38 +558,39 @@ function backlinkChart(projectId) {
             try {
                 const res = await fetch(`/api/dashboard/chart?days=${d}&project_id=${projectId}`);
                 const data = await res.json();
+                this.loading = false;
                 await this.$nextTick();
                 this.renderQuality(data);
                 this.renderCandles(data);
             } catch (e) {
                 console.error('Erreur chargement graphique:', e);
-            } finally {
                 this.loading = false;
             }
         },
 
         toggleSeries(index) {
-            this.toggles[index] = !this.toggles[index];
-            if (this.chartQuality) {
-                this.chartQuality.data.datasets[index].hidden = !this.toggles[index];
-                this.chartQuality.update();
+            const key = 't' + index;
+            this[key] = !this[key];
+            if (chartQuality) {
+                chartQuality.data.datasets[index].hidden = !this[key];
+                chartQuality.update();
             }
         },
 
         renderQuality(data) {
             const ctx = document.getElementById('projectChartQuality');
             if (!ctx) return;
-            if (this.chartQuality) this.chartQuality.destroy();
+            if (chartQuality) chartQuality.destroy();
             const tooltipLabels = ['Total', 'Parfaits', 'Non indexés', 'Nofollow'];
-            this.chartQuality = new Chart(ctx, {
+            chartQuality = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.labels,
                     datasets: [
-                        { label: 'Total', data: data.active || [], borderColor: 'rgba(59,130,246,0.9)', backgroundColor: 'rgba(59,130,246,0.06)', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: true, hidden: !this.toggles[0] },
-                        { label: 'Parfaits', data: data.perfect || [], borderColor: 'rgba(16,185,129,0.9)', backgroundColor: 'rgba(16,185,129,0.05)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: false, hidden: !this.toggles[1] },
-                        { label: 'Non indexés', data: data.not_indexed || [], borderColor: 'rgba(245,158,11,0.9)', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4, 3], pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: false, hidden: !this.toggles[2] },
-                        { label: 'Nofollow', data: data.nofollow || [], borderColor: 'rgba(139,92,246,0.9)', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4, 3], pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: false, hidden: !this.toggles[3] },
+                        { label: 'Total', data: data.active || [], borderColor: 'rgba(59,130,246,0.9)', backgroundColor: 'rgba(59,130,246,0.06)', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: true, hidden: !this.t0 },
+                        { label: 'Parfaits', data: data.perfect || [], borderColor: 'rgba(16,185,129,0.9)', backgroundColor: 'rgba(16,185,129,0.05)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: false, hidden: !this.t1 },
+                        { label: 'Non indexés', data: data.not_indexed || [], borderColor: 'rgba(245,158,11,0.9)', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4, 3], pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: false, hidden: !this.t2 },
+                        { label: 'Nofollow', data: data.nofollow || [], borderColor: 'rgba(139,92,246,0.9)', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4, 3], pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: false, hidden: !this.t3 },
                     ],
                 },
                 options: {
@@ -539,8 +615,8 @@ function backlinkChart(projectId) {
         renderCandles(data) {
             const ctx = document.getElementById('projectChartCandles');
             if (!ctx) return;
-            if (this.chartCandles) this.chartCandles.destroy();
-            this.chartCandles = new Chart(ctx, {
+            if (chartCandles) chartCandles.destroy();
+            chartCandles = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: data.labels,

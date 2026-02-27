@@ -144,22 +144,22 @@
             {{-- Boutons toggle des séries --}}
             <div class="flex flex-wrap gap-2 mb-3">
                 <button @click="toggleSeries(0)"
-                        :class="toggles[0] ? 'opacity-100' : 'opacity-40'"
+                        :class="t0 ? 'opacity-100' : 'opacity-40'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-blue-200 bg-blue-50 text-blue-700 transition-opacity">
                     <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>Total
                 </button>
                 <button @click="toggleSeries(1)"
-                        :class="toggles[1] ? 'opacity-100' : 'opacity-40'"
+                        :class="t1 ? 'opacity-100' : 'opacity-40'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 transition-opacity">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>Actifs
                 </button>
                 <button @click="toggleSeries(2)"
-                        :class="toggles[2] ? 'opacity-100' : 'opacity-40'"
+                        :class="t2 ? 'opacity-100' : 'opacity-40'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-red-200 bg-red-50 text-red-700 transition-opacity">
                     <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>Perdus
                 </button>
                 <button @click="toggleSeries(3)"
-                        :class="toggles[3] ? 'opacity-100' : 'opacity-40'"
+                        :class="t3 ? 'opacity-100' : 'opacity-40'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-amber-200 bg-amber-50 text-amber-700 transition-opacity">
                     <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>Modifiés
                 </button>
@@ -471,12 +471,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 function backlinkChart(projectId = null) {
+    let chartQuality = null;
+    let chartCandles = null;
     return {
         days: 30,
-        chartQuality: null,
-        chartCandles: null,
         loading: true,
-        toggles: [true, true, true, true],
+        t0: true, t1: true, t2: true, t3: true,
 
         init() {
             this.loadCharts(30);
@@ -493,21 +493,22 @@ function backlinkChart(projectId = null) {
             try {
                 const response = await fetch(url);
                 const data = await response.json();
+                this.loading = false;
                 await this.$nextTick();
                 this.renderQuality(data);
                 this.renderCandles(data);
             } catch (e) {
                 console.error('Erreur chargement graphique:', e);
-            } finally {
                 this.loading = false;
             }
         },
 
         toggleSeries(index) {
-            this.toggles[index] = !this.toggles[index];
-            if (this.chartQuality) {
-                this.chartQuality.data.datasets[index].hidden = !this.toggles[index];
-                this.chartQuality.update();
+            const key = 't' + index;
+            this[key] = !this[key];
+            if (chartQuality) {
+                chartQuality.data.datasets[index].hidden = !this[key];
+                chartQuality.update();
             }
         },
 
@@ -515,11 +516,11 @@ function backlinkChart(projectId = null) {
         renderQuality(data) {
             const ctx = document.getElementById('chartQuality');
             if (!ctx) return;
-            if (this.chartQuality) this.chartQuality.destroy();
+            if (chartQuality) chartQuality.destroy();
 
             const tooltipLabels = ['Total', 'Actifs', 'Perdus', 'Modifiés'];
 
-            this.chartQuality = new Chart(ctx, {
+            chartQuality = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.labels,
@@ -534,7 +535,7 @@ function backlinkChart(projectId = null) {
                             pointHoverRadius: 4,
                             tension: 0.4,
                             fill: true,
-                            hidden: !this.toggles[0],
+                            hidden: !this.t0,
                         },
                         {
                             label: 'Actifs',
@@ -546,7 +547,7 @@ function backlinkChart(projectId = null) {
                             pointHoverRadius: 4,
                             tension: 0.4,
                             fill: false,
-                            hidden: !this.toggles[1],
+                            hidden: !this.t1,
                         },
                         {
                             label: 'Perdus',
@@ -559,7 +560,7 @@ function backlinkChart(projectId = null) {
                             pointHoverRadius: 4,
                             tension: 0.4,
                             fill: false,
-                            hidden: !this.toggles[2],
+                            hidden: !this.t2,
                         },
                         {
                             label: 'Modifiés',
@@ -572,7 +573,7 @@ function backlinkChart(projectId = null) {
                             pointHoverRadius: 4,
                             tension: 0.4,
                             fill: false,
-                            hidden: !this.toggles[3],
+                            hidden: !this.t3,
                         },
                     ],
                 },
@@ -618,9 +619,9 @@ function backlinkChart(projectId = null) {
         renderCandles(data) {
             const ctx = document.getElementById('chartCandles');
             if (!ctx) return;
-            if (this.chartCandles) this.chartCandles.destroy();
+            if (chartCandles) chartCandles.destroy();
 
-            this.chartCandles = new Chart(ctx, {
+            chartCandles = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: data.labels,

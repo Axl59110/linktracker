@@ -352,39 +352,33 @@ class BacklinkController extends Controller
 
     /**
      * Check a backlink manually (on-demand verification).
+     * Accepts both classic form POST (redirects to show) and JSON fetch (returns JSON).
      */
-    public function check(Backlink $backlink, BacklinkCheckerService $checkerService, AlertService $alertService)
+    public function check(Request $request, Backlink $backlink, BacklinkCheckerService $checkerService, AlertService $alertService)
     {
+        $wantsJson = $request->expectsJson() || $request->header('X-Requested-With') === 'fetch';
+
         try {
-            // Vérifier le backlink avec le service
             $result = $checkerService->check($backlink);
 
-            // Créer un enregistrement BacklinkCheck avec les résultats
-            $check = $backlink->checks()->create([
-                'checked_at' => now(),
-                'is_present' => $result['is_present'],
-                'http_status' => $result['http_status'],
+            $backlink->checks()->create([
+                'checked_at'    => now(),
+                'is_present'    => $result['is_present'],
+                'http_status'   => $result['http_status'],
                 'error_message' => $result['error_message'],
             ]);
 
-            // Mettre à jour le backlink
-            $updateData = [
-                'last_checked_at' => now(),
-            ];
-
-            $oldStatus = $backlink->status;
+            $updateData = ['last_checked_at' => now()];
+            $oldStatus  = $backlink->status;
 
             if ($result['is_present']) {
-                // Mettre à jour l'ancre si elle a changé
                 if ($result['anchor_text'] !== null && $result['anchor_text'] !== $backlink->anchor_text) {
                     $updateData['anchor_text'] = $result['anchor_text'];
                 }
-
                 $updateData['rel_attributes'] = $result['rel_attributes'];
-                $updateData['is_dofollow'] = $result['is_dofollow'];
-                $updateData['http_status'] = $result['http_status'];
+                $updateData['is_dofollow']    = $result['is_dofollow'];
+                $updateData['http_status']    = $result['http_status'];
 
-                // Gestion des changements de statut
                 if ($backlink->status === 'lost') {
                     $updateData['status'] = 'active';
                     $alertService->createBacklinkRecoveredAlert($backlink);
@@ -396,7 +390,6 @@ class BacklinkController extends Controller
                     }
                 }
             } else {
-                // Backlink non trouvé
                 if ($backlink->status !== 'lost') {
                     $updateData['status'] = 'lost';
                     $alertService->createBacklinkLostAlert($backlink, $result['error_message']);
@@ -405,16 +398,26 @@ class BacklinkController extends Controller
 
             $backlink->update($updateData);
 
-            // Message de succès
-            if ($result['is_present']) {
-                $message = '✅ Backlink vérifié avec succès. Le lien est présent et actif.';
-            } else {
-                $message = '⚠️ Backlink vérifié : le lien n\'a pas été trouvé sur la page.';
+            $newStatus     = $backlink->fresh()->status;
+            $statusChanged = $oldStatus !== $newStatus;
+
+            if ($wantsJson) {
+                return response()->json([
+                    'success'        => true,
+                    'is_present'     => $result['is_present'],
+                    'http_status'    => $result['http_status'],
+                    'status'         => $newStatus,
+                    'status_changed' => $statusChanged,
+                    'old_status'     => $oldStatus,
+                ]);
             }
 
-            // Ajouter info sur changement de statut
-            if ($oldStatus !== $backlink->fresh()->status) {
-                $message .= " Le statut a été mis à jour : {$oldStatus} → {$backlink->fresh()->status}.";
+            $message = $result['is_present']
+                ? 'Backlink vérifié : le lien est présent et actif.'
+                : 'Backlink vérifié : le lien n\'a pas été trouvé sur la page.';
+
+            if ($statusChanged) {
+                $message .= " Statut mis à jour : {$oldStatus} → {$newStatus}.";
             }
 
             return redirect()
@@ -422,17 +425,23 @@ class BacklinkController extends Controller
                 ->with($result['is_present'] ? 'success' : 'warning', $message);
 
         } catch (\Exception $e) {
-            // En cas d'erreur, créer un check avec erreur
             $backlink->checks()->create([
-                'checked_at' => now(),
-                'is_present' => false,
-                'http_status' => null,
+                'checked_at'    => now(),
+                'is_present'    => false,
+                'http_status'   => null,
                 'error_message' => 'Manual check failed: ' . $e->getMessage(),
             ]);
 
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
+
             return redirect()
                 ->route('backlinks.show', $backlink)
-                ->with('error', '❌ Erreur lors de la vérification : ' . $e->getMessage());
+                ->with('error', 'Erreur lors de la vérification : ' . $e->getMessage());
         }
     }
 
@@ -588,6 +597,26 @@ class BacklinkController extends Controller
         $deleted = Backlink::whereIn('id', $request->ids)->delete();
 
         return redirect()->back()->with('success', "{$deleted} backlink(s) supprimé(s).");
+    }
+
+    /**
+     * Bulk check backlinks (dispatch a CheckBacklinkJob for each).
+     * POST /backlinks/bulk-check
+     */
+    public function bulkCheck(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1|max:100',
+            'ids.*' => 'integer|exists:backlinks,id',
+        ]);
+
+        $count = 0;
+        foreach ($request->ids as $id) {
+            \App\Jobs\CheckBacklinkJob::dispatch(Backlink::find($id));
+            $count++;
+        }
+
+        return redirect()->back()->with('success', "{$count} vérification(s) lancée(s) en arrière-plan.");
     }
 
     /**
