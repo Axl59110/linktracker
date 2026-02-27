@@ -151,17 +151,17 @@
                 <button @click="toggleSeries(1)"
                         :class="toggles[1] ? 'opacity-100' : 'opacity-40'"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 transition-opacity">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>Parfaits
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>Actifs
                 </button>
                 <button @click="toggleSeries(2)"
                         :class="toggles[2] ? 'opacity-100' : 'opacity-40'"
-                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-amber-200 bg-amber-50 text-amber-700 transition-opacity">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>Non indexés
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-red-200 bg-red-50 text-red-700 transition-opacity">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>Perdus
                 </button>
                 <button @click="toggleSeries(3)"
                         :class="toggles[3] ? 'opacity-100' : 'opacity-40'"
-                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-violet-200 bg-violet-50 text-violet-700 transition-opacity">
-                    <span class="w-2.5 h-2.5 rounded-full bg-violet-500 inline-block"></span>Nofollow
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-amber-200 bg-amber-50 text-amber-700 transition-opacity">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>Modifiés
                 </button>
             </div>
             {{-- Canvas graphique 1 --}}
@@ -511,13 +511,13 @@ function backlinkChart(projectId = null) {
             }
         },
 
-        // ── Graphique 1 : 4 courbes cumulatives ──────────────────────────
+        // ── Graphique 1 : courbes cumulatives par statut (snapshots réels) ──
         renderQuality(data) {
             const ctx = document.getElementById('chartQuality');
             if (!ctx) return;
             if (this.chartQuality) this.chartQuality.destroy();
 
-            const tooltipLabels = ['Total', 'Parfaits', 'Non indexés', 'Nofollow'];
+            const tooltipLabels = ['Total', 'Actifs', 'Perdus', 'Modifiés'];
 
             this.chartQuality = new Chart(ctx, {
                 type: 'line',
@@ -526,7 +526,7 @@ function backlinkChart(projectId = null) {
                     datasets: [
                         {
                             label: 'Total',
-                            data: data.active || [],
+                            data: data.total || data.active || [],
                             borderColor: 'rgba(59, 130, 246, 0.9)',
                             backgroundColor: 'rgba(59, 130, 246, 0.06)',
                             borderWidth: 2.5,
@@ -537,8 +537,8 @@ function backlinkChart(projectId = null) {
                             hidden: !this.toggles[0],
                         },
                         {
-                            label: 'Parfaits',
-                            data: data.perfect || [],
+                            label: 'Actifs',
+                            data: data.active || [],
                             borderColor: 'rgba(16, 185, 129, 0.9)',
                             backgroundColor: 'rgba(16, 185, 129, 0.05)',
                             borderWidth: 2,
@@ -549,9 +549,9 @@ function backlinkChart(projectId = null) {
                             hidden: !this.toggles[1],
                         },
                         {
-                            label: 'Non indexés',
-                            data: data.not_indexed || [],
-                            borderColor: 'rgba(245, 158, 11, 0.9)',
+                            label: 'Perdus',
+                            data: data.lost || [],
+                            borderColor: 'rgba(239, 68, 68, 0.9)',
                             backgroundColor: 'transparent',
                             borderWidth: 2,
                             borderDash: [4, 3],
@@ -562,9 +562,9 @@ function backlinkChart(projectId = null) {
                             hidden: !this.toggles[2],
                         },
                         {
-                            label: 'Nofollow',
-                            data: data.nofollow || [],
-                            borderColor: 'rgba(139, 92, 246, 0.9)',
+                            label: 'Modifiés',
+                            data: data.changed || [],
+                            borderColor: 'rgba(245, 158, 11, 0.9)',
                             backgroundColor: 'transparent',
                             borderWidth: 2,
                             borderDash: [4, 3],
@@ -636,7 +636,7 @@ function backlinkChart(projectId = null) {
                         },
                         {
                             label: 'Pertes',
-                            data: (data.lost || []).map(v => -v),
+                            data: (data.lostDelta || data.lost || []).map(v => -v),
                             backgroundColor: 'rgba(248, 113, 113, 0.8)',
                             borderColor: 'rgba(239, 68, 68, 1)',
                             borderWidth: 1,

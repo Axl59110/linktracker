@@ -12,6 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Snapshot quotidien du nombre de backlinks (minuit)
+        $schedule->command('app:snapshot-backlinks')
+                 ->dailyAt('00:05')
+                 ->withoutOverlapping()
+                 ->appendOutputTo(storage_path('logs/scheduler.log'));
+
         // Vérification quotidienne des backlinks actifs
         $schedule->command('app:check-backlinks --frequency=daily')
                  ->dailyAt('02:00')

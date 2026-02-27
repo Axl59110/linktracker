@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Backlink;
 use App\Models\BacklinkCheck;
+use App\Models\BacklinkSnapshot;
 use App\Models\Project;
 use App\Models\Alert;
 use Illuminate\Http\Request;
@@ -78,141 +79,95 @@ class DashboardController extends Controller
 
     /**
      * Retourne les données du graphique d'évolution (JSON pour Chart.js).
+     * Basé sur les snapshots quotidiens pour une mesure exacte à chaque date.
      * GET /api/dashboard/chart?days=30&project_id=
      */
     public function chartData(Request $request)
     {
         $days      = (int) $request->get('days', 30);
-        $projectId = $request->get('project_id');
+        $projectId = $request->get('project_id') ?: null;
 
-        // Valider les paramètres (ajout 180j et 365j pour voir l'historique réel)
         $days = in_array($days, [7, 30, 90, 180, 365]) ? $days : 30;
 
-        $cacheKey = "dashboard_chart_" . ($projectId ?? 'all') . "_{$days}";
+        $cacheKey = "dashboard_chart_v2_" . ($projectId ?? 'all') . "_{$days}";
 
-        $data = Cache::remember($cacheKey, 600, function () use ($days, $projectId) {
+        $data = Cache::remember($cacheKey, 300, function () use ($days, $projectId) {
 
-            // Fenêtre temporelle
-            $startDate = now()->subDays($days - 1)->startOfDay();
-            $endDate   = now()->endOfDay();
-            $startStr  = $startDate->format('Y-m-d');
-            $endStr    = $endDate->format('Y-m-d');
+            $startDate = today()->subDays($days - 1);
 
             // Générer toutes les dates de la fenêtre
             $dates = [];
             for ($i = $days - 1; $i >= 0; $i--) {
-                $dates[] = now()->subDays($i)->format('Y-m-d');
+                $dates[] = today()->subDays($i)->toDateString();
             }
 
-            // Helper : applique le filtre projet si fourni
-            $base = fn() => Backlink::query()->when($projectId, fn($q) => $q->where('project_id', $projectId));
+            // Charger les snapshots de la période
+            $snapshots = BacklinkSnapshot::query()
+                ->when($projectId, fn($q) => $q->where('project_id', $projectId), fn($q) => $q->whereNull('project_id'))
+                ->whereBetween(DB::raw("DATE(snapshot_date)"), [$startDate->toDateString(), today()->toDateString()])
+                ->orderBy('snapshot_date')
+                ->get()
+                ->keyBy(fn($s) => $s->snapshot_date->toDateString());
 
-            // Colonne de date de publication (published_at ou created_at en fallback)
-            $pubDate = "DATE(COALESCE(published_at, DATE(created_at)))";
+            // Trouver le dernier snapshot avant la fenêtre pour interpoler les jours sans données
+            $lastKnown = BacklinkSnapshot::query()
+                ->when($projectId, fn($q) => $q->where('project_id', $projectId), fn($q) => $q->whereNull('project_id'))
+                ->where(DB::raw("DATE(snapshot_date)"), '<', $startDate->toDateString())
+                ->orderByDesc('snapshot_date')
+                ->first();
 
-            // --- Requête 1 : tous les gains groupés par jour ---
-            $gainedRaw = $base()
-                ->selectRaw("{$pubDate} as day, COUNT(*) as cnt")
-                ->whereBetween(DB::raw($pubDate), [$startStr, $endStr])
-                ->groupByRaw($pubDate)
-                ->pluck('cnt', 'day')
-                ->toArray();
-
-            // --- Requête 2 : gains "parfaits" (actif + indexé + dofollow) ---
-            $gainedPerfectRaw = $base()
-                ->where('status', 'active')
-                ->where('is_indexed', true)
-                ->where('is_dofollow', true)
-                ->selectRaw("{$pubDate} as day, COUNT(*) as cnt")
-                ->whereBetween(DB::raw($pubDate), [$startStr, $endStr])
-                ->groupByRaw($pubDate)
-                ->pluck('cnt', 'day')
-                ->toArray();
-
-            // --- Requête 3 : gains "non indexés" ---
-            $gainedNotIdxRaw = $base()
-                ->where('is_indexed', false)
-                ->selectRaw("{$pubDate} as day, COUNT(*) as cnt")
-                ->whereBetween(DB::raw($pubDate), [$startStr, $endStr])
-                ->groupByRaw($pubDate)
-                ->pluck('cnt', 'day')
-                ->toArray();
-
-            // --- Requête 4 : gains "nofollow" ---
-            $gainedNofollowRaw = $base()
-                ->where('is_dofollow', false)
-                ->selectRaw("{$pubDate} as day, COUNT(*) as cnt")
-                ->whereBetween(DB::raw($pubDate), [$startStr, $endStr])
-                ->groupByRaw($pubDate)
-                ->pluck('cnt', 'day')
-                ->toArray();
-
-            // --- Requête 5 : pertes groupées par jour ---
-            $lostRaw = $base()
-                ->where('status', 'lost')
-                ->whereNotNull('last_checked_at')
-                ->selectRaw("DATE(last_checked_at) as day, COUNT(*) as cnt")
-                ->whereBetween(DB::raw("DATE(last_checked_at)"), [$startStr, $endStr])
-                ->groupByRaw("DATE(last_checked_at)")
-                ->pluck('cnt', 'day')
-                ->toArray();
-
-            // --- Bases cumulatives AVANT la fenêtre (état actuel projeté) ---
-            $baseTotal    = $base()->where(DB::raw($pubDate), '<', $startStr)->count();
-            $basePerfect  = $base()->where('status', 'active')->where('is_indexed', true)->where('is_dofollow', true)
-                                   ->where(DB::raw($pubDate), '<', $startStr)->count();
-            $baseNotIdx   = $base()->where('is_indexed', false)
-                                   ->where(DB::raw($pubDate), '<', $startStr)->count();
-            $baseNofollow = $base()->where('is_dofollow', false)
-                                   ->where(DB::raw($pubDate), '<', $startStr)->count();
-
-            // --- Construire les séries jour par jour ---
+            // Construire les séries en propageant la dernière valeur connue sur les jours sans snapshot
             $active     = [];
-            $perfect    = [];
-            $not_indexed = [];
-            $nofollow   = [];
-            $gained     = [];
             $lost       = [];
+            $changed    = [];
+            $total      = [];
+            $gained     = [];
+            $lostDelta  = [];
             $delta      = [];
 
-            $cumTotal    = $baseTotal;
-            $cumPerfect  = $basePerfect;
-            $cumNotIdx   = $baseNotIdx;
-            $cumNofollow = $baseNofollow;
+            $prevTotal  = $lastKnown?->count_total  ?? 0;
+            $prevActive = $lastKnown?->count_active ?? 0;
 
             foreach ($dates as $date) {
-                $gainedVal        = (int) ($gainedRaw[$date]         ?? 0);
-                $gainedPerfect    = (int) ($gainedPerfectRaw[$date]  ?? 0);
-                $gainedNotIdx     = (int) ($gainedNotIdxRaw[$date]   ?? 0);
-                $gainedNofollow   = (int) ($gainedNofollowRaw[$date] ?? 0);
-                $lostVal          = (int) ($lostRaw[$date]           ?? 0);
+                $snap = $snapshots[$date] ?? null;
 
-                $cumTotal    += $gainedVal - $lostVal;
-                $cumPerfect  += $gainedPerfect;
-                $cumNotIdx   += $gainedNotIdx;
-                $cumNofollow += $gainedNofollow;
+                $activeVal  = $snap ? $snap->count_active  : $prevActive;
+                $lostVal    = $snap ? $snap->count_lost    : 0;
+                $changedVal = $snap ? $snap->count_changed : 0;
+                $totalVal   = $snap ? $snap->count_total   : $prevTotal;
 
-                $active[]      = max(0, $cumTotal);
-                $perfect[]     = max(0, $cumPerfect);
-                $not_indexed[] = max(0, $cumNotIdx);
-                $nofollow[]    = max(0, $cumNofollow);
-                $gained[]      = $gainedVal;
-                $lost[]        = $lostVal;
-                $delta[]       = $gainedVal - $lostVal;
+                $gainedVal   = max(0, $totalVal - $prevTotal);
+                $lostDeltaV  = max(0, $prevTotal - $totalVal + $gainedVal);
+
+                $active[]    = $activeVal;
+                $lost[]      = $lostVal;
+                $changed[]   = $changedVal;
+                $total[]     = $totalVal;
+                $gained[]    = $gainedVal;
+                $lostDelta[] = $lostDeltaV;
+                $delta[]     = $totalVal - $prevTotal;
+
+                if ($snap) {
+                    $prevTotal  = $totalVal;
+                    $prevActive = $activeVal;
+                }
             }
 
-            // Format des labels : condensé pour les longues périodes
             $labelFormat = $days <= 90 ? 'd/m' : 'd/m/y';
 
             return [
-                'labels'      => array_map(fn($d) => \Carbon\Carbon::parse($d)->format($labelFormat), $dates),
-                'active'      => $active,
-                'perfect'     => $perfect,
-                'not_indexed' => $not_indexed,
-                'nofollow'    => $nofollow,
-                'gained'      => $gained,
-                'lost'        => $lost,
-                'delta'       => $delta,
+                'labels'  => array_map(fn($d) => \Carbon\Carbon::parse($d)->format($labelFormat), $dates),
+                'active'  => $active,
+                'lost'    => $lost,
+                'changed' => $changed,
+                'total'   => $total,
+                'gained'  => $gained,
+                'lostDelta' => $lostDelta,
+                'delta'   => $delta,
+                // Compatibilité avec l'ancien format
+                'perfect'     => $active,
+                'not_indexed' => array_fill(0, count($dates), 0),
+                'nofollow'    => array_fill(0, count($dates), 0),
             ];
         });
 
