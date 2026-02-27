@@ -221,7 +221,7 @@
                 @php
                     $checksForChart = $backlink->checks->sortBy('checked_at')->values();
                     $maxDisplay = 90;
-                    $displayChecks = $checksForChart->takeLast($maxDisplay)->values();
+                    $displayChecks = $checksForChart->slice(-$maxDisplay)->values();
                 @endphp
 
                 {{-- Timeline barchart --}}
