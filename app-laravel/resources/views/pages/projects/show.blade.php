@@ -285,19 +285,31 @@
             <div class="w-px h-5 bg-neutral-200 flex-shrink-0"></div>
 
             {{-- Bulk check --}}
-            <form :action="'{{ route('backlinks.bulk-check') }}'" method="POST">
-                @csrf
-                <template x-for="id in selected" :key="id">
-                    <input type="hidden" name="ids[]" :value="id">
-                </template>
-                <button type="submit"
+            <template x-if="!checking">
+                <button @click="runBulkCheck('{{ csrf_token() }}')"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-brand-600 hover:bg-brand-50 border border-neutral-200 hover:border-brand-200 rounded-lg transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
                     Vérifier
                 </button>
-            </form>
+            </template>
+            {{-- Barre de progression bulk check --}}
+            <template x-if="checking">
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-brand-500 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-24 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-brand-500 rounded-full transition-all duration-300"
+                                 :style="'width:' + (checkTotal > 0 ? Math.round(checkProgress/checkTotal*100) : 0) + '%'"></div>
+                        </div>
+                        <span class="text-xs text-neutral-500 tabular-nums" x-text="checkProgress + '/' + checkTotal"></span>
+                    </div>
+                </div>
+            </template>
 
             {{-- Bulk edit : date publication --}}
             <form :action="'{{ route('backlinks.bulk-edit') }}'" method="POST" class="flex items-center gap-1.5">
@@ -499,6 +511,9 @@ function bulkActions() {
     return {
         selected: [],
         allIds: @json($backlinks->pluck('id')),
+        checking: false,
+        checkProgress: 0,
+        checkTotal: 0,
 
         toggleAll(e) {
             this.selected = e.target.checked ? [...this.allIds] : [];
@@ -509,7 +524,30 @@ function bulkActions() {
                 return;
             }
             e.target.submit();
-        }
+        },
+
+        async runBulkCheck(token) {
+            if (this.checking || this.selected.length === 0) return;
+            this.checking = true;
+            this.checkProgress = 0;
+            this.checkTotal = this.selected.length;
+            const ids = [...this.selected];
+            for (const id of ids) {
+                try {
+                    await fetch(`/backlinks/${id}/check`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                        },
+                    });
+                } catch (_) {}
+                this.checkProgress++;
+            }
+            this.checking = false;
+            window.location.reload();
+        },
     };
 }
 
